@@ -334,7 +334,7 @@ const Index = () => {
             <Button size="lg" variant="secondary" className="h-12 px-8 font-medium">
               Get started free
             </Button>
-            <Button size="lg" variant="outline" className="h-12 px-8 font-medium border-primary-foreground/30 hover:bg-primary-foreground/10">
+            <Button size="lg" variant="secondary" className="h-12 px-8 font-medium">
               Schedule a demo
             </Button>
           </div>
