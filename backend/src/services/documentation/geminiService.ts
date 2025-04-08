@@ -1,6 +1,6 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai"; // Import safety settings types
 import dotenv from 'dotenv';
-import { CodeDocumentation } from "./types"; // Import the interface
+// No longer need CodeDocumentation type from ./types
 
 dotenv.config(); // Load environment variables
 
@@ -11,51 +11,77 @@ if (!API_KEY) {
 }
 
 const genAI = new GoogleGenerativeAI(API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash"}); // Or another suitable model
+// Use a potentially more capable model if needed for detailed analysis, but flash is fast.
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash"});
+
+// Define safety settings to potentially allow more code-related content
+const safetySettings = [
+  {
+    category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+    threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+  },
+  {
+    category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+    threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+  },
+  {
+    category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+    threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+  },
+  {
+    category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+    threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE, // Adjust if needed for code examples
+  },
+];
+
 
 /**
- * Generates documentation for a given set of code structures using Gemini.
- * @param structures An array of extracted code structure information.
+ * Generates detailed, line-by-line documentation for the given code using Gemini.
+ * @param code The raw code content as a string.
+ * @param filename Optional filename for context.
  * @returns A promise that resolves to the generated documentation string (Markdown).
  */
-export async function generateAIDocumentation(structures: CodeDocumentation[]): Promise<string> {
-  if (structures.length === 0) {
-    return "No documentable structures (functions, classes, methods) found to send to AI.";
+export async function generateAIDocumentation(code: string, filename?: string): Promise<string> {
+  if (!code || code.trim() === "") {
+    return "No code provided to document.";
   }
 
-  // Create a more detailed prompt for Gemini
+  // Construct the prompt for detailed, line-by-line analysis
   const prompt = `
-    Generate comprehensive documentation in Markdown format for the following TypeScript/JavaScript code structures extracted from a file.
-    Pay close attention to the provided comments as they contain valuable context.
+    Analyze the following code snippet${filename ? ` from the file "${filename}"` : ''}.
+    Provide comprehensive documentation in Markdown format.
+    Your analysis should be detailed, explaining the purpose and logic of the code, ideally on a block-by-block or line-by-line basis where appropriate.
+    Identify the programming language if possible.
 
-    Extracted Structures:
-    ${structures.map((s, index) => `
-    --- Structure ${index + 1} ---
-    Name: ${s.name} ${s.isDefaultExport ? '(Default Export)' : (s.isExported ? '(Exported)' : '')}
-    Type: ${s.type}
-    ${s.comment ? `Existing Comment/Docs:\n\`\`\`\n${s.comment}\n\`\`\`\n` : ''}
-    ${s.params && s.params.length > 0 ? `Parameters: ${s.params.map(p => `${p.name}${p.type !== 'any' ? `: ${p.type}` : ''}`).join(', ')}\n` : ''}
-    ${s.returnType ? `Returns: ${s.returnType}\n` : ''}
-    `).join('\n')}
-    --- End of Structures ---
+    Explain:
+    - The overall purpose of the code snippet.
+    - Key variables, functions, classes, or components and their roles.
+    - The logic flow and decision points.
+    - Any complex algorithms or operations.
+    - Input parameters and return values for functions/methods.
+    - Potential edge cases or important considerations mentioned in comments or inferrable from the code.
 
-    For each structure above, please provide the following in Markdown:
-    1.  **Purpose:** A clear, concise explanation of what the function/class/method does. Use the existing comments as a primary source of information if available.
-    2.  **Parameters:** (If applicable) List each parameter with its name, type (if known), and a description of its purpose. Infer descriptions from the code logic and existing comments.
-        - Format: \`- \`paramName\` ({type}): Description\`
-    3.  **Returns:** (If applicable) Describe what the function/method returns, including its type.
-        - Format: \`@returns {type} Description\`
-    4.  **Example:** (Optional but helpful) Provide a simple, clear usage example in a code block.
+    Format the output clearly using Markdown. Use headings, lists, and code blocks (\`\`\`) for clarity.
+    Do not just repeat the code; explain it thoroughly.
 
-    Structure the overall output clearly, perhaps using headings for each documented item (e.g., \`### Function: [Name]\` or \`### Class: [Name]\`).
-    Focus on clarity, accuracy, and leveraging any existing comments effectively. Do not just repeat the code.
+    Code Snippet:
+    \`\`\`
+    ${code}
+    \`\`\`
+
+    Generate the documentation below:
   `;
 
   try {
-    // console.log("Sending prompt to Gemini:", prompt); // Log the prompt for debugging (can be long)
-    console.log(`Sending ${structures.length} structures to Gemini for documentation.`);
+    console.log(`Sending code snippet${filename ? ` from ${filename}` : ''} to Gemini for detailed documentation.`);
 
-    const result = await model.generateContent(prompt);
+    // Pass safety settings to the generation request
+    const result = await model.generateContent({
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        safetySettings,
+        // Consider adding generationConfig if needed (e.g., temperature)
+        // generationConfig: { temperature: 0.7 }
+    });
     const response = result.response;
     const text = response.text();
 

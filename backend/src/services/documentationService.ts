@@ -1,37 +1,26 @@
-// Import necessary functions and types from the new modules
-import { extractCodeStructures } from "./documentation/astUtils";
+// Import the AI generation function
 import { generateAIDocumentation } from "./documentation/geminiService";
 
 /**
- * Orchestrates the documentation generation process.
- * 1. Extracts code structures using AST analysis.
- * 2. Sends the structures to the AI service for documentation generation.
+ * Orchestrates the documentation generation process by sending the raw code
+ * directly to the AI service for detailed, line-by-line analysis.
  * @param code The code content as a string.
- * @param filename Optional filename for context.
+ * @param filename Optional filename for context (can be passed to AI).
  * @returns A promise that resolves to the generated documentation string (Markdown).
  */
 export async function generateDocumentation(code: string, filename?: string): Promise<string> {
   try {
-    // 1. Extract structures using the utility function
-    const structures = extractCodeStructures(code, filename);
-
-    // Handle case where no structures are found by the parser
-    if (structures.length === 0) {
-        return "No documentable structures (functions, classes, methods) found in the code.";
-    }
-
-    // 2. Generate documentation using the AI service
-    const documentation = await generateAIDocumentation(structures);
+    // Directly pass the raw code and optional filename to the AI service
+    // The AI service will be responsible for the detailed analysis.
+    const documentation = await generateAIDocumentation(code, filename);
 
     return documentation;
 
   } catch (error: any) {
-    // Catch errors from either structure extraction or AI generation
+    // Catch errors from the AI generation step
     console.error("Error in generateDocumentation:", error);
     // Return a generic error or re-throw specific errors if needed
-    return `Error generating documentation: ${error.message}`;
+    // Consider providing more context if possible, e.g., from the error object
+    return `Error generating documentation: ${error.message || 'An unknown error occurred'}`;
   }
 }
-
-// Example usage can be moved to a separate test file or kept here if desired.
-// The core logic is now delegated.
