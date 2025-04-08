@@ -1,4 +1,6 @@
 import React from 'react';
+import { Card, CardContent } from "@/components/ui/card"; // Import Card
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"; // Import Avatar
 
 export const IntegrationsSection = () => {
   return (
@@ -7,18 +9,23 @@ export const IntegrationsSection = () => {
         <div className="flex flex-col gap-4 text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Powerful Integrations</h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Connect with your existing tools and workflows.
+           Connect with your existing tools and workflows.
           </p>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-8">
+        {/* Use Card and Avatar */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-6"> {/* Adjusted gap */}
           {["GitHub", "GitLab", "Swagger", "OpenAPI", "Postman", "Docusaurus"].map((integration) => (
-            <div key={integration} className="flex flex-col items-center">
-              <div className="h-20 w-20 rounded-full bg-background border shadow-sm flex items-center justify-center mb-4 transition-transform hover:scale-105">
-                {/* Placeholder - Replace with actual logos */}
-                <span className="text-2xl font-bold text-muted-foreground/70">{integration.charAt(0)}</span>
-              </div>
-              <span className="font-medium text-muted-foreground">{integration}</span>
-            </div>
+            <Card key={integration} className="bg-background/50 hover:bg-background/80 transition-colors duration-200 shadow-sm border">
+              <CardContent className="flex flex-col items-center p-6 gap-3"> {/* Adjusted padding and gap */}
+                <Avatar className="h-16 w-16 border"> {/* Increased size */}
+                  {/* Placeholder - Replace with actual logos using AvatarImage */}
+                  <AvatarFallback className="text-xl font-semibold bg-muted/50">
+                    {integration.slice(0, 2)} {/* Show first 2 chars */}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="font-medium text-center text-sm">{integration}</span> {/* Adjusted text size */}
+              </CardContent>
+            </Card>
           ))}
         </div>
       </div>

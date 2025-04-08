@@ -1,5 +1,6 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { UsersRound, BrainCircuit, Bug } from "lucide-react"; // Import icons
 
 export const ProblemSection = () => {
   return (
@@ -14,8 +15,9 @@ export const ProblemSection = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Example Card - Repeat or modify for others */}
           <Card className="bg-background/70 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle>Slow Onboarding</CardTitle>
+            <CardHeader className="flex flex-row items-center gap-3 space-y-0"> {/* Use flex for icon alignment */}
+              <UsersRound className="h-6 w-6 text-primary" /> {/* Add icon */}
+              <CardTitle className="text-lg font-semibold">Slow Onboarding</CardTitle> {/* Adjusted title size */}
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground">
@@ -24,8 +26,9 @@ export const ProblemSection = () => {
             </CardContent>
           </Card>
           <Card className="bg-background/70 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle>Knowledge Silos</CardTitle>
+            <CardHeader className="flex flex-row items-center gap-3 space-y-0">
+              <BrainCircuit className="h-6 w-6 text-primary" /> {/* Add icon */}
+              <CardTitle className="text-lg font-semibold">Knowledge Silos</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground">
@@ -34,8 +37,9 @@ export const ProblemSection = () => {
             </CardContent>
           </Card>
           <Card className="bg-background/70 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle>Bugs & Misuse</CardTitle>
+            <CardHeader className="flex flex-row items-center gap-3 space-y-0">
+              <Bug className="h-6 w-6 text-primary" /> {/* Add icon */}
+              <CardTitle className="text-lg font-semibold">Bugs & Misuse</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground">

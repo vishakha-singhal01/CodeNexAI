@@ -5,6 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label"; // Import Label
+import { Badge } from "@/components/ui/badge"; // Import Badge
+import { Skeleton } from "@/components/ui/skeleton"; // Import Skeleton
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -72,8 +75,8 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
               {/* Paste Code Tab */}
               <TabsContent value="paste">
                 <div className="grid gap-5"> {/* Increased gap */}
-                  <div>
-                    {/* <Label htmlFor="code-input">Code Input</Label> */}
+                  <div className="space-y-2"> {/* Added space-y-2 for label spacing */}
+                    <Label htmlFor="code-input">Paste Code</Label>
                     <Textarea
                       id="code-input"
                       placeholder="Paste your function, class, or code snippet here..."
@@ -96,7 +99,7 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
               <TabsContent value="upload">
                 <div className="grid gap-5"> {/* Increased gap */}
                   <div className="space-y-2">
-                    {/* <Label htmlFor="file-input">Upload Files or Folder</Label> */}
+                    <Label htmlFor="file-input">Upload Files or Folder</Label>
                     <Input
                       id="file-input"
                       type="file"
@@ -110,11 +113,18 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
                       disabled={isLoadingDocs}
                     />
                     <p className="text-sm text-muted-foreground pt-1">
-                      Select multiple files or a single folder containing code.
+                       Select multiple files or a single folder containing code.
                     </p>
                     {uploadedFiles && uploadedFiles.length > 0 && (
-                      <div className="mt-2 text-sm text-muted-foreground max-h-24 overflow-y-auto border rounded p-2 bg-muted/30">
-                        <strong>Selected {uploadedFiles.length} item(s):</strong> {Array.from(uploadedFiles).map(f => f.name).join(', ')}
+                      <div className="mt-2 space-y-1 max-h-28 overflow-y-auto rounded p-2 border bg-muted/20">
+                        <p className="text-sm font-medium mb-1">Selected {uploadedFiles.length} item(s):</p>
+                        <div className="flex flex-wrap gap-1">
+                          {Array.from(uploadedFiles).map((file, index) => (
+                            <Badge key={index} variant="secondary" className="text-xs">
+                              {file.name}
+                            </Badge>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -128,7 +138,7 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
               <TabsContent value="github">
                 <div className="grid gap-5"> {/* Increased gap */}
                   <div className="space-y-2">
-                    {/* <Label htmlFor="repo-url-input">Public GitHub Repository URL</Label> */}
+                    <Label htmlFor="repo-url-input">Public GitHub Repository URL</Label>
                     <Input
                       id="repo-url-input"
                       placeholder="https://github.com/username/repository-name"
@@ -155,29 +165,50 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
 
         {/* Shared Output Area - Placed outside the Card for better separation */}
         <div className="mt-8 max-w-4xl mx-auto w-full">
-          {docsError && (
-            <Alert variant="destructive" className="mb-6"> {/* Increased margin */}
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Generation Error</AlertTitle>
-              <AlertDescription>{docsError}</AlertDescription>
-            </Alert>
-          )}
-          {generatedDocs && (
+          {isLoadingDocs ? (
+            // Loading Skeleton
             <Card className="shadow-md border">
-              <CardHeader className="flex flex-row items-center justify-between pb-3 pt-4 px-5"> {/* Adjusted padding */}
-                <CardTitle className="text-xl font-semibold">Generated Documentation</CardTitle>
-                <Button variant="outline" size="sm" onClick={handleDownloadDocs}>
-                  <Download className="mr-2 h-4 w-4" />
-                  Download (.md)
-                </Button>
+              <CardHeader className="flex flex-row items-center justify-between pb-3 pt-4 px-5">
+                <Skeleton className="h-6 w-48" /> {/* Skeleton for Title */}
+                <Skeleton className="h-8 w-32" /> {/* Skeleton for Button */}
               </CardHeader>
-              <CardContent className="px-5 pb-5"> {/* Adjusted padding */}
-                {/* Added max-height and scroll */}
-                <div className="prose prose-sm max-w-none dark:prose-invert bg-muted/30 p-4 rounded-md border max-h-[60vh] overflow-y-auto">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{generatedDocs}</ReactMarkdown>
-                </div>
+              <CardContent className="px-5 pb-5 space-y-3"> {/* Added space-y-3 */}
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-5/6" />
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-1/2" />
               </CardContent>
             </Card>
+          ) : (
+            // Actual Content or Error
+            <>
+              {docsError && (
+                <Alert variant="destructive" className="mb-6"> {/* Increased margin */}
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Generation Error</AlertTitle>
+                  <AlertDescription>{docsError}</AlertDescription>
+                </Alert>
+              )}
+              {generatedDocs && (
+                <Card className="shadow-md border">
+                  <CardHeader className="flex flex-row items-center justify-between pb-3 pt-4 px-5"> {/* Adjusted padding */}
+                    <CardTitle className="text-xl font-semibold">Generated Documentation</CardTitle>
+                    <Button variant="outline" size="sm" onClick={handleDownloadDocs}>
+                      <Download className="mr-2 h-4 w-4" />
+                      Download (.md)
+                    </Button>
+                  </CardHeader>
+                  <CardContent className="px-5 pb-5"> {/* Adjusted padding */}
+                    {/* Added max-height and scroll */}
+                    <div className="prose prose-sm max-w-none dark:prose-invert bg-muted/30 p-4 rounded-md border max-h-[60vh] overflow-y-auto">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{generatedDocs}</ReactMarkdown>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </>
           )}
         </div>
       </div>

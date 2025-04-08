@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Server, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Navbar } from "@/components/navbar"; // Import Navbar
 
 // Import the newly created section components
 import { HeroSection } from "./Index/components/HeroSection";
@@ -141,47 +142,52 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 text-foreground">
-      {/* Backend Status Indicator */}
-      {backendStatus && (
-        <Alert variant={backendStatus.error ? "destructive" : "default"} className="container max-w-5xl mx-auto mt-4 mb-2 rounded-lg border">
-          {backendStatus.error ? <AlertCircle className="h-4 w-4" /> : <Server className="h-4 w-4" />}
-          <AlertTitle className="font-semibold">{backendStatus.error ? "Backend Connection Error" : "Backend Status"}</AlertTitle>
-          <AlertDescription>
-            {backendStatus.message}
-          </AlertDescription>
-        </Alert>
-      )}
+    <div className="flex flex-col min-h-screen"> {/* Use flex column */}
+      <Navbar /> {/* Add Navbar */}
+      {/* Main content area */}
+      <main className="flex-grow"> {/* Make main content grow */}
+        {/* Backend Status Indicator */}
+        {backendStatus && (
+          <Alert variant={backendStatus.error ? "destructive" : "default"} className="container max-w-5xl mx-auto mt-4 mb-2 rounded-lg border">
+            {backendStatus.error ? <AlertCircle className="h-4 w-4" /> : <Server className="h-4 w-4" />}
+            <AlertTitle className="font-semibold">{backendStatus.error ? "Backend Connection Error" : "Backend Status"}</AlertTitle>
+            <AlertDescription>
+              {backendStatus.message}
+            </AlertDescription>
+          </Alert>
+        )}
 
-      {/* Render the extracted sections */}
-      <HeroSection />
+        {/* Render the extracted sections */}
+        <HeroSection />
 
-      <GeneratorSection
-        inputCode={inputCode}
-        setInputCode={setInputCode}
-        uploadedFiles={uploadedFiles}
-        setUploadedFiles={setUploadedFiles}
-        repoUrl={repoUrl}
-        setRepoUrl={setRepoUrl}
-        generatedDocs={generatedDocs}
-        setGeneratedDocs={setGeneratedDocs}
-        isLoadingDocs={isLoadingDocs}
-        docsError={docsError}
-        setDocsError={setDocsError}
-        fileInputRef={fileInputRef}
-        handleGenerateDocsFromText={handleGenerateDocsFromText}
-        handleFileChange={handleFileChange}
-        handleGenerateDocsFromUpload={handleGenerateDocsFromUpload}
-        handleGenerateDocsFromRepo={handleGenerateDocsFromRepo}
-        isValidGitHubUrl={isValidGitHubUrl}
-        handleDownloadDocs={handleDownloadDocs}
-      />
+        <GeneratorSection
+          inputCode={inputCode}
+          setInputCode={setInputCode}
+          uploadedFiles={uploadedFiles}
+          setUploadedFiles={setUploadedFiles}
+          repoUrl={repoUrl}
+          setRepoUrl={setRepoUrl}
+          generatedDocs={generatedDocs}
+          setGeneratedDocs={setGeneratedDocs}
+          isLoadingDocs={isLoadingDocs}
+          docsError={docsError}
+          setDocsError={setDocsError}
+          fileInputRef={fileInputRef}
+          handleGenerateDocsFromText={handleGenerateDocsFromText}
+          handleFileChange={handleFileChange}
+          handleGenerateDocsFromUpload={handleGenerateDocsFromUpload}
+          handleGenerateDocsFromRepo={handleGenerateDocsFromRepo}
+          isValidGitHubUrl={isValidGitHubUrl}
+          handleDownloadDocs={handleDownloadDocs}
+        />
 
-      <ProblemSection />
-      <FeaturesSection />
-      <IntegrationsSection />
-      <PricingSection />
-      <CtaSection />
+        <ProblemSection />
+        <FeaturesSection />
+        <IntegrationsSection />
+        <PricingSection />
+        <CtaSection />
+      </main>
+      {/* Footer remains at the bottom */}
       <Footer />
     </div>
   );
