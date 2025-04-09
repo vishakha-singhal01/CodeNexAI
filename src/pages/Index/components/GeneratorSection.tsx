@@ -5,12 +5,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label"; // Import Label
-import { Badge } from "@/components/ui/badge"; // Import Badge
-import { Skeleton } from "@/components/ui/skeleton"; // Import Skeleton
+import { Label } from "@/components/ui/label"; 
+import { Badge } from "@/components/ui/badge"; 
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu"
 
 interface GeneratorSectionProps {
   inputCode: string;
@@ -53,6 +59,34 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
   isValidGitHubUrl,
   handleDownloadDocs,
 }) => {
+
+  const handleDownloadPDF = () => {
+    const preview = document.getElementById('markdown-preview');
+    if (!preview) return;
+
+    const printWindow = window.open('', '', 'width=800,height=600');
+    if (!printWindow) return;
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Generated Documentation</title>
+          <style>
+            body { font-family: sans-serif; padding: 2rem; }
+            .prose { max-width: 100%; }
+          </style>
+        </head>
+        <body>
+          ${preview.innerHTML}
+        </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+  };
+  
   return (
     <section id="try-it" className="w-full py-20 md:py-28 lg:py-32 bg-background border-t">
       <div className="container px-4 md:px-6 max-w-5xl mx-auto">
@@ -113,7 +147,7 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
                       disabled={isLoadingDocs}
                     />
                     <p className="text-sm text-muted-foreground pt-1">
-                       Select multiple files or a single folder containing code.
+                      Select multiple files or a single folder containing code.
                     </p>
                     {uploadedFiles && uploadedFiles.length > 0 && (
                       <div className="mt-2 space-y-1 max-h-28 overflow-y-auto rounded p-2 border bg-muted/20">
@@ -193,20 +227,46 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
               )}
               {generatedDocs && (
                 <Card className="shadow-md border">
-                  <CardHeader className="flex flex-row items-center justify-between pb-3 pt-4 px-5"> {/* Adjusted padding */}
+                  <CardHeader className="flex flex-row items-center justify-between pb-3 pt-4 px-5">
                     <CardTitle className="text-xl font-semibold">Generated Documentation</CardTitle>
-                    <Button variant="outline" size="sm" onClick={handleDownloadDocs}>
-                      <Download className="mr-2 h-4 w-4" />
-                      Download (.md)
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          <Download className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={handleDownloadDocs}>
+                          Download as <span className="ml-1 font-medium">.md</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={handleDownloadPDF}>
+                          Download as <span className="ml-1 font-medium">PDF</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </CardHeader>
-                  <CardContent className="px-5 pb-5"> {/* Adjusted padding */}
-                    {/* Added max-height and scroll */}
-                    <div className="prose prose-sm max-w-none dark:prose-invert bg-muted/30 p-4 rounded-md border max-h-[60vh] overflow-y-auto">
-                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{generatedDocs}</ReactMarkdown>
+
+                  <CardContent className="px-5 pb-5">
+                    <div className="grid grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto">
+                      <div className="bg-muted/20 p-4 rounded-md border overflow-y-auto whitespace-pre-wrap text-sm font-mono max-h-[60vh]">
+                        {generatedDocs}
+                      </div>
+
+                      <div id="markdown-preview" className="prose prose-sm max-w-none dark:prose-invert bg-muted/30 p-4 rounded-md border overflow-y-auto max-h-[60vh]
+                      [&_p]:mb-4
+                      [&_h1]:mb-6 [&_h2]:mb-5 [&_h3]:mb-4
+                      [&_ul]:mb-4 [&_ol]:mb-4
+                      [&_li]:mb-2
+                      [&_pre]:my-4
+                      [&_blockquote]:my-4
+                    ">
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>{generatedDocs}</ReactMarkdown>
+                       
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
+
               )}
             </>
           )}
