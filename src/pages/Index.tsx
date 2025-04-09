@@ -26,8 +26,9 @@ const Index = () => {
 
   useEffect(() => {
     const fetchBackendStatus = async () => {
+      const apiUrl = import.meta.env.PROD ? `${import.meta.env.VITE_API_BASE_URL}/api/health` : '/api/health';
       try {
-        const response = await fetch('/api/health'); // Uses the proxy
+        const response = await fetch(apiUrl); // Use dynamic URL
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -58,8 +59,10 @@ const Index = () => {
     setDocsError(null);
     clearInputs(); // Clear other inputs when starting a new generation type
 
+    const fullEndpoint = import.meta.env.PROD ? `${import.meta.env.VITE_API_BASE_URL}${endpoint}` : endpoint;
+
     try {
-      const response = await fetch(endpoint, {
+      const response = await fetch(fullEndpoint, { // Use dynamic URL
         method: 'POST',
         headers: headers,
         body: body,
@@ -68,7 +71,7 @@ const Index = () => {
       if (!response.ok) throw new Error(data.error || `HTTP error! status: ${response.status}`);
       setGeneratedDocs(data.documentation);
     } catch (error: any) {
-      console.error(`Failed to generate documentation from ${endpoint}:`, error);
+      console.error(`Failed to generate documentation from ${fullEndpoint}:`, error); // Use dynamic URL in log
       setDocsError(error.message || "An unknown error occurred.");
     } finally {
       setIsLoadingDocs(false);

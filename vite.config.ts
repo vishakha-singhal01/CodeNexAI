@@ -9,12 +9,13 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
     proxy: {
-      // Proxy API requests to the backend server
+      // Proxy API requests to the deployed backend server during development
       '/api': {
-        target: 'http://localhost:3001', // Your backend server address
+        target: 'https://code-whisper-docs.onrender.com/', // Deployed backend server address
         changeOrigin: true, // Needed for virtual hosted sites
-        // Optionally rewrite path: remove /api prefix before forwarding
-        // rewrite: (path) => path.replace(/^\/api/, ''),
+        // We keep the '/api' prefix in the frontend code, but the proxy forwards to the root of the target.
+        // If your backend expects '/api' prefix (e.g. https://.../api/health), uncomment the rewrite rule below.
+        // rewrite: (path) => path, // Keep /api prefix when forwarding
       },
     },
   },
