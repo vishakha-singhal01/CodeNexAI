@@ -1,6 +1,12 @@
-import express, { Express, Request, Response } from 'express';
+import express, { Express, Request, Response, NextFunction } from 'express'; // Added NextFunction
 import dotenv from 'dotenv';
 import cors from 'cors';
+import mongoose from 'mongoose'; // Added mongoose
+import session from 'express-session'; // Added express-session
+import MongoStore from 'connect-mongo'; // Added connect-mongo
+import passport from 'passport'; // Added passport
+import configurePassport from './config/passport'; // Added passport config import
+import authRoutes from './routes/auth'; // Import the auth routes
 import multer from 'multer';
 import axios from 'axios'; // Import axios
 import AdmZip from 'adm-zip'; // Import adm-zip
@@ -8,7 +14,24 @@ import path from 'path'; // Import path for extension checking
 import { generateDocumentation } from './services/documentationService';
 
 dotenv.config(); // Load environment variables from .env file
+
+// --- Passport Configuration ---
+configurePassport(); // Call the function to set up strategies
+
 const app: Express = express();
+
+// --- MongoDB Connection ---
+const mongoUri = process.env.MONGO_URI;
+if (!mongoUri) {
+  console.error('FATAL ERROR: MONGO_URI is not defined in .env file.');
+  process.exit(1); // Exit if DB connection string is missing
+}
+mongoose.connect(mongoUri)
+  .then(() => console.log('MongoDB Connected'))
+  .catch(err => {
+    console.error('MongoDB connection error:', err);
+    process.exit(1);
+  });
 
 // --- Multer Configuration ---
 // Store files in memory as Buffers
@@ -39,9 +62,42 @@ app.use(cors());
 // Middleware to parse JSON bodies
 app.use(express.json());
 
+// --- Session Configuration ---
+const sessionSecret = process.env.SESSION_SECRET;
+if (!sessionSecret) {
+    console.error('FATAL ERROR: SESSION_SECRET is not defined in .env file.');
+    process.exit(1); // Exit if session secret is missing
+}
+app.use(session({
+    secret: sessionSecret,
+    resave: false, // Don't save session if unmodified
+    saveUninitialized: false, // Don't create session until something stored
+    store: MongoStore.create({ mongoUrl: mongoUri }), // Store session in MongoDB
+    cookie: {
+        // secure: process.env.NODE_ENV === 'production', // Use secure cookies in production (requires HTTPS)
+        // httpOnly: true, // Prevent client-side JS from accessing cookie
+        maxAge: 1000 * 60 * 60 * 24 * 7 // Example: 1 week
+    }
+}));
+
+// --- Passport Middleware ---
+app.use(passport.initialize()); // Initialize Passport
+app.use(passport.session()); // Enable persistent login sessions
+
+// Middleware to make user available in templates (if needed later)
+// app.use((req, res, next) => {
+//   res.locals.user = req.user || null;
+//   next();
+// });
+
+
 app.get('/', (req: Request, res: Response) => {
   res.send('AI Documentation Writer Backend is running!');
 });
+
+// --- Authentication Routes Placeholder ---
+// --- Authentication Routes ---
+app.use('/api/auth', authRoutes); // Mount the authentication routes
 
 // Health check endpoint
 app.get('/api/health', (req: Request, res: Response) => {
