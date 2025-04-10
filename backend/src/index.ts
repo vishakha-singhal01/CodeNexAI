@@ -54,10 +54,11 @@ const upload = multer({
 });
 const port = process.env.PORT || 3001; // Use port from env or default to 3001
 
-// Enable CORS for all routes
-// In production, you might want to configure specific origins:
-// app.use(cors({ origin: 'YOUR_FRONTEND_URL' }));
-app.use(cors());
+// Enable CORS for specific origin
+app.use(cors({
+  origin: 'http://localhost:8080', // Allow requests from your frontend
+  credentials: true // Allow cookies/sessions to be sent
+}));
 
 // Middleware to parse JSON bodies
 app.use(express.json());
