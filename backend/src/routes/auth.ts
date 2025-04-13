@@ -37,11 +37,11 @@ router.post('/signup', async (req: Request, res: Response, next: NextFunction) =
             if (err) {
                 next(err); // Pass error
                 return; // Explicit return
-            }
-            // Send back user info (excluding password)
-            const userResponse = { id: newUser._id, email: newUser.email, displayName: newUser.displayName };
-            res.status(201).json({ message: 'Signup successful.', user: userResponse });
-            return; // Explicit return
+             }
+             // Send back user info (excluding password)
+             const userResponse = { id: newUser._id, email: newUser.email, displayName: newUser.displayName, plan: newUser.plan };
+             res.status(201).json({ message: 'Signup successful.', user: userResponse });
+             return; // Explicit return
         });
 
     } catch (error) {
@@ -52,18 +52,18 @@ router.post('/signup', async (req: Request, res: Response, next: NextFunction) =
 
 // POST /api/auth/login (Email/Password Login)
 router.post('/login', (req: Request, res: Response, next: NextFunction) => {
-    passport.authenticate('local', (err: any, user: IUser | false, info: { message: string }) => {
+    passport.authenticate('local', (err: Error | null, user: IUser | false, info: { message: string }) => {
         if (err) { return next(err); }
         if (!user) {
             // Use the message from the LocalStrategy verify callback
             return res.status(401).json({ message: info.message || 'Login failed.' });
         }
-        req.logIn(user, (err) => {
-            if (err) { return next(err); }
-            // Send back user info (excluding password)
-            const userResponse = { id: user._id, email: user.email, displayName: user.displayName };
-            return res.json({ message: 'Login successful.', user: userResponse });
-        });
+         req.logIn(user, (err) => {
+             if (err) { return next(err); }
+             // Send back user info (excluding password)
+             const userResponse = { id: user._id, email: user.email, displayName: user.displayName, plan: user.plan };
+             return res.json({ message: 'Login successful.', user: userResponse });
+         });
     })(req, res, next);
 });
 
@@ -84,11 +84,11 @@ router.post('/logout', (req: Request, res: Response, next: NextFunction) => {
 // GET /api/auth/current_user (Check login status)
 router.get('/current_user', (req: Request, res: Response) => {
     if (req.isAuthenticated()) {
-        // Send back user info (excluding password and potentially sensitive fields)
-        const user = req.user as IUser; // Cast req.user
-        const userResponse = { id: user._id, email: user.email, displayName: user.displayName, googleId: user.googleId, githubId: user.githubId };
-        res.json({ user: userResponse });
-    } else {
+         // Send back user info (excluding password and potentially sensitive fields)
+         const user = req.user as IUser; // Cast req.user
+         const userResponse = { id: user._id, email: user.email, displayName: user.displayName, googleId: user.googleId, githubId: user.githubId, plan: user.plan };
+         res.json({ user: userResponse });
+     } else {
         res.json({ user: null }); // No user logged in
     }
 });
@@ -103,7 +103,7 @@ router.get('/google', passport.authenticate('google', {
 
 // GET /api/auth/google/callback (Google OAuth callback URL)
 router.get('/google/callback', (req: Request, res: Response, next: NextFunction) => {
-    passport.authenticate('google', { failureRedirect: '/login?error=google_failed', session: true }, (err: any, user: IUser | false, info: any) => {
+    passport.authenticate('google', { failureRedirect: '/login?error=google_failed', session: true }, (err: Error | null, user: IUser | false, info: unknown) => {
         if (err) { return next(err); }
         if (!user) {
             // Send error message back to opener window
@@ -116,12 +116,12 @@ router.get('/google/callback', (req: Request, res: Response, next: NextFunction)
             return res.send(script);
         }
         // Login the user to establish the session
-        req.logIn(user, (loginErr) => {
-            if (loginErr) { return next(loginErr); }
-            // Send user data back to opener window
-            const userResponse = { id: user._id, email: user.email, displayName: user.displayName, googleId: user.googleId, githubId: user.githubId };
-            const script = `
-                <script>
+         req.logIn(user, (loginErr) => {
+             if (loginErr) { return next(loginErr); }
+             // Send user data back to opener window
+             const userResponse = { id: user._id, email: user.email, displayName: user.displayName, googleId: user.googleId, githubId: user.githubId, plan: user.plan };
+             const script = `
+                 <script>
                     window.opener.postMessage({ type: 'auth-success', user: ${JSON.stringify(userResponse)} }, '${process.env.FRONTEND_URL || '*'}');
                     window.close();
                 </script>
@@ -141,7 +141,7 @@ router.get('/github', passport.authenticate('github', {
 
 // GET /api/auth/github/callback (GitHub OAuth callback URL)
 router.get('/github/callback', (req: Request, res: Response, next: NextFunction) => {
-    passport.authenticate('github', { failureRedirect: '/login?error=github_failed', session: true }, (err: any, user: IUser | false, info: any) => {
+    passport.authenticate('github', { failureRedirect: '/login?error=github_failed', session: true }, (err: Error | null, user: IUser | false, info: unknown) => {
         if (err) { return next(err); }
         if (!user) {
             // Send error message back to opener window
@@ -154,12 +154,12 @@ router.get('/github/callback', (req: Request, res: Response, next: NextFunction)
             return res.send(script);
         }
         // Login the user to establish the session
-        req.logIn(user, (loginErr) => {
-            if (loginErr) { return next(loginErr); }
-            // Send user data back to opener window
-            const userResponse = { id: user._id, email: user.email, displayName: user.displayName, googleId: user.googleId, githubId: user.githubId };
-            const script = `
-                <script>
+         req.logIn(user, (loginErr) => {
+             if (loginErr) { return next(loginErr); }
+             // Send user data back to opener window
+             const userResponse = { id: user._id, email: user.email, displayName: user.displayName, googleId: user.googleId, githubId: user.githubId, plan: user.plan };
+             const script = `
+                 <script>
                     window.opener.postMessage({ type: 'auth-success', user: ${JSON.stringify(userResponse)} }, '${process.env.FRONTEND_URL || '*'}');
                     window.close();
                 </script>

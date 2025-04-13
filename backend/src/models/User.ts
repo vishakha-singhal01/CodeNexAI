@@ -7,6 +7,7 @@ export interface IUser extends Document {
   googleId?: string;
   githubId?: string;
   displayName?: string; // Name from OAuth provider or user input
+  plan: 'free' | 'pro' | 'enterprise'; // Subscription plan
   createdAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
@@ -19,7 +20,7 @@ const UserSchema: Schema = new Schema({
     lowercase: true,
     trim: true,
     // Basic email validation, consider a more robust library if needed
-    match: [/.+\@.+\..+/, 'Please fill a valid email address'],
+    match: [/.+@.+\..+/, 'Please fill a valid email address'],
   },
   password: {
     type: String,
@@ -39,6 +40,12 @@ const UserSchema: Schema = new Schema({
   displayName: {
     type: String,
     trim: true,
+  },
+  plan: {
+    type: String,
+    enum: ['free', 'pro', 'enterprise'],
+    default: 'free',
+    required: true,
   },
   createdAt: {
     type: Date,
