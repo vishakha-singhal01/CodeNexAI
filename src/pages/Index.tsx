@@ -151,7 +151,7 @@ const Index = () => {
       {/* Main content area */}
       <main className="flex-grow"> {/* Make main content grow */}
         {/* Backend Status Indicator */}
-        {backendStatus && (
+        {/* {backendStatus && (
           <Alert variant={backendStatus.error ? "destructive" : "default"} className="container max-w-5xl mx-auto mt-4 mb-2 rounded-lg border">
             {backendStatus.error ? <AlertCircle className="h-4 w-4" /> : <Server className="h-4 w-4" />}
             <AlertTitle className="font-semibold">{backendStatus.error ? "Backend Connection Error" : "Backend Status"}</AlertTitle>
@@ -159,7 +159,7 @@ const Index = () => {
               {backendStatus.message}
             </AlertDescription>
           </Alert>
-        )}
+        )} */}
 
         {/* Render the extracted sections */}
         <HeroSection />

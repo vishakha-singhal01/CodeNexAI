@@ -13,8 +13,8 @@ export const CtaSection = () => {
           <Button size="lg" variant="secondary" className="h-12 px-8 text-base font-semibold shadow-lg hover:shadow-black/30 transition-shadow duration-300">
             Request Early Access
           </Button>
-          <Button size="lg" variant="outline" className="h-12 px-8 text-base font-semibold border-primary-foreground/50 hover:bg-primary-foreground/10 text-primary-foreground">
-            Schedule a demo
+          <Button size="lg" variant="secondary" className="h-12 px-8 text-base font-semibold shadow-lg hover:shadow-black/30 transition-shadow duration-300">
+            Schedule a Demo
           </Button>
         </div>
       </div>

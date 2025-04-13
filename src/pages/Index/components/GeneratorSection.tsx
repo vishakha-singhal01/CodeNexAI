@@ -16,7 +16,8 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
+import { useAuth } from '@/context/AuthContext'; // Import useAuth
 
 interface GeneratorSectionProps {
   inputCode: string;
@@ -61,6 +62,8 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
   handleDownloadDocs,
   clearInputs, // Destructure clearInputs
 }) => {
+  const { user } = useAuth(); // Get user from AuthContext
+  const userPlan = user?.plan || 'free'; // Default to 'free' if no user or plan
 
   const handleDownloadPDF = () => {
     const preview = document.getElementById('markdown-preview');
@@ -121,7 +124,7 @@ const [loadingQuote, setLoadingQuote] = useState("");
         <div className="flex flex-col gap-4 text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Try the AI Generator</h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Paste code, upload files, or link a public GitHub repo.
+            Paste code, upload files, or link a public GitHub repo. (Feature access depends on your plan)
           </p>
         </div>
 
@@ -132,8 +135,20 @@ const [loadingQuote, setLoadingQuote] = useState("");
               <TabsList className="grid w-full grid-cols-3 gap-2 bg-muted/40 p-1 rounded-lg mb-6">
                 {/* Changed active background to bg-card */}
                 <TabsTrigger value="paste" className="rounded-md data-[state=active]:bg-card data-[state=active]:text-card-foreground data-[state=active]:shadow-sm">Paste Code</TabsTrigger>
-                <TabsTrigger value="upload" className="rounded-md data-[state=active]:bg-card data-[state=active]:text-card-foreground data-[state=active]:shadow-sm">Upload</TabsTrigger>
-                <TabsTrigger value="github" className="rounded-md data-[state=active]:bg-card data-[state=active]:text-card-foreground data-[state=active]:shadow-sm">GitHub Repo</TabsTrigger>
+                <TabsTrigger
+                  value="upload"
+                  className="rounded-md data-[state=active]:bg-card data-[state=active]:text-card-foreground data-[state=active]:shadow-sm"
+                  disabled={userPlan === 'free'} // Disable for free users
+                >
+                  Upload {userPlan === 'free' && <Badge variant="secondary" className="ml-2">Pro+</Badge>}
+                </TabsTrigger>
+                <TabsTrigger
+                  value="github"
+                  className="rounded-md data-[state=active]:bg-card data-[state=active]:text-card-foreground data-[state=active]:shadow-sm"
+                  disabled={userPlan === 'free' || userPlan === 'pro'} // Disable for free & pro users
+                >
+                  GitHub Repo {(userPlan === 'free' || userPlan === 'pro') && <Badge variant="secondary" className="ml-2">Enterprise</Badge>}
+                </TabsTrigger>
               </TabsList>
 
               {/* Paste Code Tab */}
@@ -180,10 +195,10 @@ const [loadingQuote, setLoadingQuote] = useState("");
                       webkitdirectory="true"
                       directory="true"
                       className="cursor-pointer h-11 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border file:bg-background file:text-sm file:font-medium hover:file:bg-accent hover:file:text-accent-foreground focus-visible:ring-2"
-                      disabled={isLoadingDocs}
+                      disabled={isLoadingDocs || userPlan === 'free'} // Also disable input if free
                     />
                     <p className="text-sm text-muted-foreground pt-1">
-                      Select folder containing code.
+                      Select folder containing code. (Available for Pro and Enterprise plans)
                     </p>
 
                     {uploadedFiles && uploadedFiles.length > 0 && (
@@ -203,7 +218,7 @@ const [loadingQuote, setLoadingQuote] = useState("");
                     size="lg"
                     className="w-full"
                     onClick={handleGenerateDocsFromUpload}
-                    disabled={isLoadingDocs || !uploadedFiles || uploadedFiles.length === 0}
+                    disabled={isLoadingDocs || !uploadedFiles || uploadedFiles.length === 0 || userPlan === 'free'} // Disable button for free users
                   >
                     {isLoadingDocs ? "Generating..." : <> <Upload className="mr-2 h-4 w-4" /> Generate from Upload </>}
                   </Button>
@@ -225,17 +240,17 @@ const [loadingQuote, setLoadingQuote] = useState("");
                         setInputCode(''); setUploadedFiles(null); setGeneratedDocs(''); setDocsError(null);
                       }}
                       className="font-mono text-sm h-11 rounded-md"
-                      disabled={isLoadingDocs}
+                      disabled={isLoadingDocs || userPlan === 'free' || userPlan === 'pro'} // Also disable input if free/pro
                     />
                     <p className="text-sm text-muted-foreground pt-1">
-                      Enter the full URL of a public GitHub repository.
+                      Enter the full URL of a public GitHub repository. (Available for Enterprise plan)
                     </p>
                   </div>
                   <Button
                     size="lg"
                     className="w-full"
                     onClick={handleGenerateDocsFromRepo}
-                    disabled={isLoadingDocs || !repoUrl.trim() || !isValidGitHubUrl(repoUrl)}
+                    disabled={isLoadingDocs || !repoUrl.trim() || !isValidGitHubUrl(repoUrl) || userPlan === 'free' || userPlan === 'pro'} // Disable button for free/pro users
                   >
                     {isLoadingDocs ? "Generating..." : <> <Github className="mr-2 h-4 w-4" /> Generate from Repo </>}
                   </Button>

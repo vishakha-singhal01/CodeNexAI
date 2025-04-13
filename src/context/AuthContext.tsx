@@ -8,6 +8,7 @@ interface User {
   displayName?: string;
   googleId?: string;
   githubId?: string;
+  plan: 'free' | 'pro' | 'enterprise'; // Add user's plan
 }
 
 // Define the shape of the context value
