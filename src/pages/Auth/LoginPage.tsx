@@ -61,37 +61,8 @@ export function LoginPage() {
      window.open(`${import.meta.env.VITE_API_BASE_URL}/api/auth/github`, '_blank', 'width=500,height=600,noopener,noreferrer');
   };
 
-   // Effect to listen for messages from OAuth popup
-   useEffect(() => {
-    const handleAuthMessage = (event: MessageEvent) => {
-      // Basic origin check for security
-      // Note: Checking against the *backend* origin here might be correct if the popup redirects
-      // back to the backend which then posts a message. If the popup posts directly,
-      // this check might need adjustment or removal depending on the exact OAuth flow.
-      if (event.origin !== import.meta.env.VITE_API_BASE_URL) {
-        console.warn('Received message from unexpected origin:', event.origin, 'Expected:', import.meta.env.VITE_API_BASE_URL);
-        // Consider if you should still process the message or return here based on security needs.
-        // For now, we'll keep the check but use the env variable.
-        return;
-      }
-
-      if (event.data?.type === 'authSuccess' && event.data?.user) {
-        console.log('OAuth success message received:', event.data.user);
-        login(event.data.user); // Update context with user data from popup
-        navigate('/'); // Redirect to home
-      } else if (event.data?.type === 'authError') {
-         console.error('OAuth error message received:', event.data.message);
-         setError(event.data.message || 'OAuth login failed.');
-      }
-    };
-
-    window.addEventListener('message', handleAuthMessage);
-
-    // Cleanup listener on component unmount
-    return () => {
-      window.removeEventListener('message', handleAuthMessage);
-    };
-  }, [login, navigate]); // Dependencies for the effect
+  // The useEffect hook for handling postMessage has been removed as the backend now handles redirects.
+  // The AuthContext should detect the session change after the redirect.
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">

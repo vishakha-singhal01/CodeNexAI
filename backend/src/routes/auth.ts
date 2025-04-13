@@ -109,11 +109,9 @@ router.get('/google/callback', passport.authenticate('google', {
     // Successful authentication. Frontend should ideally poll /api/auth/current_user or handle redirect.
     // Sending user data back directly might be useful for SPAs.
     const user = req.user as IUser;
-    const userResponse = { id: user._id, email: user.email, displayName: user.displayName };
-    // Instead of redirecting, you might close a popup window or send a message to the opener window
-    res.send(`<script>window.opener.postMessage({ type: 'authSuccess', user: ${JSON.stringify(userResponse)} }, '*'); window.close();</script>`);
-    // Or simply redirect to a frontend page that handles the login state
-    // res.redirect(process.env.FRONTEND_URL || '/');
+    // Successful authentication. Redirect to the frontend.
+    // The frontend should handle the session/token and update its state.
+    res.redirect(process.env.FRONTEND_URL || '/');
 });
 
 
@@ -131,11 +129,9 @@ router.get('/github/callback', passport.authenticate('github', {
 }), (req: Request, res: Response) => {
     // Successful authentication. Frontend should ideally poll /api/auth/current_user or handle redirect.
     const user = req.user as IUser;
-    const userResponse = { id: user._id, email: user.email, displayName: user.displayName };
-    // Similar to Google, close popup or send message
-     res.send(`<script>window.opener.postMessage({ type: 'authSuccess', user: ${JSON.stringify(userResponse)} }, '*'); window.close();</script>`);
-    // Or redirect
-    // res.redirect(process.env.FRONTEND_URL || '/');
+    // Successful authentication. Redirect to the frontend.
+    // The frontend should handle the session/token and update its state.
+    res.redirect(process.env.FRONTEND_URL || '/');
 });
 
 
