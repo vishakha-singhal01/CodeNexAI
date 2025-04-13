@@ -37,6 +37,7 @@ interface GeneratorSectionProps {
   handleGenerateDocsFromRepo: () => void;
   isValidGitHubUrl: (url: string) => boolean;
   handleDownloadDocs: () => void;
+  clearInputs: () => void; // Add clearInputs prop
 }
 
 export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
@@ -58,6 +59,7 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
   handleGenerateDocsFromRepo,
   isValidGitHubUrl,
   handleDownloadDocs,
+  clearInputs, // Destructure clearInputs
 }) => {
 
   const handleDownloadPDF = () => {
@@ -97,7 +99,7 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
     "Documentation is being summoned 📜✨",
     "Hold tight! Your code is getting smarter.",
   ];
-  
+
 const [loadingQuote, setLoadingQuote] = useState("");
   const randomQuote = loadingQuotes[Math.floor(Math.random() * loadingQuotes.length)];
   useEffect(() => {
@@ -105,6 +107,14 @@ const [loadingQuote, setLoadingQuote] = useState("");
       setLoadingQuote(loadingQuotes[Math.floor(Math.random() * loadingQuotes.length)]);
     }
   }, [isLoadingDocs]);
+
+  // Handler for tab changes
+  const handleTabChange = () => {
+    clearInputs(); // Clear all input fields from parent
+    setGeneratedDocs(''); // Clear generated docs
+    setDocsError(null); // Clear any errors
+  };
+
   return (
     <section id="try-it" className="w-full py-20 md:py-28 lg:py-32 bg-background border-t">
       <div className="container px-4 md:px-6 max-w-5xl mx-auto">
@@ -115,13 +125,15 @@ const [loadingQuote, setLoadingQuote] = useState("");
           </p>
         </div>
 
-        <Card className="max-w-4xl mx-auto shadow-md border rounded-2xl bg-white">
+        <Card className="max-w-4xl mx-auto shadow-md border rounded-2xl bg-card"> {/* Changed bg-white to bg-card */}
           <CardContent className="p-8 space-y-6">
-            <Tabs defaultValue="paste" className="w-full">
+            {/* Add onValueChange handler to Tabs */}
+            <Tabs defaultValue="paste" className="w-full" onValueChange={handleTabChange}>
               <TabsList className="grid w-full grid-cols-3 gap-2 bg-muted/40 p-1 rounded-lg mb-6">
-                <TabsTrigger value="paste" className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">Paste Code</TabsTrigger>
-                <TabsTrigger value="upload" className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">Upload</TabsTrigger>
-                <TabsTrigger value="github" className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">GitHub Repo</TabsTrigger>
+                {/* Changed active background to bg-card */}
+                <TabsTrigger value="paste" className="rounded-md data-[state=active]:bg-card data-[state=active]:text-card-foreground data-[state=active]:shadow-sm">Paste Code</TabsTrigger>
+                <TabsTrigger value="upload" className="rounded-md data-[state=active]:bg-card data-[state=active]:text-card-foreground data-[state=active]:shadow-sm">Upload</TabsTrigger>
+                <TabsTrigger value="github" className="rounded-md data-[state=active]:bg-card data-[state=active]:text-card-foreground data-[state=active]:shadow-sm">GitHub Repo</TabsTrigger>
               </TabsList>
 
               {/* Paste Code Tab */}
@@ -135,6 +147,7 @@ const [loadingQuote, setLoadingQuote] = useState("");
                       value={inputCode}
                       onChange={(e) => {
                         setInputCode(e.target.value);
+                        // Keep clearing other inputs on change within a tab
                         setUploadedFiles(null); setRepoUrl(''); setGeneratedDocs(''); setDocsError(null);
                       }}
                       className="min-h-[250px] font-mono text-sm bg-muted/30 border border-border rounded-lg focus-visible:ring-2 focus-visible:ring-primary"
@@ -161,9 +174,9 @@ const [loadingQuote, setLoadingQuote] = useState("");
                       id="file-input"
                       type="file"
                       ref={fileInputRef}
-                      onChange={handleFileChange}
+                      onChange={handleFileChange} // handleFileChange already clears other inputs
                       multiple
-                      // @ts-ignore
+                      // @ts-expect-error // Use ts-expect-error instead of ts-ignore
                       webkitdirectory="true"
                       directory="true"
                       className="cursor-pointer h-11 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border file:bg-background file:text-sm file:font-medium hover:file:bg-accent hover:file:text-accent-foreground focus-visible:ring-2"
@@ -208,6 +221,7 @@ const [loadingQuote, setLoadingQuote] = useState("");
                       value={repoUrl}
                       onChange={(e) => {
                         setRepoUrl(e.target.value);
+                        // Keep clearing other inputs on change within a tab
                         setInputCode(''); setUploadedFiles(null); setGeneratedDocs(''); setDocsError(null);
                       }}
                       className="font-mono text-sm h-11 rounded-md"
@@ -238,7 +252,8 @@ const [loadingQuote, setLoadingQuote] = useState("");
                 <h3 className="text-2xl md:text-3xl lg:text-4xl font-semibold text-center text-muted-foreground animate-pulse">
                   {loadingQuote}
                 </h3>
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
+                {/* Changed shimmer color for better dark mode compatibility */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-foreground/10 to-transparent animate-shimmer" />
               </div>
             </div>
           ) : (
@@ -251,7 +266,7 @@ const [loadingQuote, setLoadingQuote] = useState("");
               </Alert>
             )}
             {generatedDocs && (
-              <Card className="max-w-4xl mx-auto shadow-md border rounded-2xl bg-white">
+              <Card className="max-w-4xl mx-auto shadow-md border rounded-2xl bg-card"> {/* Changed bg-white to bg-card */}
                 <CardHeader className="flex flex-row items-center justify-between pb-3 pt-4 px-5">
                   <CardTitle className="text-xl font-semibold">Generated Documentation</CardTitle>
                   <DropdownMenu>
