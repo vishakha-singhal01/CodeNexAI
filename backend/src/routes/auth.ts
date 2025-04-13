@@ -102,18 +102,33 @@ router.get('/google', passport.authenticate('google', {
 }));
 
 // GET /api/auth/google/callback (Google OAuth callback URL)
-router.get('/google/callback', passport.authenticate('google', {
-    // successRedirect: '/dashboard', // Redirect on success (adjust URL) - Frontend should handle this
-    failureRedirect: '/login?error=google_failed' // Redirect on failure (adjust URL) - Frontend should handle this
-}), (req: Request, res: Response) => {
-    // Successful authentication. Frontend should ideally poll /api/auth/current_user or handle redirect.
-    // Sending user data back directly might be useful for SPAs.
-    const user = req.user as IUser;
-    const userResponse = { id: user._id, email: user.email, displayName: user.displayName };
-    // Instead of redirecting, you might close a popup window or send a message to the opener window
-    res.send(`<script>window.opener.postMessage({ type: 'authSuccess', user: ${JSON.stringify(userResponse)} }, '*'); window.close();</script>`);
-    // Or simply redirect to a frontend page that handles the login state
-    // res.redirect(process.env.FRONTEND_URL || '/');
+router.get('/google/callback', (req: Request, res: Response, next: NextFunction) => {
+    passport.authenticate('google', { failureRedirect: '/login?error=google_failed', session: true }, (err: any, user: IUser | false, info: any) => {
+        if (err) { return next(err); }
+        if (!user) {
+            // Send error message back to opener window
+            const script = `
+                <script>
+                    window.opener.postMessage({ type: 'auth-error', error: 'Google authentication failed.' }, '${process.env.FRONTEND_URL || '*'}');
+                    window.close();
+                </script>
+            `;
+            return res.send(script);
+        }
+        // Login the user to establish the session
+        req.logIn(user, (loginErr) => {
+            if (loginErr) { return next(loginErr); }
+            // Send user data back to opener window
+            const userResponse = { id: user._id, email: user.email, displayName: user.displayName, googleId: user.googleId, githubId: user.githubId };
+            const script = `
+                <script>
+                    window.opener.postMessage({ type: 'auth-success', user: ${JSON.stringify(userResponse)} }, '${process.env.FRONTEND_URL || '*'}');
+                    window.close();
+                </script>
+            `;
+            res.send(script);
+        });
+    })(req, res, next);
 });
 
 
@@ -125,17 +140,33 @@ router.get('/github', passport.authenticate('github', {
 }));
 
 // GET /api/auth/github/callback (GitHub OAuth callback URL)
-router.get('/github/callback', passport.authenticate('github', {
-    // successRedirect: '/dashboard', // Redirect on success (adjust URL) - Frontend should handle this
-    failureRedirect: '/login?error=github_failed' // Redirect on failure (adjust URL) - Frontend should handle this
-}), (req: Request, res: Response) => {
-    // Successful authentication. Frontend should ideally poll /api/auth/current_user or handle redirect.
-    const user = req.user as IUser;
-    const userResponse = { id: user._id, email: user.email, displayName: user.displayName };
-    // Similar to Google, close popup or send message
-     res.send(`<script>window.opener.postMessage({ type: 'authSuccess', user: ${JSON.stringify(userResponse)} }, '*'); window.close();</script>`);
-    // Or redirect
-    // res.redirect(process.env.FRONTEND_URL || '/');
+router.get('/github/callback', (req: Request, res: Response, next: NextFunction) => {
+    passport.authenticate('github', { failureRedirect: '/login?error=github_failed', session: true }, (err: any, user: IUser | false, info: any) => {
+        if (err) { return next(err); }
+        if (!user) {
+            // Send error message back to opener window
+            const script = `
+                <script>
+                    window.opener.postMessage({ type: 'auth-error', error: 'GitHub authentication failed.' }, '${process.env.FRONTEND_URL || '*'}');
+                    window.close();
+                </script>
+            `;
+            return res.send(script);
+        }
+        // Login the user to establish the session
+        req.logIn(user, (loginErr) => {
+            if (loginErr) { return next(loginErr); }
+            // Send user data back to opener window
+            const userResponse = { id: user._id, email: user.email, displayName: user.displayName, googleId: user.googleId, githubId: user.githubId };
+            const script = `
+                <script>
+                    window.opener.postMessage({ type: 'auth-success', user: ${JSON.stringify(userResponse)} }, '${process.env.FRONTEND_URL || '*'}');
+                    window.close();
+                </script>
+            `;
+            res.send(script);
+        });
+    })(req, res, next);
 });
 
 

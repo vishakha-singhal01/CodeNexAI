@@ -62,27 +62,8 @@ export function SignupPage() {
      window.open(`${import.meta.env.VITE_API_BASE_URL}/api/auth/github`, '_blank', 'width=500,height=600,noopener,noreferrer'); // Replaced URL
   };
 
-  // Effect to listen for messages from OAuth popup (same as LoginPage)
-  useEffect(() => {
-    const handleAuthMessage = (event: MessageEvent) => {
-      // Basic origin check for security (same logic as LoginPage)
-      if (event.origin !== import.meta.env.VITE_API_BASE_URL) { // Replaced URL
-        console.warn('Received message from unexpected origin:', event.origin, 'Expected:', import.meta.env.VITE_API_BASE_URL);
-        // Consider if you should still process the message or return here based on security needs.
-        return;
-      }
-      if (event.data?.type === 'authSuccess' && event.data?.user) {
-        login(event.data.user);
-        navigate('/');
-      } else if (event.data?.type === 'authError') {
-         setError(event.data.message || 'OAuth login failed.');
-      }
-    };
-    window.addEventListener('message', handleAuthMessage);
-    return () => {
-      window.removeEventListener('message', handleAuthMessage);
-    };
-  }, [login, navigate]);
+  // The useEffect hook for handling postMessage has been removed as the backend now handles redirects.
+  // The AuthContext should detect the session change after the redirect.
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">
