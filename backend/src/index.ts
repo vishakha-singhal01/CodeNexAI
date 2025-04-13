@@ -20,6 +20,11 @@ configurePassport(); // Call the function to set up strategies
 
 const app: Express = express();
 
+// Trust the first proxy hop (common for services like Render)
+// This allows Express/Passport to correctly determine the protocol (http/https)
+// based on headers like X-Forwarded-Proto set by the proxy.
+app.set('trust proxy', 1);
+
 // --- MongoDB Connection ---
 const mongoUri = process.env.MONGO_URI;
 if (!mongoUri) {
