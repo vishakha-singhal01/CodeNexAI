@@ -61,8 +61,39 @@ export function LoginPage() {
      window.open(`${import.meta.env.VITE_API_BASE_URL}/api/auth/github`, '_blank', 'width=500,height=600,noopener,noreferrer');
   };
 
-  // The useEffect hook for handling postMessage has been removed as the backend now handles redirects.
-  // The AuthContext should detect the session change after the redirect.
+  // Effect to listen for messages from the OAuth popup window
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      // IMPORTANT: Verify the origin of the message for security
+      // Allow messages from the API origin or potentially the frontend origin if redirects happen differently
+      const allowedOrigin = import.meta.env.VITE_API_BASE_URL; // Or adjust if needed
+      // In development, window.origin might be different from VITE_API_BASE_URL if served separately
+      // Consider adding window.origin to allowed origins in development if necessary.
+      if (!allowedOrigin || event.origin !== new URL(allowedOrigin).origin) {
+         console.warn(`Message rejected from origin: ${event.origin}. Expected: ${allowedOrigin ? new URL(allowedOrigin).origin : 'N/A'}`);
+         // return; // Uncomment this line in production for strict origin checking
+      }
+
+
+      const { type, user, error: messageError } = event.data;
+
+      if (type === 'auth-success' && user) {
+        console.log('OAuth success message received:', user);
+        login(user); // Update auth context
+        navigate('/'); // Redirect to home page
+      } else if (type === 'auth-error') {
+        console.error('OAuth error message received:', messageError);
+        setError(messageError || 'OAuth authentication failed.');
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+
+    // Cleanup function to remove the event listener
+    return () => {
+      window.removeEventListener('message', handleMessage);
+    };
+  }, [login, navigate]); // Dependencies for the effect
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">
