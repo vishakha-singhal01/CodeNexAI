@@ -61,8 +61,52 @@ export function LoginPage() {
      window.open(`${import.meta.env.VITE_API_BASE_URL}/api/auth/github`, '_blank', 'width=500,height=600,noopener,noreferrer');
   };
 
-  // The useEffect hook for handling postMessage has been removed as the backend now handles redirects.
-  // The AuthContext should detect the session change after the redirect.
+  // Effect to listen for messages from the OAuth popup window
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      console.log('Login Page: Message received:', event.data); // Log all received messages
+
+      // IMPORTANT: Verify the origin of the message for security.
+      // The message should come from your backend API origin where the callback script is served.
+      const backendApiOrigin = import.meta.env.VITE_API_BASE_URL;
+      if (!backendApiOrigin) {
+          console.error("Login Page: VITE_API_BASE_URL is not defined. Cannot verify message origin.");
+          return;
+      }
+
+      const expectedOrigin = new URL(backendApiOrigin).origin;
+      if (event.origin !== expectedOrigin) {
+         console.warn(`Login Page: Message rejected from origin: ${event.origin}. Expected: ${expectedOrigin}`);
+         // return; // Uncomment this line in production for strict origin checking
+      } else {
+         console.log(`Login Page: Message origin ${event.origin} verified.`);
+      }
+
+      // Check if data is an object and has a type property
+      if (typeof event.data !== 'object' || event.data === null || !event.data.type) {
+          console.log('Login Page: Received message is not in the expected format (missing type).', event.data);
+          return;
+      }
+
+      const { type, user, error: messageError } = event.data;
+
+      if (type === 'auth-success' && user) {
+        console.log('OAuth success message received:', user);
+        login(user); // Update auth context
+        navigate('/'); // Redirect to home page
+      } else if (type === 'auth-error') {
+        console.error('OAuth error message received:', messageError);
+        setError(messageError || 'OAuth authentication failed.');
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+
+    // Cleanup function to remove the event listener
+    return () => {
+      window.removeEventListener('message', handleMessage);
+    };
+  }, [login, navigate]); // Dependencies for the effect
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">

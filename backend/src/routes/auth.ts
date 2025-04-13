@@ -107,11 +107,36 @@ router.get('/google/callback', (req: Request, res: Response, next: NextFunction)
         if (err) { return next(err); }
         if (!user) {
             // Send error message back to opener window
+            const frontendUrl = process.env.FRONTEND_URL;
+            const errorMessage = info?.message || 'Google authentication failed.'; // Use specific message if available
+            console.log(`[Auth Callback - Google Error] Sending error message to origin: ${frontendUrl || 'Not Set (using *)'}`);
+            const messagePayload = JSON.stringify({ type: 'auth-error', error: errorMessage });
             const script = `
-                <script>
-                    window.opener.postMessage({ type: 'auth-error', error: 'Google authentication failed.' }, '${process.env.FRONTEND_URL || '*'}');
-                    window.close();
-                </script>
+                 <!DOCTYPE html>
+                <html>
+                <head><title>Authentication Failed</title></head>
+                <body>
+                    <script>
+                        try {
+                            console.log('Popup: Attempting postMessage (error)...');
+                            const targetOrigin = ${frontendUrl ? `'${frontendUrl}'` : "'*'"};
+                             if (window.opener) {
+                                window.opener.postMessage(${messagePayload}, targetOrigin);
+                                console.log('Popup: Error message sent to:', targetOrigin);
+                                // Add a small delay before closing
+                                setTimeout(() => window.close(), 100);
+                            } else {
+                                console.error('Popup: window.opener is not available.');
+                                document.body.innerText = 'Error: Could not communicate back to the original window. Please close this window manually.';
+                            }
+                        } catch (e) {
+                            console.error('Popup: Error executing postMessage script:', e);
+                            document.body.innerText = 'An error occurred during authentication. Please close this window.';
+                        }
+                    </script>
+                     <p>Authentication failed: ${errorMessage}. Closing this window...</p>
+                </body>
+                </html>
             `;
             return res.send(script);
         }
@@ -145,11 +170,36 @@ router.get('/github/callback', (req: Request, res: Response, next: NextFunction)
         if (err) { return next(err); }
         if (!user) {
             // Send error message back to opener window
+            const frontendUrl = process.env.FRONTEND_URL;
+            const errorMessage = info?.message || 'GitHub authentication failed.'; // Use specific message if available
+            console.log(`[Auth Callback - GitHub Error] Sending error message to origin: ${frontendUrl || 'Not Set (using *)'}`);
+            const messagePayload = JSON.stringify({ type: 'auth-error', error: errorMessage });
             const script = `
-                <script>
-                    window.opener.postMessage({ type: 'auth-error', error: 'GitHub authentication failed.' }, '${process.env.FRONTEND_URL || '*'}');
-                    window.close();
-                </script>
+                 <!DOCTYPE html>
+                <html>
+                <head><title>Authentication Failed</title></head>
+                <body>
+                    <script>
+                        try {
+                            console.log('Popup: Attempting postMessage (error)...');
+                            const targetOrigin = ${frontendUrl ? `'${frontendUrl}'` : "'*'"};
+                             if (window.opener) {
+                                window.opener.postMessage(${messagePayload}, targetOrigin);
+                                console.log('Popup: Error message sent to:', targetOrigin);
+                                // Add a small delay before closing
+                                setTimeout(() => window.close(), 100);
+                            } else {
+                                console.error('Popup: window.opener is not available.');
+                                document.body.innerText = 'Error: Could not communicate back to the original window. Please close this window manually.';
+                            }
+                        } catch (e) {
+                            console.error('Popup: Error executing postMessage script:', e);
+                            document.body.innerText = 'An error occurred during authentication. Please close this window.';
+                        }
+                    </script>
+                     <p>Authentication failed: ${errorMessage}. Closing this window...</p>
+                </body>
+                </html>
             `;
             return res.send(script);
         }
