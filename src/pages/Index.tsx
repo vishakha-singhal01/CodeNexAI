@@ -53,11 +53,11 @@ const Index = () => {
   };
 
   // Generic function to handle API call and state updates
-  const generateDocsApiCall = async (endpoint: string, body: any, headers?: HeadersInit) => {
+  const generateDocsApiCall = async (endpoint: string, body: string | FormData, headers?: HeadersInit) => {
     setIsLoadingDocs(true);
     setGeneratedDocs('');
     setDocsError(null);
-    clearInputs(); // Clear other inputs when starting a new generation type
+    // clearInputs(); // Clear other inputs when starting a new generation type <-- Removed this line
 
     const fullEndpoint = import.meta.env.PROD ? `${import.meta.env.VITE_API_BASE_URL}${endpoint}` : endpoint;
 
@@ -70,9 +70,10 @@ const Index = () => {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || `HTTP error! status: ${response.status}`);
       setGeneratedDocs(data.documentation);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(`Failed to generate documentation from ${fullEndpoint}:`, error); // Use dynamic URL in log
-      setDocsError(error.message || "An unknown error occurred.");
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+      setDocsError(errorMessage);
     } finally {
       setIsLoadingDocs(false);
     }
@@ -182,6 +183,7 @@ const Index = () => {
           handleGenerateDocsFromRepo={handleGenerateDocsFromRepo}
           isValidGitHubUrl={isValidGitHubUrl}
           handleDownloadDocs={handleDownloadDocs}
+          clearInputs={clearInputs} // Pass clearInputs down
         />
 
         <ProblemSection />
