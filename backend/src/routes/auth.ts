@@ -108,7 +108,10 @@ router.get('/google/callback', (req: Request, res: Response, next: NextFunction)
         if (!user) {
             // Send error message back to opener window
             const frontendUrl = process.env.FRONTEND_URL;
-            const errorMessage = info?.message || 'Google authentication failed.'; // Use specific message if available
+            // Safely access message from info object
+            const errorMessage = (info && typeof info === 'object' && 'message' in info && typeof info.message === 'string')
+                ? info.message
+                : 'Google authentication failed.';
             console.log(`[Auth Callback - Google Error] Sending error message to origin: ${frontendUrl || 'Not Set (using *)'}`);
             const messagePayload = JSON.stringify({ type: 'auth-error', error: errorMessage });
             const script = `
@@ -171,7 +174,10 @@ router.get('/github/callback', (req: Request, res: Response, next: NextFunction)
         if (!user) {
             // Send error message back to opener window
             const frontendUrl = process.env.FRONTEND_URL;
-            const errorMessage = info?.message || 'GitHub authentication failed.'; // Use specific message if available
+            // Safely access message from info object
+            const errorMessage = (info && typeof info === 'object' && 'message' in info && typeof info.message === 'string')
+                ? info.message
+                : 'GitHub authentication failed.';
             console.log(`[Auth Callback - GitHub Error] Sending error message to origin: ${frontendUrl || 'Not Set (using *)'}`);
             const messagePayload = JSON.stringify({ type: 'auth-error', error: errorMessage });
             const script = `
