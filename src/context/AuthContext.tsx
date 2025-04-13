@@ -38,7 +38,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsLoading(true);
     try {
       // Use credentials to ensure cookies are sent
-      const response = await axios.get<{ user: User | null }>('http://localhost:3001/api/auth/current_user', { withCredentials: true });
+      const response = await axios.get<{ user: User | null }>(`${import.meta.env.VITE_API_BASE_URL}/api/auth/current_user`, { withCredentials: true });
       setUser(response.data.user);
     } catch (error) {
       console.error('Error checking auth status:', error);
@@ -57,7 +57,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = async () => {
     setIsLoading(true);
     try {
-      await axios.post('http://localhost:3001/api/auth/logout', {}, { withCredentials: true });
+      await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/auth/logout`, {}, { withCredentials: true });
       setUser(null);
     } catch (error) {
       console.error('Error logging out:', error);

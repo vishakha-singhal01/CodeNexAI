@@ -66,4 +66,4 @@ UserSchema.methods.comparePassword = function (candidatePassword: string): Promi
   return bcrypt.compare(candidatePassword, this.password || '');
 };
 
-export default mongoose.model<IUser>('User', UserSchema);
+export default mongoose.model<IUser>('DocUser', UserSchema);

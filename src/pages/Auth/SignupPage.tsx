@@ -32,7 +32,7 @@ export function SignupPage() {
     setError(null);
     try {
        const response = await axios.post(
-        'http://localhost:3001/api/auth/signup',
+        `${import.meta.env.VITE_API_BASE_URL}/api/auth/signup`, // Replaced URL
         { email, password, displayName }, // Include displayName
         { withCredentials: true } // Send cookies
       );
@@ -54,19 +54,21 @@ export function SignupPage() {
 
    const handleGoogleLogin = () => {
     console.log('Attempting Google login...');
-    window.open('http://localhost:3001/api/auth/google', '_blank', 'width=500,height=600,noopener,noreferrer');
+    window.open(`${import.meta.env.VITE_API_BASE_URL}/api/auth/google`, '_blank', 'width=500,height=600,noopener,noreferrer'); // Replaced URL
   };
 
   const handleGitHubLogin = () => {
     console.log('Attempting GitHub login...');
-     window.open('http://localhost:3001/api/auth/github', '_blank', 'width=500,height=600,noopener,noreferrer');
+     window.open(`${import.meta.env.VITE_API_BASE_URL}/api/auth/github`, '_blank', 'width=500,height=600,noopener,noreferrer'); // Replaced URL
   };
 
   // Effect to listen for messages from OAuth popup (same as LoginPage)
   useEffect(() => {
     const handleAuthMessage = (event: MessageEvent) => {
-      if (event.origin !== 'http://localhost:3001') {
-        console.warn('Received message from unexpected origin:', event.origin);
+      // Basic origin check for security (same logic as LoginPage)
+      if (event.origin !== import.meta.env.VITE_API_BASE_URL) { // Replaced URL
+        console.warn('Received message from unexpected origin:', event.origin, 'Expected:', import.meta.env.VITE_API_BASE_URL);
+        // Consider if you should still process the message or return here based on security needs.
         return;
       }
       if (event.data?.type === 'authSuccess' && event.data?.user) {
