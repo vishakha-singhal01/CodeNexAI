@@ -90,9 +90,10 @@ app.use(session({
     saveUninitialized: false, // Don't create session until something stored
     store: MongoStore.create({ mongoUrl: mongoUri }), // Store session in MongoDB
     cookie: {
-        // secure: process.env.NODE_ENV === 'production', // Use secure cookies in production (requires HTTPS)
-        // httpOnly: true, // Prevent client-side JS from accessing cookie
-        maxAge: 1000 * 60 * 60 * 24 * 7 // Example: 1 week
+        secure: process.env.NODE_ENV === 'production', // Use secure cookies in production (requires HTTPS)
+        httpOnly: true, // Prevent client-side JS from accessing cookie
+        maxAge: 1000 * 60 * 60 * 24 * 7, // Example: 1 week
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax' // Crucial for cross-site requests in prod (needs secure:true)
     }
 }));
 
