@@ -64,16 +64,29 @@ export function LoginPage() {
   // Effect to listen for messages from the OAuth popup window
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      // IMPORTANT: Verify the origin of the message for security
-      // Allow messages from the API origin or potentially the frontend origin if redirects happen differently
-      const allowedOrigin = import.meta.env.VITE_API_BASE_URL; // Or adjust if needed
-      // In development, window.origin might be different from VITE_API_BASE_URL if served separately
-      // Consider adding window.origin to allowed origins in development if necessary.
-      if (!allowedOrigin || event.origin !== new URL(allowedOrigin).origin) {
-         console.warn(`Message rejected from origin: ${event.origin}. Expected: ${allowedOrigin ? new URL(allowedOrigin).origin : 'N/A'}`);
-         // return; // Uncomment this line in production for strict origin checking
+      console.log('Login Page: Message received:', event.data); // Log all received messages
+
+      // IMPORTANT: Verify the origin of the message for security.
+      // The message should come from your backend API origin where the callback script is served.
+      const backendApiOrigin = import.meta.env.VITE_API_BASE_URL;
+      if (!backendApiOrigin) {
+          console.error("Login Page: VITE_API_BASE_URL is not defined. Cannot verify message origin.");
+          return;
       }
 
+      const expectedOrigin = new URL(backendApiOrigin).origin;
+      if (event.origin !== expectedOrigin) {
+         console.warn(`Login Page: Message rejected from origin: ${event.origin}. Expected: ${expectedOrigin}`);
+         // return; // Uncomment this line in production for strict origin checking
+      } else {
+         console.log(`Login Page: Message origin ${event.origin} verified.`);
+      }
+
+      // Check if data is an object and has a type property
+      if (typeof event.data !== 'object' || event.data === null || !event.data.type) {
+          console.log('Login Page: Received message is not in the expected format (missing type).', event.data);
+          return;
+      }
 
       const { type, user, error: messageError } = event.data;
 
