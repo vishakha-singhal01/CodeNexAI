@@ -119,7 +119,8 @@ const [loadingQuote, setLoadingQuote] = useState("");
   };
 
   return (
-    <section id="try-it" className="w-full py-20 md:py-28 lg:py-32 bg-background border-t">
+    // Added id="generator-section" here
+    <section id="generator-section" className="w-full py-20 md:py-28 lg:py-32 bg-background border-t">
       <div className="container px-4 md:px-6 max-w-5xl mx-auto">
         <div className="flex flex-col gap-4 text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Try the AI Generator</h2>

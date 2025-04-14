@@ -1,8 +1,10 @@
 import React from 'react';
 import { ArrowRight, Code, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from 'react-router-dom';
 
 export const HeroSection = () => {
+  const navigate = useNavigate(); 
   return (
     <section className="w-full py-24 md:py-32 lg:py-40">
       <div className="container px-4 md:px-6 max-w-5xl mx-auto flex flex-col items-center text-center gap-6">
@@ -14,12 +16,20 @@ export const HeroSection = () => {
           Stop wasting time on manual documentation. Let AI analyze your codebase, generate comprehensive docs, and keep them automatically updated.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 items-center mt-4">
-          <Button size="lg" className="h-12 px-8 text-base font-semibold shadow-lg hover:shadow-primary/30 transition-shadow duration-300">
+          <Button size="lg" className="h-12 px-8 text-base font-semibold shadow-lg hover:shadow-primary/30 transition-shadow duration-300" onClick={() => navigate('/contact')} >
             Request Early Access
             <ArrowRight className="ml-2 h-5 w-5" />
           </Button>
-          <Button variant="outline" size="lg" className="h-12 px-8 text-base font-semibold">
-            Book a demo
+          <Button
+            variant="outline"
+            size="lg"
+            className="h-12 px-8 text-base font-semibold"
+            onClick={() => {
+              const generatorSection = document.getElementById('generator-section');
+              generatorSection?.scrollIntoView({ behavior: 'smooth' });
+            }}
+          >
+            Try the Generator
           </Button>
         </div>
         {/* Simplified placeholder graphic */}

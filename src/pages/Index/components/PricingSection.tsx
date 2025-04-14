@@ -182,7 +182,7 @@ export const PricingSection = () => {
   };
 
   return (
-    <section className="w-full py-20 md:py-28">
+    <section className="w-full py-20 md:py-28 bg-muted/50">
       <div className="container px-4 md:px-6 max-w-6xl mx-auto">
         <div className="flex flex-col gap-4 text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Simple, Transparent Pricing</h2>

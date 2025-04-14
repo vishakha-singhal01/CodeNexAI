@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import { LoginPage } from "./pages/Auth/LoginPage"; // Import LoginPage
 import { SignupPage } from "./pages/Auth/SignupPage"; // Import SignupPage
+import ContactPage from "./pages/ContactPage"; // Import ContactPage
 
 const queryClient = new QueryClient();
 
@@ -20,6 +21,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<LoginPage />} /> {/* Add Login Route */}
           <Route path="/signup" element={<SignupPage />} /> {/* Add Signup Route */}
+          <Route path="/contact" element={<ContactPage />} /> {/* Add Contact Route */}
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

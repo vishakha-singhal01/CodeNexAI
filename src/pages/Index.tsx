@@ -188,11 +188,10 @@ const Index = () => {
 
         <ProblemSection />
         <FeaturesSection />
-        <IntegrationsSection />
+        {/* <IntegrationsSection /> */}
         <PricingSection />
         <CtaSection />
       </main>
-      {/* Footer remains at the bottom */}
       <Footer />
     </div>
   );

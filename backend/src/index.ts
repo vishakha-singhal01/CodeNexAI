@@ -8,6 +8,7 @@ import passport from 'passport'; // Added passport
 import configurePassport from './config/passport'; // Added passport config import
 import authRoutes from './routes/auth'; // Import the auth routes
 import paymentsRouter from './routes/payments'; // Import the payment routes
+import contactRouter from './routes/contact'; // Import the contact routes
 import multer from 'multer';
 import axios from 'axios'; // Import axios
 import AdmZip from 'adm-zip'; // Import adm-zip
@@ -118,6 +119,9 @@ app.use('/api/auth', authRoutes); // Mount the authentication routes
 
 // --- Payment Routes ---
 app.use('/api/payments', paymentsRouter); // Mount the payment routes
+
+// --- Contact Route ---
+app.use('/api/contact', contactRouter); // Mount the contact routes
 
 // Health check endpoint
 app.get('/api/health', (req: Request, res: Response) => {
