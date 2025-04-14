@@ -103,7 +103,7 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
     "Hold tight! Your code is getting smarter.",
   ];
 
-const [loadingQuote, setLoadingQuote] = useState("");
+  const [loadingQuote, setLoadingQuote] = useState("");
   const randomQuote = loadingQuotes[Math.floor(Math.random() * loadingQuotes.length)];
   useEffect(() => {
     if (isLoadingDocs) {
@@ -127,6 +127,18 @@ const [loadingQuote, setLoadingQuote] = useState("");
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Paste code, upload files, or link a public GitHub repo. (Feature access depends on your plan)
           </p>
+
+          <div className="flex flex-wrap justify-center gap-2 mt-4">
+            {[
+              'JavaScript', 'TypeScript', 'JSX', 'TSX', 'Python', 'Java', 'C', 'C++', 'C#',
+              'HTML', 'CSS', 'SCSS', 'LESS', 'JSON', 'Markdown', 'Text',
+              'Shell', 'Ruby', 'Go', 'PHP'
+            ].map(lang => (
+              <span key={lang} className="px-3 py-1 text-sm rounded-full bg-gray-100 text-gray-800 border border-gray-300">
+                {lang}
+              </span>
+            ))}
+          </div>
         </div>
 
         <Card className="max-w-4xl mx-auto shadow-md border rounded-2xl bg-card"> {/* Changed bg-white to bg-card */}
@@ -273,42 +285,42 @@ const [loadingQuote, setLoadingQuote] = useState("");
               </div>
             </div>
           ) : (
-          <>
-            {docsError && (
-              <Alert variant="destructive" className="mb-6"> {/* Increased margin */}
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Generation Error</AlertTitle>
-                <AlertDescription>{docsError}</AlertDescription>
-              </Alert>
-            )}
-            {generatedDocs && (
-              <Card className="max-w-4xl mx-auto shadow-md border rounded-2xl bg-card"> {/* Changed bg-white to bg-card */}
-                <CardHeader className="flex flex-row items-center justify-between pb-3 pt-4 px-5">
-                  <CardTitle className="text-xl font-semibold">Generated Documentation</CardTitle>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="sm">
-                        <Download className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={handleDownloadDocs}>
-                        Download as <span className="ml-1 font-medium">.md</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={handleDownloadPDF}>
-                        Download as <span className="ml-1 font-medium">PDF</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </CardHeader>
+            <>
+              {docsError && (
+                <Alert variant="destructive" className="mb-6"> {/* Increased margin */}
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Generation Error</AlertTitle>
+                  <AlertDescription>{docsError}</AlertDescription>
+                </Alert>
+              )}
+              {generatedDocs && (
+                <Card className="max-w-4xl mx-auto shadow-md border rounded-2xl bg-card"> {/* Changed bg-white to bg-card */}
+                  <CardHeader className="flex flex-row items-center justify-between pb-3 pt-4 px-5">
+                    <CardTitle className="text-xl font-semibold">Generated Documentation</CardTitle>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          <Download className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={handleDownloadDocs}>
+                          Download as <span className="ml-1 font-medium">.md</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={handleDownloadPDF}>
+                          Download as <span className="ml-1 font-medium">PDF</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </CardHeader>
 
-                <CardContent className="px-5 pb-5">
-                  <div className="grid grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto">
-                    <div className="bg-muted/20 p-4 rounded-md border overflow-y-auto whitespace-pre-wrap text-sm font-mono max-h-[60vh]">
-                      {generatedDocs}
-                    </div>
+                  <CardContent className="px-5 pb-5">
+                    <div className="grid grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto">
+                      <div className="bg-muted/20 p-4 rounded-md border overflow-y-auto whitespace-pre-wrap text-sm font-mono max-h-[60vh]">
+                        {generatedDocs}
+                      </div>
 
-                    <div id="markdown-preview" className="prose prose-sm max-w-none dark:prose-invert bg-muted/30 p-4 rounded-md border overflow-y-auto max-h-[60vh]
+                      <div id="markdown-preview" className="prose prose-sm max-w-none dark:prose-invert bg-muted/30 p-4 rounded-md border overflow-y-auto max-h-[60vh]
                       [&_p]:mb-4
                       [&_h1]:mb-6 [&_h2]:mb-5 [&_h3]:mb-4
                       [&_ul]:mb-4 [&_ol]:mb-4
@@ -316,14 +328,14 @@ const [loadingQuote, setLoadingQuote] = useState("");
                       [&_pre]:my-4
                       [&_blockquote]:my-4
                     ">
-                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{generatedDocs}</ReactMarkdown>
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{generatedDocs}</ReactMarkdown>
 
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </>
+                  </CardContent>
+                </Card>
+              )}
+            </>
           )}
         </div>
       </div>
