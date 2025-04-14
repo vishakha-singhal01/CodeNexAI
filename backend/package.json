@@ -18,7 +18,7 @@
     "@babel/types": "^7.27.0",
     "@google/generative-ai": "^0.24.0",
     "@types/bcrypt": "^5.0.2",
-    "@types/express": "^4.17.20",
+    "@types/express": "^4.17.0",
     "@types/express-session": "^1.18.1",
     "@types/passport": "^1.0.17",
     "@types/passport-github2": "^1.2.9",
@@ -30,7 +30,7 @@
     "connect-mongo": "^5.1.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
-    "express": "^4.19.2",
+    "express": "^4.17.1",
     "express-session": "^1.18.1",
     "mongoose": "^8.13.2",
     "multer": "^1.4.5-lts.2",
@@ -38,8 +38,7 @@
     "passport-github2": "^0.1.12",
     "passport-google-oauth20": "^2.0.0",
     "passport-local": "^1.0.0",
-    "razorpay": "^2.9.6",
-    "vite_react_shadcn_ts": "file:.."
+    "razorpay": "^2.9.6"
   },
   "devDependencies": {
     "@types/adm-zip": "^0.5.7",
