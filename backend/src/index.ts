@@ -14,6 +14,7 @@ import axios from 'axios'; // Import axios
 import AdmZip from 'adm-zip'; // Import adm-zip
 import path from 'path'; // Import path for extension checking
 import { generateDocumentation } from './services/documentationService';
+import { ErrorRequestHandler } from 'express'; // Import ErrorRequestHandler
 
 dotenv.config(); // Load environment variables from .env file
 
@@ -31,16 +32,11 @@ app.set('trust proxy', 1);
 const mongoUri = process.env.MONGO_URI;
 if (!mongoUri) {
   console.error('FATAL ERROR: MONGO_URI is not defined in .env file.');
-  process.exit(1); // Exit if DB connection string is missing
+    console.error('FATAL ERROR: MONGO_URI is not defined in .env file.');
+    process.exit(1); // Exit if DB connection string is missing
 }
-mongoose.connect(mongoUri)
-  .then(() => console.log('MongoDB Connected'))
-  .catch(err => {
-    console.error('MongoDB connection error:', err);
-    process.exit(1);
-  });
 
-// --- Multer Configuration ---
+// --- Multer Configuration --- (Moved before middleware setup)
 // Store files in memory as Buffers
 const storage = multer.memoryStorage();
 const upload = multer({
@@ -306,8 +302,37 @@ app.post('/api/github-repo-docs', githubRepoDocsHandler);
 // app.use('/api/docs', otherDocsRoutes);
 
 
-// Listen on all network interfaces, crucial for deployment environments like Render
-// Removed unused @ts-expect-error
-app.listen(portNumber, '0.0.0.0', () => {
-  console.log(`[server]: Server listening on port ${portNumber}`);
-});
+// --- Global Error Handler ---
+// This should be the LAST middleware added
+const globalErrorHandler: ErrorRequestHandler = (err, req, res, next) => {
+  console.error("Unhandled Error:", err); // Log the error
+  // Avoid sending detailed errors in production
+  const statusCode = err.status || 500;
+  const message = process.env.NODE_ENV === 'production' ? 'Internal Server Error' : (err.message || 'An unexpected error occurred');
+  res.status(statusCode).json({ error: message });
+};
+app.use(globalErrorHandler);
+
+
+// --- Start Server Function ---
+const startServer = async () => {
+  try {
+    // 1. Connect to MongoDB
+    console.log('Connecting to MongoDB...');
+    await mongoose.connect(mongoUri);
+    console.log('MongoDB Connected Successfully.');
+
+    // 2. Start Listening
+    // Listen on all network interfaces, crucial for deployment environments like Render
+    app.listen(portNumber, '0.0.0.0', () => {
+      console.log(`[server]: Server listening on port ${portNumber}`);
+    });
+
+  } catch (error) {
+    console.error('FATAL: Failed to start server:', error);
+    process.exit(1); // Exit if server cannot start (e.g., DB connection fails)
+  }
+};
+
+// --- Execute Server Start ---
+startServer();
