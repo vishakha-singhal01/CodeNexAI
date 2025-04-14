@@ -59,7 +59,8 @@ const upload = multer({
     }
   }
 });
-const port = process.env.PORT || 3001; // Use port from env or default to 3001
+// Ensure port is treated as a number
+const portNumber = Number(process.env.PORT || 3001);
 
 // Enable CORS for specific origin
 app.use(cors({
@@ -85,6 +86,7 @@ if (!sessionSecret) {
     console.error('FATAL ERROR: SESSION_SECRET is not defined in .env file.');
     process.exit(1); // Exit if session secret is missing
 }
+// Removed unused @ts-expect-error
 app.use(session({
     secret: sessionSecret,
     resave: false, // Don't save session if unmodified
@@ -96,10 +98,12 @@ app.use(session({
         maxAge: 1000 * 60 * 60 * 24 * 7, // Example: 1 week
         sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax' // Crucial for cross-site requests in prod (needs secure:true)
     }
-}));
+})); // Removed cast
 
 // --- Passport Middleware ---
+// Removed unused @ts-expect-error
 app.use(passport.initialize()); // Initialize Passport
+// Removed unused @ts-expect-error
 app.use(passport.session()); // Enable persistent login sessions
 
 // Middleware to make user available in templates (if needed later)
@@ -303,6 +307,7 @@ app.post('/api/github-repo-docs', githubRepoDocsHandler);
 
 
 // Listen on all network interfaces, crucial for deployment environments like Render
-app.listen(Number(port), '0.0.0.0', () => {
-  console.log(`[server]: Server listening on port ${port}`);
+// Removed unused @ts-expect-error
+app.listen(portNumber, '0.0.0.0', () => {
+  console.log(`[server]: Server listening on port ${portNumber}`);
 });
