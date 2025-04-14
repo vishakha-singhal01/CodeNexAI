@@ -334,6 +334,7 @@ app.post('/api/github-repo-docs', (req: Request<Record<string, unknown>, Record<
 // app.use('/api/docs', otherDocsRoutes);
 
 
-app.listen(port, () => {
-  console.log(`[server]: Server is running at http://localhost:${port}`);
+// Listen on all network interfaces, crucial for deployment environments like Render
+app.listen(Number(port), '0.0.0.0', () => {
+  console.log(`[server]: Server listening on port ${port}`);
 });
