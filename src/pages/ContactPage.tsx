@@ -29,9 +29,11 @@ const ContactPage: React.FC = () => {
     event.preventDefault();
     setIsLoading(true);
     console.log('Submitting form data:', formData);
+    const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api/contact`; // Use absolute URL
+    console.log(`Submitting to: ${apiUrl}`);
 
     try {
-      const response = await fetch('/api/contact', { // Target backend endpoint
+      const response = await fetch(apiUrl, { // Use the constructed API URL
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
