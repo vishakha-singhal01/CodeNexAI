@@ -62,7 +62,7 @@ const port = process.env.PORT || 3001; // Use port from env or default to 3001
 
 // Enable CORS for specific origin
 app.use(cors({
-  origin: 'http://localhost:8080', // Allow requests from your frontend
+  origin: 'https://dockiedoc.netlify.app', // Allow requests from your frontend
   credentials: true // Allow cookies/sessions to be sent
 }));
 
