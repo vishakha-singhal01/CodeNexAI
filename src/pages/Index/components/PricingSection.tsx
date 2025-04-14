@@ -68,6 +68,7 @@ export const PricingSection = () => {
             // Include credentials/auth token if your API requires it
             // This assumes cookie-based session auth is handled automatically by the browser
           },
+          credentials: 'include', // <-- ADD THIS LINE: Send cookies with cross-origin requests
           body: JSON.stringify({
             amount: 230000, // ₹2300 in paise (approx $29 USD)
             currency: 'INR',
