@@ -1,4 +1,4 @@
-import express, { Express, Request, Response, NextFunction } from 'express'; // Added NextFunction
+import express, { Express, Request, Response, NextFunction, RequestHandler } from 'express'; // Added RequestHandler
 import dotenv from 'dotenv';
 import cors from 'cors';
 import mongoose from 'mongoose'; // Added mongoose
@@ -133,91 +133,77 @@ interface GenerateDocsRequestBody {
   code: string;
 }
 
-// Endpoint to generate documentation
-app.post('/api/generate-docs', (req: Request, res: Response) => {
-  // Use a self-invoking async function to handle the async logic
-  (async () => {
-    const { code } = req.body as GenerateDocsRequestBody;
+// --- Route Handlers Refactoring ---
 
-    if (!code) {
-      return res.status(400).json({ error: 'Missing "code" field in request body.' });
-    }
+// Endpoint to generate documentation (Refactored)
+const generateDocsHandler: RequestHandler = async (req, res) => {
+  const { code } = req.body as GenerateDocsRequestBody;
 
-    try {
-      const documentation = await generateDocumentation(code);
-      res.json({ documentation });
-    } catch (error: unknown) { // Use unknown instead of any
-      console.error("API Error generating documentation:", error);
-      // Send a generic error message to the client
-      const message = error instanceof Error ? error.message : 'An unknown error occurred';
-      res.status(500).json({ error: 'Failed to generate documentation.', details: message });
-    }
-  })().catch(err => {
-    // Catch any unexpected errors from the async block itself
-    console.error("Unhandled error in /api/generate-docs:", err);
-    res.status(500).json({ error: 'An unexpected server error occurred.' });
-  });
-});
+  if (!code) {
+    res.status(400).json({ error: 'Missing "code" field in request body.' });
+    return;
+  }
 
-// Endpoint to generate documentation from uploaded files
-// 'codeFiles' should match the name attribute of the file input in the frontend form
-app.post('/api/upload-generate-docs', upload.array('codeFiles'), (req: Request, res: Response) => {
-  // Use a self-invoking async function to handle the async logic
-  (async () => {
-    if (!req.files || (req.files as Express.Multer.File[]).length === 0) {
-      return res.status(400).json({ error: 'No files were uploaded.' });
-    }
+  try {
+    const documentation = await generateDocumentation(code);
+    res.json({ documentation });
+    return;
+  } catch (error: unknown) {
+    console.error("API Error generating documentation:", error);
+    const message = error instanceof Error ? error.message : 'An unknown error occurred';
+    res.status(500).json({ error: 'Failed to generate documentation.', details: message });
+    return;
+  }
+};
 
-    // Ensure req.files is treated as an array
-    const files = req.files as Express.Multer.File[];
-    const allDocs: string[] = [];
-    let hasErrors = false;
+// Endpoint to generate documentation from uploaded files (Refactored)
+const uploadGenerateDocsHandler: RequestHandler = async (req, res) => {
+  if (!req.files || (req.files as Express.Multer.File[]).length === 0) {
+     res.status(400).json({ error: 'No files were uploaded.' });
+     return;
+  }
 
-    try {
-      // Process each file individually
-      for (const file of files) {
-        const fileContent = file.buffer.toString('utf-8');
-        if (!fileContent.trim()) {
-          console.log(`Skipping empty file: ${file.originalname}`);
-          continue; // Skip empty files
-        }
+  const files = req.files as Express.Multer.File[];
+  const allDocs: string[] = [];
+  let hasErrors = false;
 
-        try {
-          console.log(`Generating documentation for: ${file.originalname}`);
-          // Pass filename to generateDocumentation if you modify it to accept it
-          // For now, it extracts structures internally based on content only
-          const documentation = await generateDocumentation(fileContent);
-          // Add a header for each file's documentation
-          allDocs.push(`## File: ${file.originalname}\n\n${documentation}`);
-        } catch (fileError: unknown) { // Use unknown instead of any
-          console.error(`Error processing file ${file.originalname}:`, fileError);
-          const fileErrorMessage = fileError instanceof Error ? fileError.message : 'An unknown error occurred processing this file';
-          allDocs.push(`## File: ${file.originalname}\n\nError generating documentation for this file: ${fileErrorMessage}`);
-          hasErrors = true; // Mark that at least one file failed
-        }
+  try {
+    for (const file of files) {
+      const fileContent = file.buffer.toString('utf-8');
+      if (!fileContent.trim()) {
+        console.log(`Skipping empty file: ${file.originalname}`);
+        continue;
       }
 
-      if (allDocs.length === 0) {
-        return res.status(400).json({ error: 'No processable code content found in uploaded files.' });
+      try {
+        console.log(`Generating documentation for: ${file.originalname}`);
+        const documentation = await generateDocumentation(fileContent);
+        allDocs.push(`## File: ${file.originalname}\n\n${documentation}`);
+      } catch (fileError: unknown) {
+        console.error(`Error processing file ${file.originalname}:`, fileError);
+        const fileErrorMessage = fileError instanceof Error ? fileError.message : 'An unknown error occurred processing this file';
+        allDocs.push(`## File: ${file.originalname}\n\nError generating documentation for this file: ${fileErrorMessage}`);
+        hasErrors = true;
       }
-
-      // Combine documentation from all files
-      const combinedDocumentation = allDocs.join('\n\n---\n\n'); // Separator between files
-
-      // Decide status based on whether any file processing failed
-      const status = hasErrors ? 207 : 200; // 207 Multi-Status if some failed
-      res.status(status).json({ documentation: combinedDocumentation });
-
-    } catch (error: unknown) { // Use unknown instead of any
-      console.error("API Error generating documentation from upload:", error);
-      const message = error instanceof Error ? error.message : 'An unknown error occurred';
-      res.status(500).json({ error: 'Failed to generate documentation from uploaded files.', details: message });
     }
-  })().catch(err => {
-    console.error("Unhandled error in /api/upload-generate-docs:", err);
-    res.status(500).json({ error: 'An unexpected server error occurred during file processing.' });
-  });
-});
+
+    if (allDocs.length === 0) {
+       res.status(400).json({ error: 'No processable code content found in uploaded files.' });
+       return;
+    }
+
+    const combinedDocumentation = allDocs.join('\n\n---\n\n');
+    const status = hasErrors ? 207 : 200;
+    res.status(status).json({ documentation: combinedDocumentation });
+    return;
+
+  } catch (error: unknown) {
+    console.error("API Error generating documentation from upload:", error);
+    const message = error instanceof Error ? error.message : 'An unknown error occurred';
+    res.status(500).json({ error: 'Failed to generate documentation from uploaded files.', details: message });
+    return;
+  }
+};
 
 // Define interface for GitHub repo request body
 interface GitHubRepoRequestBody {
@@ -234,100 +220,82 @@ function isValidGitHubUrl(url: string): boolean {
   }
 }
 
-// Endpoint to generate documentation from a GitHub repository URL
-// Use Record<string, unknown> or specific types instead of {}
-app.post('/api/github-repo-docs', (req: Request<Record<string, unknown>, Record<string, unknown>, GitHubRepoRequestBody>, res: Response) => {
- (async () => {
-    const { repoUrl } = req.body;
+// Endpoint to generate documentation from a GitHub repository URL (Refactored)
+const githubRepoDocsHandler: RequestHandler = async (req, res) => {
+  const { repoUrl } = req.body as GitHubRepoRequestBody;
 
-    if (!repoUrl || !isValidGitHubUrl(repoUrl)) {
-      return res.status(400).json({ error: 'Invalid or missing GitHub repository URL.' });
+  if (!repoUrl || !isValidGitHubUrl(repoUrl)) {
+     res.status(400).json({ error: 'Invalid or missing GitHub repository URL.' });
+     return;
+  }
+
+  const urlParts = new URL(repoUrl);
+  const repoPath = urlParts.pathname;
+  const downloadUrl = `https://github.com${repoPath}/archive/refs/heads/main.zip`;
+
+  console.log(`Attempting to download repo zip from: ${downloadUrl}`);
+
+  try {
+    const response = await axios.get(downloadUrl, { responseType: 'arraybuffer' });
+    console.log(`Downloaded ${response.headers['content-length']} bytes.`);
+
+    const zip = new AdmZip(response.data);
+    const zipEntries = zip.getEntries();
+    console.log(`Found ${zipEntries.length} entries in zip.`);
+
+    const allDocs: string[] = [];
+    let hasErrors = false;
+    let processedFileCount = 0;
+    const allowedExts = ['.js', '.ts', '.jsx', '.tsx', '.py', '.java', '.md', '.txt', '.json', '.yaml', '.yml', '.sh', '.rb', '.go', '.php', '.cs', '.cpp', '.c', '.h', '.html', '.css', '.scss', '.less'];
+
+    for (const zipEntry of zipEntries) {
+      if (zipEntry.isDirectory || zipEntry.entryName.includes('/.') || zipEntry.entryName.startsWith('.')) continue;
+      const fileExt = path.extname(zipEntry.entryName).toLowerCase();
+      if (!allowedExts.includes(fileExt)) continue;
+      const fileContent = zipEntry.getData().toString('utf-8');
+      if (!fileContent.trim()) continue;
+
+      processedFileCount++;
+      try {
+        console.log(`Generating documentation for: ${zipEntry.entryName}`);
+        const documentation = await generateDocumentation(fileContent);
+        allDocs.push(`## File: ${zipEntry.entryName}\n\n${documentation}`);
+      } catch (fileGenError: unknown) {
+        console.error(`Error generating docs for file ${zipEntry.entryName}:`, fileGenError);
+        const fileGenErrorMessage = fileGenError instanceof Error ? fileGenError.message : 'An unknown error occurred generating docs for this file';
+        allDocs.push(`## File: ${zipEntry.entryName}\n\n_Error generating documentation for this file: ${fileGenErrorMessage}_`);
+        hasErrors = true;
+      }
     }
 
-    // Construct the download URL (usually main branch, could be configurable)
-    // Example: https://github.com/user/repo -> https://github.com/user/repo/archive/refs/heads/main.zip
-    const urlParts = new URL(repoUrl);
-    const repoPath = urlParts.pathname;
-    const downloadUrl = `https://github.com${repoPath}/archive/refs/heads/main.zip`; // Adjust branch name if needed
+    console.log(`Processed ${processedFileCount} code files.`);
 
-    console.log(`Attempting to download repo zip from: ${downloadUrl}`);
-
-    try {
-      // 1. Download the zip file
-      const response = await axios.get(downloadUrl, { responseType: 'arraybuffer' });
-      console.log(`Downloaded ${response.headers['content-length']} bytes.`);
-
-      // 2. Extract the zip file in memory
-      const zip = new AdmZip(response.data);
-      const zipEntries = zip.getEntries();
-      console.log(`Found ${zipEntries.length} entries in zip.`);
-
-      const allDocs: string[] = [];
-      let hasErrors = false;
-      let processedFileCount = 0;
-
-      // Allowed extensions (sync with multer config)
-      const allowedExts = ['.js', '.ts', '.jsx', '.tsx', '.py', '.java', '.md', '.txt', '.json', '.yaml', '.yml', '.sh', '.rb', '.go', '.php', '.cs', '.cpp', '.c', '.h', '.html', '.css', '.scss', '.less'];
-
-      // 3. Process each file
-      for (const zipEntry of zipEntries) {
-        // Skip directories and files in hidden/config folders (basic filtering)
-        if (zipEntry.isDirectory || zipEntry.entryName.includes('/.') || zipEntry.entryName.startsWith('.')) {
-          continue;
-        }
-
-        const fileExt = path.extname(zipEntry.entryName).toLowerCase();
-        if (!allowedExts.includes(fileExt)) {
-          // console.log(`Skipping file with unsupported extension: ${zipEntry.entryName}`);
-          continue;
-        }
-
-        // Extract file content
-        const fileContent = zipEntry.getData().toString('utf-8');
-        if (!fileContent.trim()) {
-          // console.log(`Skipping empty file: ${zipEntry.entryName}`);
-          continue; // Skip empty files
-        }
-
-        processedFileCount++;
-        // Add specific try/catch around generation for this file
-        try {
-          console.log(`Generating documentation for: ${zipEntry.entryName}`);
-          // Pass filename to generateDocumentation if you modify it to accept it
-          const documentation = await generateDocumentation(fileContent);
-          allDocs.push(`## File: ${zipEntry.entryName}\n\n${documentation}`);
-        } catch (fileGenError: unknown) { // Use unknown instead of any
-          console.error(`Error generating docs for file ${zipEntry.entryName}:`, fileGenError); // Log the whole error
-          // Add specific error message for this file, but continue processing others
-          const fileGenErrorMessage = fileGenError instanceof Error ? fileGenError.message : 'An unknown error occurred generating docs for this file';
-          allDocs.push(`## File: ${zipEntry.entryName}\n\n_Error generating documentation for this file: ${fileGenErrorMessage}_`);
-          hasErrors = true; // Mark that at least one file failed
-        }
-      } // End of loop through zip entries
-
-      console.log(`Processed ${processedFileCount} code files.`);
-
-      if (allDocs.length === 0) {
-        return res.status(400).json({ error: 'No processable code files found in the repository.' });
-      }
-
-      const combinedDocumentation = allDocs.join('\n\n---\n\n');
-      const status = hasErrors ? 207 : 200;
-      res.status(status).json({ documentation: combinedDocumentation });
-
-    } catch (error: unknown) { // Use unknown instead of any
-      console.error("API Error fetching/processing GitHub repo:", error);
-      const message = error instanceof Error ? error.message : 'An unknown error occurred';
-      if (axios.isAxiosError(error) && error.response?.status === 404) {
-         return res.status(404).json({ error: 'Repository or default branch (main) not found. Check URL or branch name.' });
-      }
-      res.status(500).json({ error: 'Failed to fetch or process GitHub repository.', details: message });
+    if (allDocs.length === 0) {
+       res.status(400).json({ error: 'No processable code files found in the repository.' });
+       return;
     }
-  })().catch(err => {
-    console.error("Unhandled error in /api/github-repo-docs:", err);
-    res.status(500).json({ error: 'An unexpected server error occurred during repository processing.' });
-  });
-});
+
+    const combinedDocumentation = allDocs.join('\n\n---\n\n');
+    const status = hasErrors ? 207 : 200;
+    res.status(status).json({ documentation: combinedDocumentation });
+    return;
+
+  } catch (error: unknown) {
+    console.error("API Error fetching/processing GitHub repo:", error);
+    const message = error instanceof Error ? error.message : 'An unknown error occurred';
+    if (axios.isAxiosError(error) && error.response?.status === 404) {
+       res.status(404).json({ error: 'Repository or default branch (main) not found. Check URL or branch name.' });
+       return;
+    }
+    res.status(500).json({ error: 'Failed to fetch or process GitHub repository.', details: message });
+    return;
+  }
+};
+
+// --- Apply Refactored Handlers ---
+app.post('/api/generate-docs', generateDocsHandler);
+app.post('/api/upload-generate-docs', upload.array('codeFiles'), uploadGenerateDocsHandler);
+app.post('/api/github-repo-docs', githubRepoDocsHandler);
 
 
 // Placeholder for other API routes related to documentation generation
