@@ -73,6 +73,41 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     checkAuthStatus();
   }, []);
 
+  // Listen for messages from OAuth popup window
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      // IMPORTANT: Always verify the origin of the message for security!
+      // Use the specific backend URL if possible, otherwise fall back to '*' cautiously
+      // during development, but tighten this for production.
+      const expectedOrigin = import.meta.env.VITE_API_BASE_URL; // Or your specific frontend URL if different
+
+      // Example check (adjust origin verification as needed for your setup)
+      // if (expectedOrigin && event.origin !== expectedOrigin) {
+      //   console.warn(`Message received from unexpected origin: ${event.origin}. Expected: ${expectedOrigin}`);
+      //   return;
+      // }
+
+      // Check if the message contains the expected data structure
+      if (event.data && typeof event.data === 'object') {
+        if (event.data.type === 'auth-success' && event.data.user) {
+          console.log('Auth success message received from popup:', event.data.user);
+          login(event.data.user); // Update auth state with user data
+          // Navigation should happen based on state change in App.tsx or routing logic
+        } else if (event.data.type === 'auth-error') {
+          console.error('Auth error message received from popup:', event.data.error);
+          // Optionally, display the error to the user (e.g., using a toast notification)
+        }
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+
+    // Cleanup function to remove the listener when the component unmounts
+    return () => {
+      window.removeEventListener('message', handleMessage);
+    };
+  }, [login]); // Add login to dependency array as it's used inside the effect
+
   // Provide the context value to children
   const value = {
     user,
