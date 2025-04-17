@@ -69,8 +69,13 @@ router.post('/login', (req: Request, res: Response, next: NextFunction) => {
 
 // POST /api/auth/logout
 router.post('/logout', (req: Request, res: Response, next: NextFunction) => {
+    console.log(`[Auth Route] Received POST request for /api/auth/logout. User authenticated: ${req.isAuthenticated()}`); // <-- Add logging
     req.logout((err) => { // req.logout requires a callback
-        if (err) { return next(err); }
+        if (err) {
+            console.error('[Auth Route] Error during req.logout:', err); // <-- Log logout errors
+            return next(err);
+        }
+        console.log('[Auth Route] req.logout successful. Attempting session destroy.'); // <-- Log success
         req.session.destroy((destroyErr) => { // Optional: Destroy session completely
              if (destroyErr) {
                  console.error("Error destroying session:", destroyErr);
