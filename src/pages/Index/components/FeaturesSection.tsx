@@ -44,12 +44,12 @@ export const FeaturesSection = () => {
             <CardHeader className="pb-2">
               <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
                 <Zap className="h-6 w-6 text-primary" />
-              </div>
-              <CardTitle>LLM-Powered Generator</CardTitle>
-              <CardDescription className="text-md">
-                Uses advanced AI to create comprehensive documentation
-              </CardDescription>
-            </CardHeader>
+               </div>
+               <CardTitle>LLM-Powered Generator</CardTitle>
+               <CardDescription className="text-md">
+                 Uses advanced AI to create comprehensive documentation. Securely generate documentation - your code is processed in memory and never stored.
+               </CardDescription>
+             </CardHeader>
             <CardContent>
               <ul className="space-y-2">
                 <li className="flex items-start">

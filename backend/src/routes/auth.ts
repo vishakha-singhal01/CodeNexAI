@@ -1,57 +1,88 @@
-import express, { Router, Request, Response, NextFunction } from 'express'; // Import Router type
+import express, { Router, Request, Response, NextFunction, RequestHandler } from 'express'; // Import RequestHandler
 import passport from 'passport';
+import rateLimit from 'express-rate-limit'; // Import rate-limiter
 import User, { IUser } from '../models/User'; // Adjust path if necessary
 
 const router: Router = express.Router(); // Explicitly type the router
 
+// --- Rate Limiter for Auth Routes ---
+const authLimiter = rateLimit({
+	windowMs: 15 * 60 * 1000, // 15 minutes
+	max: 10, // Limit each IP to 10 requests per windowMs (adjust as needed)
+	message: 'Too many login/signup attempts from this IP, please try again after 15 minutes',
+    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
+
 // --- Local Authentication Routes ---
 
-// POST /api/auth/signup (Email/Password Registration)
-router.post('/signup', async (req: Request, res: Response, next: NextFunction) => {
+// Define the signup handler separately to ensure correct typing
+const signupHandler: RequestHandler = async (req, res, next) => {
     const { email, password, displayName } = req.body;
 
-    // Basic validation
+    // --- Enhanced Input Validation ---
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // Simple email format regex
     if (!email || !password) {
         res.status(400).json({ message: 'Email and password are required.' });
-        return; // Explicit return
+        return undefined; // Explicitly return undefined
     }
-    // Add more robust validation as needed (e.g., password complexity)
+    if (!emailRegex.test(email)) {
+        res.status(400).json({ message: 'Invalid email format.' });
+        return undefined; // Explicitly return undefined
+    }
+    if (password.length < 8) { // Enforce minimum password length
+        res.status(400).json({ message: 'Password must be at least 8 characters long.' });
+        return undefined; // Explicitly return undefined
+    }
+    // Consider adding more complex password rules (uppercase, number, symbol) if needed
+    // --- End Enhanced Input Validation ---
 
     try {
-        const existingUser = await User.findOne({ email: email.toLowerCase() });
+        const normalizedEmail = email.toLowerCase(); // Normalize email before searching/saving
+        const existingUser = await User.findOne({ email: normalizedEmail });
         if (existingUser) {
             res.status(409).json({ message: 'Email already exists.' }); // 409 Conflict
-            return; // Explicit return
+            return undefined; // Explicitly return undefined
         }
 
         const newUser = new User({
-            email: email.toLowerCase(),
+            email: normalizedEmail, // Use normalized email
             password: password, // Password will be hashed by the pre-save hook in User model
-            displayName: displayName || email.split('@')[0] // Default display name
+            displayName: displayName || normalizedEmail.split('@')[0] // Default display name from normalized email
         });
 
         await newUser.save();
 
-        // Log in the user immediately after signup
-        req.logIn(newUser, (err) => {
-            if (err) {
-                next(err); // Pass error
-                return; // Explicit return
-             }
-             // Send back user info (excluding password)
-             const userResponse = { id: newUser._id, email: newUser.email, displayName: newUser.displayName, plan: newUser.plan };
-             res.status(201).json({ message: 'Signup successful.', user: userResponse });
-             return; // Explicit return
+        // Wrap req.logIn in a Promise to handle async nature correctly within RequestHandler
+        await new Promise<void>((resolve, reject) => {
+            req.logIn(newUser, (err) => {
+                if (err) {
+                    console.error("Error during req.logIn after signup:", err);
+                    // Reject the promise, which will be caught by the outer catch block
+                    return reject(new Error('Login after signup failed.'));
+                }
+                resolve(); // Resolve the promise if login is successful
+            });
         });
 
+        // If the promise resolved (login successful), send the success response
+        const userResponse = { id: newUser._id, email: newUser.email, displayName: newUser.displayName, plan: newUser.plan };
+        res.status(201).json({ message: 'Signup successful.', user: userResponse });
+        // Implicitly returns Promise<void> here
+
     } catch (error) {
+        // Catch errors from findOne, save, or the login Promise rejection
         next(error); // Pass error to the error handling middleware
-        return; // Explicit return
+        // Implicitly returns Promise<void> here
     }
-});
+};
+
+// Apply the handler and limiter to the signup route
+router.post('/signup', authLimiter, signupHandler);
 
 // POST /api/auth/login (Email/Password Login)
-router.post('/login', (req: Request, res: Response, next: NextFunction) => {
+// Apply the limiter to the login route
+router.post('/login', authLimiter, (req: Request, res: Response, next: NextFunction) => {
     passport.authenticate('local', (err: Error | null, user: IUser | false, info: { message: string }) => {
         if (err) { return next(err); }
         if (!user) {
@@ -112,7 +143,8 @@ router.get('/google/callback', (req: Request, res: Response, next: NextFunction)
         if (err) { return next(err); }
         if (!user) {
             // Send error message back to opener window
-            const frontendUrl = process.env.FRONTEND_URL;
+            const frontendUrl = process.env.FRONTEND_URL; // Get frontend URL
+            const targetOrigin = frontendUrl ? `'${frontendUrl}'` : "'*'"; // Use specific origin if available, else '*' for error message only
             // Safely access message from info object
             const errorMessage = (info && typeof info === 'object' && 'message' in info && typeof info.message === 'string')
                 ? info.message
@@ -127,10 +159,10 @@ router.get('/google/callback', (req: Request, res: Response, next: NextFunction)
                     <script>
                         try {
                             console.log('Popup: Attempting postMessage (error)...');
-                            const targetOrigin = ${frontendUrl ? `'${frontendUrl}'` : "'*'"};
+                            // Use targetOrigin defined above
                              if (window.opener) {
-                                window.opener.postMessage(${messagePayload}, targetOrigin);
-                                console.log('Popup: Error message sent to:', targetOrigin);
+                                window.opener.postMessage(${messagePayload}, ${targetOrigin});
+                                console.log('Popup: Error message sent to:', ${targetOrigin});
                                 // Add a small delay before closing
                                 setTimeout(() => window.close(), 100);
                             } else {
@@ -151,15 +183,22 @@ router.get('/google/callback', (req: Request, res: Response, next: NextFunction)
         // Login the user to establish the session
          req.logIn(user, (loginErr) => {
              if (loginErr) { return next(loginErr); }
-             // Send user data back to opener window
+             // --- Secure postMessage for Success ---
+             const frontendUrlSuccess = process.env.FRONTEND_URL;
+             if (!frontendUrlSuccess) {
+                 console.error("CRITICAL: FRONTEND_URL not set. Cannot securely send user data via postMessage.");
+                 // Optionally send a generic error back or just close
+                 return res.status(500).send("<script>alert('Configuration error: Cannot complete login.'); window.close();</script>");
+             }
              const userResponse = { id: user._id, email: user.email, displayName: user.displayName, googleId: user.googleId, githubId: user.githubId, plan: user.plan };
              const script = `
                  <script>
-                    window.opener.postMessage({ type: 'auth-success', user: ${JSON.stringify(userResponse)} }, '${process.env.FRONTEND_URL || '*'}');
+                    window.opener.postMessage({ type: 'auth-success', user: ${JSON.stringify(userResponse)} }, '${frontendUrlSuccess}');
                     window.close();
                 </script>
             `;
             res.send(script);
+             // --- End Secure postMessage ---
         });
     })(req, res, next);
 });
@@ -178,7 +217,8 @@ router.get('/github/callback', (req: Request, res: Response, next: NextFunction)
         if (err) { return next(err); }
         if (!user) {
             // Send error message back to opener window
-            const frontendUrl = process.env.FRONTEND_URL;
+            const frontendUrl = process.env.FRONTEND_URL; // Get frontend URL
+            const targetOrigin = frontendUrl ? `'${frontendUrl}'` : "'*'"; // Use specific origin if available, else '*' for error message only
             // Safely access message from info object
             const errorMessage = (info && typeof info === 'object' && 'message' in info && typeof info.message === 'string')
                 ? info.message
@@ -193,10 +233,10 @@ router.get('/github/callback', (req: Request, res: Response, next: NextFunction)
                     <script>
                         try {
                             console.log('Popup: Attempting postMessage (error)...');
-                            const targetOrigin = ${frontendUrl ? `'${frontendUrl}'` : "'*'"};
+                            // Use targetOrigin defined above
                              if (window.opener) {
-                                window.opener.postMessage(${messagePayload}, targetOrigin);
-                                console.log('Popup: Error message sent to:', targetOrigin);
+                                window.opener.postMessage(${messagePayload}, ${targetOrigin});
+                                console.log('Popup: Error message sent to:', ${targetOrigin});
                                 // Add a small delay before closing
                                 setTimeout(() => window.close(), 100);
                             } else {
@@ -217,15 +257,22 @@ router.get('/github/callback', (req: Request, res: Response, next: NextFunction)
         // Login the user to establish the session
          req.logIn(user, (loginErr) => {
              if (loginErr) { return next(loginErr); }
-             // Send user data back to opener window
+             // --- Secure postMessage for Success ---
+             const frontendUrlSuccess = process.env.FRONTEND_URL;
+             if (!frontendUrlSuccess) {
+                 console.error("CRITICAL: FRONTEND_URL not set. Cannot securely send user data via postMessage.");
+                 // Optionally send a generic error back or just close
+                 return res.status(500).send("<script>alert('Configuration error: Cannot complete login.'); window.close();</script>");
+             }
              const userResponse = { id: user._id, email: user.email, displayName: user.displayName, googleId: user.googleId, githubId: user.githubId, plan: user.plan };
              const script = `
                  <script>
-                    window.opener.postMessage({ type: 'auth-success', user: ${JSON.stringify(userResponse)} }, '${process.env.FRONTEND_URL || '*'}');
+                    window.opener.postMessage({ type: 'auth-success', user: ${JSON.stringify(userResponse)} }, '${frontendUrlSuccess}');
                     window.close();
                 </script>
             `;
             res.send(script);
+             // --- End Secure postMessage ---
         });
     })(req, res, next);
 });
