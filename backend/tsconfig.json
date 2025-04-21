@@ -9,7 +9,7 @@
     "skipLibCheck": true, // Skip type checking of declaration files
     "forceConsistentCasingInFileNames": true, // Disallow inconsistently-cased references to the same file.
     "resolveJsonModule": true, // Include modules imported with .json extension
-    "types": ["node", "babel__parser"] // Explicitly include necessary types (matching @types package name)
+    "types": ["node"] // Explicitly include necessary types (matching @types package name) - Removed babel__parser
   },
   "include": ["src/**/*"], // Specifies the files to include in the program
   "exclude": ["node_modules", "**/*.spec.ts"] // Specifies the files to exclude
