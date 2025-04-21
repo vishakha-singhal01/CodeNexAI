@@ -40,13 +40,20 @@ export function LoginPage() {
         navigate('/'); // Redirect to home page on successful login
       } else {
          // Should not happen if backend sends user on success, but handle defensively
-         setError(response.data.message || 'Login failed. Please try again.');
-      }
-    } catch (err: any) {
-      console.error('Login error:', err);
-      const message = err.response?.data?.message || 'An error occurred during login.';
-      setError(message);
-    } finally {
+          setError(response.data.message || 'Login failed. Please try again.');
+       }
+     } catch (err: unknown) { // Use unknown instead of any
+       console.error('Login error:', err);
+       let message = 'An error occurred during login.';
+       // Type checking for AxiosError
+       if (axios.isAxiosError(err) && err.response?.data?.message) {
+         message = err.response.data.message;
+       } else if (err instanceof Error) {
+         // Fallback for generic Error objects
+         message = err.message;
+       }
+       setError(message);
+     } finally {
       setIsLoading(false);
     }
   };
@@ -169,12 +176,15 @@ export function LoginPage() {
             <Button type="submit" className="w-full mt-2" disabled={isLoading}>
               {isLoading ? 'Logging in...' : 'Login'}
             </Button>
-          </form>
-        </CardContent>
-         <CardFooter className="flex justify-center text-sm">
-            Don't have an account?&nbsp; {/* Use non-breaking space */}
-            <Link to="/signup" className="underline">
-                Sign up
+           </form>
+           <p className="px-6 text-xs text-center text-muted-foreground">
+             We protect your password using industry-standard hashing.
+           </p>
+         </CardContent>
+          <CardFooter className="flex justify-center text-sm">
+             Don't have an account?&nbsp; {/* Use non-breaking space */}
+             <Link to="/signup" className="underline">
+                 Sign up
             </Link>
         </CardFooter>
       </Card>

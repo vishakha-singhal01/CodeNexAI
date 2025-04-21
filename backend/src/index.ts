@@ -5,6 +5,8 @@ import mongoose from 'mongoose'; // Added mongoose
 import session from 'express-session'; // Added express-session
 import MongoStore from 'connect-mongo'; // Added connect-mongo
 import passport from 'passport'; // Added passport
+import cookieParser from 'cookie-parser'; // Import cookie-parser
+import csrf from 'csurf'; // Import csurf
 import configurePassport from './config/passport'; // Added passport config import
 import authRoutes from './routes/auth'; // Import the auth routes
 import paymentsRouter from './routes/payments'; // Import the payment routes
@@ -97,6 +99,9 @@ app.use(express.json({
   }
 }));
 
+// --- Cookie Parser Middleware ---
+// Must come before session and csurf
+app.use(cookieParser());
 
 // --- Session Configuration ---
 const sessionSecret = process.env.SESSION_SECRET;
@@ -124,6 +129,11 @@ app.use(passport.initialize()); // Initialize Passport
 // Removed unused @ts-expect-error
 app.use(passport.session()); // Enable persistent login sessions
 
+// --- CSRF Protection Middleware ---
+// Must come after cookieParser and session middleware
+const csrfProtection = csrf({ cookie: true });
+app.use(csrfProtection);
+
 // Middleware to make user available in templates (if needed later)
 // app.use((req, res, next) => {
 //   res.locals.user = req.user || null;
@@ -133,6 +143,12 @@ app.use(passport.session()); // Enable persistent login sessions
 
 app.get('/', (req: Request, res: Response) => {
   res.send('AI Documentation Writer Backend is running!');
+});
+
+// --- CSRF Token Endpoint ---
+// Route for frontend to fetch the CSRF token
+app.get('/api/csrf-token', (req: Request, res: Response) => {
+  res.json({ csrfToken: req.csrfToken() });
 });
 
 // --- Authentication Routes Placeholder ---
@@ -159,6 +175,13 @@ interface GenerateDocsRequestBody {
 
 // Endpoint to generate documentation (Refactored)
 const generateDocsHandler: RequestHandler = async (req, res) => {
+  // --- Authentication Check ---
+  if (!req.isAuthenticated()) {
+    res.status(401).json({ error: 'Unauthorized. Please log in.' });
+    return; // Use return without sending response again
+  }
+  // --- End Authentication Check ---
+
   const { code } = req.body as GenerateDocsRequestBody;
 
   if (!code) {
@@ -180,6 +203,13 @@ const generateDocsHandler: RequestHandler = async (req, res) => {
 
 // Endpoint to generate documentation from uploaded files (Refactored)
 const uploadGenerateDocsHandler: RequestHandler = async (req, res) => {
+  // --- Authentication Check ---
+  if (!req.isAuthenticated()) {
+    res.status(401).json({ error: 'Unauthorized. Please log in.' });
+    return; // Use return without sending response again
+  }
+  // --- End Authentication Check ---
+
   if (!req.files || (req.files as Express.Multer.File[]).length === 0) {
      res.status(400).json({ error: 'No files were uploaded.' });
      return;
@@ -244,6 +274,13 @@ function isValidGitHubUrl(url: string): boolean {
 
 // Endpoint to generate documentation from a GitHub repository URL (Refactored)
 const githubRepoDocsHandler: RequestHandler = async (req, res) => {
+  // --- Authentication Check ---
+  if (!req.isAuthenticated()) {
+    res.status(401).json({ error: 'Unauthorized. Please log in.' });
+    return; // Use return without sending response again
+  }
+  // --- End Authentication Check ---
+
   const { repoUrl } = req.body as GitHubRepoRequestBody;
 
   if (!repoUrl || !isValidGitHubUrl(repoUrl)) {
