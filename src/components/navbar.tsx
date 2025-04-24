@@ -42,7 +42,7 @@ export const Navbar = () => {
           <Link to="/" className="mr-6 flex items-center space-x-2"> {/* Use Link */}
             <FileText className="h-6 w-6 text-primary" />
             <span className="font-bold inline-block">
-              DocuGen AI
+              TivaAI
             </span>
           </Link>
           {/* Add navigation links here if needed */}

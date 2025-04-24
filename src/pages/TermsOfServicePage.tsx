@@ -7,72 +7,79 @@ const TermsOfServicePage: React.FC = () => {
 
       <div className="prose prose-lg max-w-4xl mx-auto">
         <p>
-          <strong>Last Updated:</strong> [Date]
+          <strong>Last Updated:</strong> 24-04-2025
         </p>
 
-        <h2>1. Agreement to Terms</h2>
+        <h2>1. Acceptance of Terms</h2>
         <p>
-          These Terms of Service constitute a legally binding agreement made between you, whether personally or on behalf of an entity (“you”) and DocuGen AI ("we," "us," or "our"), concerning your access to and use of the [Your Website URL] website as well as any other media form, media channel, mobile website or mobile application related, linked, or otherwise connected thereto (collectively, the “Site”). You agree that by accessing the Site, you have read, understood, and agreed to be bound by all of these Terms of Service. IF YOU DO NOT AGREE WITH ALL OF THESE TERMS OF SERVICE, THEN YOU ARE EXPRESSLY PROHIBITED FROM USING THE SITE AND YOU MUST DISCONTINUE USE IMMEDIATELY.
+          These Terms of Service (“Terms”) constitute a legally binding agreement between you (“User”, “you”) and TivaAI (“Company”, “we”, “our”, or “us”) governing your access to and use of our website located at [your-website-url] and all related services (collectively, the “Site”). By accessing or using the Site, you confirm that you have read, understood, and agreed to be bound by these Terms. If you do not agree to all of the Terms, you must not access or use the Site.
         </p>
 
-        <h2>2. Intellectual Property Rights</h2>
+        <h2>2. Intellectual Property</h2>
         <p>
-          Unless otherwise indicated, the Site is our proprietary property and all source code, databases, functionality, software, website designs, audio, video, text, photographs, and graphics on the Site (collectively, the “Content”) and the trademarks, service marks, and logos contained therein (the “Marks”) are owned or controlled by us or licensed to us, and are protected by copyright and trademark laws and various other intellectual property rights and unfair competition laws of the United States, foreign jurisdictions, and international conventions.
+          All content on the Site, including but not limited to source code, databases, functionality, software, website design, text, graphics, audio, and video (collectively, the “Content”) and all trademarks, service marks, and logos (the “Marks”) are the property of TivaAI or its licensors and are protected by intellectual property laws.
         </p>
         <p>
-          Regarding the code you provide for documentation generation: You retain full ownership of your code. We claim no intellectual property rights over the material you provide to the DocuGen AI service. Your code is used solely for the purpose of generating documentation for you and is not stored after processing, as detailed in our <a href="/security" className="text-blue-600 hover:underline">Security Page</a>.
-        </p>
-
-        <h2>3. User Representations</h2>
-        <p>
-          By using the Site, you represent and warrant that: (1) all registration information you submit will be true, accurate, current, and complete; (2) you will maintain the accuracy of such information and promptly update such registration information as necessary; (3) you have the legal capacity and you agree to comply with these Terms of Service; [...]
-          {/* Add other representations */}
+          Any code you upload to our service for the purpose of generating documentation remains your intellectual property. We claim no ownership over your code and do not store it after processing. Please refer to our <a href="/security" className="text-blue-600 hover:underline">Security Policy</a> for more details.
         </p>
 
-        <h2>4. Prohibited Activities</h2>
+        <h2>3. User Responsibilities</h2>
         <p>
-          You may not access or use the Site for any purpose other than that for which we make the Site available. The Site may not be used in connection with any commercial endeavors except those that are specifically endorsed or approved by us. As a user of the Site, you agree not to: [...]
-          {/* List prohibited activities */}
+          By using the Site, you represent and warrant that: 
+          <ul>
+            <li>You are at least 18 years of age or have legal parental/guardian consent to use the Site;</li>
+            <li>All information provided by you is accurate and up-to-date;</li>
+            <li>You will maintain the security of your account credentials;</li>
+            <li>Your use of the Site will not violate any applicable laws or regulations.</li>
+          </ul>
+        </p>
+
+        <h2>4. Prohibited Conduct</h2>
+        <p>
+          You agree not to engage in any of the following activities:
+          <ul>
+            <li>Use the Site for any unlawful purpose or in violation of any local, state, national, or international law;</li>
+            <li>Access or attempt to access the accounts of other users or penetrate any security measures;</li>
+            <li>Upload viruses, malware, or any other harmful code;</li>
+            <li>Use automated scripts to collect information or interact with the Site.</li>
+          </ul>
         </p>
 
         <h2>5. Service Usage and Limitations</h2>
         <p>
-          Our service generates documentation based on the code you provide. While we strive for accuracy, the generated documentation may contain errors or omissions. You are responsible for reviewing and verifying the accuracy of the generated documentation. We are not liable for any inaccuracies or issues arising from the use of the generated documentation.
+          The Site provides AI-powered code documentation services. While we strive to ensure high-quality output, we do not guarantee the completeness or accuracy of the generated documentation. Users are responsible for verifying all results before use.
         </p>
         <p>
-          We reserve the right to impose usage limits (e.g., number of requests, code size) to ensure fair usage and maintain service quality.
+          We reserve the right to enforce fair usage limits, including but not limited to the number of requests and the size of uploaded files.
         </p>
 
-        <h2>6. Term and Termination</h2>
+        <h2>6. Termination</h2>
         <p>
-          These Terms of Service shall remain in full force and effect while you use the Site. WITHOUT LIMITING ANY OTHER PROVISION OF THESE TERMS OF SERVICE, WE RESERVE THE RIGHT TO, IN OUR SOLE DISCRETION AND WITHOUT NOTICE OR LIABILITY, DENY ACCESS TO AND USE OF THE SITE (INCLUDING BLOCKING CERTAIN IP ADDRESSES), TO ANY PERSON FOR ANY REASON OR FOR NO REASON [...]
-          {/* Add termination details */}
+          We may suspend or terminate your access to the Site at our sole discretion, with or without notice, for any conduct that we believe violates these Terms or is otherwise harmful to the Site or other users.
         </p>
 
         <h2>7. Governing Law</h2>
         <p>
-          These Terms of Service and your use of the Site are governed by and construed in accordance with the laws of [Your State/Country] applicable to agreements made and to be entirely performed within [Your State/Country], without regard to its conflict of law principles.
+          These Terms are governed by the laws of [Insert Jurisdiction], without regard to conflict of law principles. Any disputes arising under these Terms shall be subject to the exclusive jurisdiction of the courts located in [Insert Jurisdiction].
         </p>
 
-        <h2>8. Disclaimer</h2>
+        <h2>8. Disclaimer of Warranties</h2>
         <p>
-          THE SITE IS PROVIDED ON AN AS-IS AND AS-AVAILABLE BASIS. YOU AGREE THAT YOUR USE OF THE SITE AND OUR SERVICES WILL BE AT YOUR SOLE RISK. TO THE FULLEST EXTENT PERMITTED BY LAW, WE DISCLAIM ALL WARRANTIES, EXPRESS OR IMPLIED, IN CONNECTION WITH THE SITE AND YOUR USE THEREOF [...]
-          {/* Full disclaimer text */}
+          THE SITE IS PROVIDED ON AN “AS IS” AND “AS AVAILABLE” BASIS. WE DISCLAIM ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
         </p>
 
         <h2>9. Limitation of Liability</h2>
         <p>
-          IN NO EVENT WILL WE OR OUR DIRECTORS, EMPLOYEES, OR AGENTS BE LIABLE TO YOU OR ANY THIRD PARTY FOR ANY DIRECT, INDIRECT, CONSEQUENTIAL, EXEMPLARY, INCIDENTAL, SPECIAL, OR PUNITIVE DAMAGES [...]
-          {/* Full limitation of liability text */}
+          TO THE MAXIMUM EXTENT PERMITTED BY LAW,  TivaAI SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR EXEMPLARY DAMAGES ARISING OUT OF OR IN CONNECTION WITH YOUR USE OF THE SITE.
         </p>
 
-        <h2>10. Contact Us</h2>
+        <h2>10. Contact Information</h2>
         <p>
-          In order to resolve a complaint regarding the Site or to receive further information regarding use of the Site, please contact us at: [Your Contact Email Address]
+          If you have any questions or concerns regarding these Terms, please contact us at: <strong>[Insert Contact Email]</strong>
         </p>
 
         <p className="mt-8 italic">
-          [Disclaimer: This is a template and may not be legally sufficient for your specific needs. Consult with a legal professional to ensure compliance with all applicable laws and regulations.]
+          Disclaimer: This document is a general template and may not address all legal requirements. Please consult a qualified attorney to ensure full compliance with applicable laws.
         </p>
       </div>
     </div>

@@ -83,14 +83,14 @@ export function SignupPage() {
         </CardHeader>
         <CardContent className="grid gap-4">
           {/* OAuth Buttons */}
-           <div className="grid grid-cols-2 gap-6">
-            <Button variant="outline" onClick={handleGitHubLogin} disabled={isLoading}>
+           <div className="grid grid-cols-1 gap-6">
+            {/* <Button variant="outline" onClick={handleGitHubLogin} disabled={isLoading}> */}
               {/* <Github className="mr-2 h-4 w-4" /> */}
-              GitHub
-            </Button>
+              {/* GitHub
+            </Button> */}
             <Button variant="outline" onClick={handleGoogleLogin} disabled={isLoading}>
               {/* <Chrome className="mr-2 h-4 w-4" /> */}
-              Google
+              Login with Google
             </Button>
           </div>
            {/* Separator */}

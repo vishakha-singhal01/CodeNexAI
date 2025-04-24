@@ -10,7 +10,7 @@ export const Footer = () => {
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <FileText className="h-5 w-5 text-primary" />
-             <span className="font-semibold text-lg">DocuGen AI</span>
+             <span className="font-semibold text-lg">TivaAI</span>
            </div>
            <div className="flex gap-6 text-sm">
              <a href="/privacy" className="text-muted-foreground hover:text-foreground transition-colors">
@@ -30,7 +30,7 @@ export const Footer = () => {
             </a> 
           </div>
           <div className="text-sm text-muted-foreground">
-            © 2025 DocuGen AI. All rights reserved.
+            © 2025 TivaAI. All rights reserved.
           </div>
         </div>
       </div>

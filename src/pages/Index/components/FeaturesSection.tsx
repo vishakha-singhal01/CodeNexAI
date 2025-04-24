@@ -44,12 +44,12 @@ export const FeaturesSection = () => {
             <CardHeader className="pb-2">
               <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
                 <Zap className="h-6 w-6 text-primary" />
-               </div>
-               <CardTitle>LLM-Powered Generator</CardTitle>
-               <CardDescription className="text-md">
-                 Uses advanced AI to create comprehensive documentation. Securely generate documentation - your code is processed in memory and never stored.
-               </CardDescription>
-             </CardHeader>
+              </div>
+              <CardTitle>LLM-Powered Generator</CardTitle>
+              <CardDescription className="text-md">
+                Uses advanced AI to create comprehensive documentation. Securely generate documentation - your code is processed in memory and never stored.
+              </CardDescription>
+            </CardHeader>
             <CardContent>
               <ul className="space-y-2">
                 <li className="flex items-start">
@@ -67,7 +67,10 @@ export const FeaturesSection = () => {
               </ul>
             </CardContent>
           </Card>
-          <Card className="border-primary/20 bg-gradient-to-br from-background to-muted/20">
+          <Card className="relative border-primary/20 bg-gradient-to-br from-background to-muted/20">
+            <div className="absolute top-2 right-2 bg-yellow-200 text-yellow-800 text-xs font-semibold px-2 py-0.5 rounded-full shadow-sm">
+              Coming Soon
+            </div>
             <CardHeader className="pb-2">
               <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
                 <GitBranch className="h-6 w-6 text-primary" />
