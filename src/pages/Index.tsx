@@ -66,6 +66,7 @@ const Index = () => {
         method: 'POST',
         headers: headers,
         body: body,
+        credentials: 'include', // <-- Add this line to send cookies
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || `HTTP error! status: ${response.status}`);
