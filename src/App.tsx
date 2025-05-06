@@ -4,7 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom"; // Import useNavigate, useLocation
-import { AuthProvider, useAuth } from './context/AuthContext'; // Import AuthProvider and useAuth
+import { useAuth } from './context/AuthContext'; // Import useAuth
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import { LoginPage } from "./pages/Auth/LoginPage"; // Import LoginPage
@@ -76,13 +76,13 @@ const AuthRedirector = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <AuthProvider> {/* Wrap BrowserRouter with AuthProvider */}
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AuthRedirector /> {/* Add the redirector component */}
-          <Routes>
-            <Route path="/" element={<Index />} />
+      {/* AuthProvider is now only in main.tsx */}
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <AuthRedirector /> {/* Add the redirector component */}
+        <Routes>
+          <Route path="/" element={<Index />} />
           <Route path="/login" element={<LoginPage />} /> {/* Add Login Route */}
           <Route path="/signup" element={<SignupPage />} /> {/* Add Signup Route */}
           <Route path="/contact" element={<ContactPage />} /> {/* Add Contact Route */}
@@ -93,7 +93,6 @@ const App = () => (
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
-    </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
