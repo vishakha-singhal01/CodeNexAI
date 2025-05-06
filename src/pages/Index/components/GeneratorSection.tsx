@@ -145,7 +145,7 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
           <CardContent className="p-8 space-y-6">
             {/* Add onValueChange handler to Tabs */}
             <Tabs defaultValue="paste" className="w-full" onValueChange={handleTabChange}>
-              <TabsList className="grid w-full grid-cols-3 gap-2 bg-muted/40 p-1 rounded-lg mb-6">
+              <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 gap-2 bg-muted/40 p-1 rounded-lg mb-6">
                 {/* Changed active background to bg-card */}
                 <TabsTrigger value="paste" className="rounded-md data-[state=active]:bg-card data-[state=active]:text-card-foreground data-[state=active]:shadow-sm">Paste Code</TabsTrigger>
                 <TabsTrigger
