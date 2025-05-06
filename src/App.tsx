@@ -4,7 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom"; // Import useNavigate, useLocation
-import { useAuth } from './context/AuthContext'; // Import useAuth
+import { AuthProvider, useAuth } from './context/AuthContext'; // Import AuthProvider and useAuth
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import { LoginPage } from "./pages/Auth/LoginPage"; // Import LoginPage
@@ -29,27 +29,43 @@ const AuthRedirector = () => {
     }
 
     const publicOnlyPaths = ['/login', '/signup'];
+    // Define protected paths that require authentication.
+    // For now, let's assume all paths other than publicOnlyPaths and static info pages are protected.
+    // This example doesn't explicitly list all protected paths but demonstrates the logic.
+    // A more robust solution might involve a configuration for protected routes.
 
     if (user) {
-      // If user is logged in and on a public-only page, redirect to home
-      if (publicOnlyPaths.includes(location.pathname)) {
-        console.log('User logged in, redirecting from public-only page to /');
+      // User is logged in.
+      // Check if there's a 'from' location in the state (e.g., redirected from a protected route).
+      const fromPath = location.state?.from?.pathname;
+      const fromSearch = location.state?.from?.search;
+
+      if (fromPath) {
+        console.log(`User logged in, redirecting to originally requested path: ${fromPath}${fromSearch || ''}`);
+        // Navigate to the original path and clear the state to prevent redirect loops.
+        navigate(fromPath + (fromSearch || ''), { replace: true, state: {} });
+      } else if (publicOnlyPaths.includes(location.pathname)) {
+        // If logged in and on a public-only page like /login or /signup (and no specific 'from' path),
+        // redirect to the home page.
+        console.log('User logged in, on public-only page (no specific "from" path), redirecting to /');
         navigate('/', { replace: true });
       }
-      // Else if user is logged in, not on a public-only page, and not on home, redirect to home
-      // This handles post-login/signup redirection (including OAuth)
-      else if (location.pathname !== '/') {
-        console.log('User logged in (and not on a public-only page or home), redirecting to /');
-        navigate('/', { replace: true });
+      // If the user is logged in, not on a public-only page, and there's no 'from' path,
+      // they are likely on a valid page (e.g., /, /contact, /settings). No redirect needed.
+
+    } else {
+      // User is NOT logged in.
+      // If user tries to access a protected route, redirect to login and pass the current location.
+      // For this example, let's consider any page not explicitly public or informational as protected.
+      // This is a simplified check.
+      const informationalPages = ['/', '/contact', '/security', '/privacy', '/terms']; // Add root as informational for non-logged-in users
+      const isPublicOrInfo = publicOnlyPaths.includes(location.pathname) || informationalPages.includes(location.pathname);
+
+      if (!isPublicOrInfo) {
+        console.log(`User not logged in, attempting to access ${location.pathname}, redirecting to /login`);
+        navigate('/login', { replace: true, state: { from: location } });
       }
     }
-    // If user is NOT logged in and tries to access a protected route, redirect to login
-    // Example: Add protected routes logic here if needed in the future
-    // const protectedPaths = ['/dashboard', '/profile'];
-    // if (!user && protectedPaths.includes(location.pathname)) {
-    //   navigate('/login', { replace: true, state: { from: location } });
-    // }
-
   }, [user, isLoading, navigate, location]);
 
   // This component doesn't render anything itself, it just handles effects
@@ -60,12 +76,13 @@ const AuthRedirector = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthRedirector /> {/* Add the redirector component */}
-        <Routes>
-          <Route path="/" element={<Index />} />
+      <AuthProvider> {/* Wrap BrowserRouter with AuthProvider */}
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AuthRedirector /> {/* Add the redirector component */}
+          <Routes>
+            <Route path="/" element={<Index />} />
           <Route path="/login" element={<LoginPage />} /> {/* Add Login Route */}
           <Route path="/signup" element={<SignupPage />} /> {/* Add Signup Route */}
           <Route path="/contact" element={<ContactPage />} /> {/* Add Contact Route */}
@@ -76,6 +93,7 @@ const App = () => (
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
+    </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
