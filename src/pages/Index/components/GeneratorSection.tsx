@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ChevronDown } from "lucide-react"; // Added for dropdown indicator
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import {
@@ -64,6 +65,15 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
 }) => {
   const { user } = useAuth(); // Get user from AuthContext
   const userPlan = user?.plan || 'free'; // Default to 'free' if no user or plan
+  const [selectedTab, setSelectedTab] = useState("paste"); // State for active tab
+
+  const tabOptions = [
+    { value: "paste", label: "Paste Code", disabled: false, badge: null },
+    { value: "upload", label: "Upload", disabled: userPlan === 'free', badge: userPlan === 'free' ? "Pro+" : null },
+    { value: "github", label: "GitHub Repo", disabled: userPlan === 'free' || userPlan === 'pro', badge: (userPlan === 'free' || userPlan === 'pro') ? "Enterprise" : null },
+  ];
+
+  const currentTabLabel = tabOptions.find(tab => tab.value === selectedTab)?.label || "Select Option";
 
   const handleDownloadPDF = () => {
     const preview = document.getElementById('markdown-preview');
@@ -112,7 +122,8 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
   }, [isLoadingDocs]);
 
   // Handler for tab changes
-  const handleTabChange = () => {
+  const handleTabChangeInternal = (newTabValue: string) => {
+    setSelectedTab(newTabValue);
     clearInputs(); // Clear all input fields from parent
     setGeneratedDocs(''); // Clear generated docs
     setDocsError(null); // Clear any errors
@@ -143,26 +154,44 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
 
         <Card className="max-w-4xl mx-auto shadow-md border rounded-2xl bg-card"> {/* Changed bg-white to bg-card */}
           <CardContent className="p-8 space-y-6">
-            {/* Add onValueChange handler to Tabs */}
-            <Tabs defaultValue="paste" className="w-full" onValueChange={handleTabChange}>
-              <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 gap-2 bg-muted/40 p-1 rounded-lg mb-6">
-                {/* Changed active background to bg-card */}
-                <TabsTrigger value="paste" className="rounded-md data-[state=active]:bg-card data-[state=active]:text-card-foreground data-[state=active]:shadow-sm">Paste Code</TabsTrigger>
-                <TabsTrigger
-                  value="upload"
-                  className="rounded-md data-[state=active]:bg-card data-[state=active]:text-card-foreground data-[state=active]:shadow-sm"
-                  disabled={userPlan === 'free'} // Disable for free users
-                >
-                  Upload {userPlan === 'free' && <Badge variant="secondary" className="ml-2">Pro+</Badge>}
-                </TabsTrigger>
-                <TabsTrigger
-                  value="github"
-                  className="rounded-md data-[state=active]:bg-card data-[state=active]:text-card-foreground data-[state=active]:shadow-sm"
-                  disabled={userPlan === 'free' || userPlan === 'pro'} // Disable for free & pro users
-                >
-                  GitHub Repo {(userPlan === 'free' || userPlan === 'pro') && <Badge variant="secondary" className="ml-2">Enterprise</Badge>}
-                </TabsTrigger>
+            <Tabs value={selectedTab} onValueChange={handleTabChangeInternal} className="w-full">
+              {/* Desktop TabsList */}
+              <TabsList className="hidden w-full md:grid md:grid-cols-3 gap-2 bg-muted/40 p-1 rounded-lg mb-6">
+                {tabOptions.map(tab => (
+                  <TabsTrigger
+                    key={tab.value}
+                    value={tab.value}
+                    className="rounded-md data-[state=active]:bg-card data-[state=active]:text-card-foreground data-[state=active]:shadow-sm"
+                    disabled={tab.disabled}
+                  >
+                    {tab.label} {tab.badge && <Badge variant="secondary" className="ml-2">{tab.badge}</Badge>}
+                  </TabsTrigger>
+                ))}
               </TabsList>
+
+              {/* Mobile Dropdown */}
+              <div className="md:hidden mb-6">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="w-full justify-between">
+                      {currentTabLabel}
+                      <ChevronDown className="ml-2 h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-[--radix-dropdown-menu-trigger-width)]">
+                    {tabOptions.map(tab => (
+                      <DropdownMenuItem
+                        key={tab.value}
+                        disabled={tab.disabled}
+                        onSelect={() => handleTabChangeInternal(tab.value)}
+                        className={selectedTab === tab.value ? "bg-muted" : ""}
+                      >
+                        {tab.label} {tab.badge && <Badge variant="secondary" className="ml-2">{tab.badge}</Badge>}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
 
               {/* Paste Code Tab */}
               <TabsContent value="paste">
