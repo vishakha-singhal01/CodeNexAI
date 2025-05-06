@@ -28,24 +28,21 @@ const AuthRedirector = () => {
       return;
     }
 
-    // If user is logged in and they are on a public-only page (like login/signup), redirect to home
     const publicOnlyPaths = ['/login', '/signup'];
-    if (user && publicOnlyPaths.includes(location.pathname)) {
-      console.log('User logged in, redirecting from public page to /');
-      navigate('/', { replace: true });
-    }
 
-    // If the user just logged in via OAuth (user state changed from null to object),
-    // and they are not already on the home page, redirect them there.
-    // This handles the post-popup scenario specifically.
-    // Note: This might cause a redirect even if they logged in via form, which is usually desired.
-    if (user && location.pathname !== '/') {
-       // We might want to be more specific here if redirects are needed only for OAuth
-       // For now, redirecting logged-in users to '/' if they aren't there seems reasonable.
-       // console.log('User logged in, redirecting to /');
-       // navigate('/', { replace: true }); // Let's comment this specific part out for now, the above check handles login/signup pages
+    if (user) {
+      // If user is logged in and on a public-only page, redirect to home
+      if (publicOnlyPaths.includes(location.pathname)) {
+        console.log('User logged in, redirecting from public-only page to /');
+        navigate('/', { replace: true });
+      }
+      // Else if user is logged in, not on a public-only page, and not on home, redirect to home
+      // This handles post-login/signup redirection (including OAuth)
+      else if (location.pathname !== '/') {
+        console.log('User logged in (and not on a public-only page or home), redirecting to /');
+        navigate('/', { replace: true });
+      }
     }
-
     // If user is NOT logged in and tries to access a protected route, redirect to login
     // Example: Add protected routes logic here if needed in the future
     // const protectedPaths = ['/dashboard', '/profile'];
