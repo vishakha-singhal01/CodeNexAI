@@ -1,12 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, FormEvent } from 'react'; // Added FormEvent
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { Button } from "@/components/ui/button"; // Assuming Button component is stable
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input"; // Assuming Input component exists
+import { Label } from "@/components/ui/label"; // Assuming Label component exists
 
 export function SignupPage() {
   const navigate = useNavigate();
-  const { login } = useAuth(); // Use login from AuthContext to set user state after successful OAuth
+  const { login } = useAuth();
   const [error, setError] = useState<string | null>(null);
+
+  // Form state for email/password signup
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState(''); // Optional username
 
   // Explicitly get and log the API base URL to ensure it's loaded
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
@@ -74,24 +81,88 @@ export function SignupPage() {
     return () => {
       window.removeEventListener('message', handleMessage);
     };
-  }, [login, navigate, apiBaseUrl]); // Add apiBaseUrl to dependencies
+  }, [login, navigate, apiBaseUrl]);
+
+  const handleEmailSignup = async (e: FormEvent) => {
+    e.preventDefault();
+    setError(null); // Clear previous errors
+
+    if (!email || !password) {
+      setError('Email and password are required.');
+      return;
+    }
+    // Basic email validation
+    if (!/\S+@\S+\.\S+/.test(email)) {
+        setError('Please enter a valid email address.');
+        return;
+    }
+    if (password.length < 8) {
+        setError('Password must be at least 8 characters long.');
+        return;
+    }
+
+    try {
+      const response = await fetch(`${apiBaseUrl}/api/auth/signup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password, username: username || undefined }), // Send username only if it has a value
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.message || 'Signup failed. Please try again.');
+      } else {
+        console.log('Email signup successful:', data.user);
+        login(data.user); // Update auth context
+        navigate('/'); // Redirect to home
+      }
+    } catch (err) {
+      console.error('Email signup error:', err);
+      setError('An unexpected error occurred during signup. Please try again.');
+    }
+  };
 
   return (
     <div style={{ padding: '50px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
       <h1>Signup Page</h1>
-      <p style={{ margin: '10px 0' }}>
-        VITE_API_BASE_URL is configured as: <strong>{apiBaseUrl}</strong>
-      </p>
-      <Button onClick={handleGoogleSignup} style={{ marginTop: '20px', padding: '10px 20px', fontSize: '16px' }}>
+      
+      {/* Email/Password Signup Form */}
+      <form onSubmit={handleEmailSignup} style={{ width: '300px', marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+        <div>
+          <Label htmlFor="email">Email</Label>
+          <Input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="you@example.com" />
+        </div>
+        <div>
+          <Label htmlFor="username">Username (Optional)</Label>
+          <Input type="text" id="username" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="your_username" />
+        </div>
+        <div>
+          <Label htmlFor="password">Password</Label>
+          <Input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="********" />
+        </div>
+        <Button type="submit" style={{ padding: '10px 20px', fontSize: '16px' }}>Sign up with Email</Button>
+      </form>
+
+      <p style={{ margin: '20px 0' }}>Or</p>
+
+      <Button onClick={handleGoogleSignup} style={{ padding: '10px 20px', fontSize: '16px' }}>
         Sign up / Login with Google
       </Button>
+      
       {error && (
-        <p style={{ color: 'red', marginTop: '20px', border: '1px solid red', padding: '10px' }}>
+        <p style={{ color: 'red', marginTop: '20px', border: '1px solid red', padding: '10px', maxWidth: '300px', textAlign: 'center' }}>
           <strong>Error:</strong> {error}
         </p>
       )}
-      <div style={{ marginTop: '30px', padding: '15px', border: '1px solid #ccc', backgroundColor: '#f9f9f9' }}>
-        <p><strong>Troubleshooting Tips:</strong></p>
+
+      <p style={{ marginTop: '20px' }}>
+        VITE_API_BASE_URL is configured as: <strong>{apiBaseUrl}</strong>
+      </p>
+      <div style={{ marginTop: '30px', padding: '15px', border: '1px solid #ccc', backgroundColor: '#f9f9f9', maxWidth: '400px' }}>
+        <p><strong>Troubleshooting Tips (OAuth):</strong></p>
         <ul style={{ textAlign: 'left', listStylePosition: 'inside' }}>
           <li>Check the browser's developer console (usually F12) for any error messages.</li>
           <li>Ensure the backend server at <code>{apiBaseUrl}</code> is running and accessible.</li>

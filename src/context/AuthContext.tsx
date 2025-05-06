@@ -5,6 +5,7 @@ import axios from 'axios'; // Using axios for API calls
 interface User {
   id: string;
   email?: string;
+  username?: string; // Added optional username
   displayName?: string;
   googleId?: string;
   githubId?: string;

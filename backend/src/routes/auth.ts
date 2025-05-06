@@ -18,7 +18,7 @@ const authLimiter = rateLimit({
 
 // Define the signup handler separately to ensure correct typing
 const signupHandler: RequestHandler = async (req, res, next) => {
-    const { email, password, displayName } = req.body;
+    const { email, password, username, displayName } = req.body; // Added username
 
     // --- Enhanced Input Validation ---
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // Simple email format regex
@@ -48,7 +48,8 @@ const signupHandler: RequestHandler = async (req, res, next) => {
         const newUser = new User({
             email: normalizedEmail, // Use normalized email
             password: password, // Password will be hashed by the pre-save hook in User model
-            displayName: displayName || normalizedEmail.split('@')[0] // Default display name from normalized email
+            username: username ? username.toLowerCase() : undefined, // Save username if provided, store lowercase
+            displayName: displayName || username || normalizedEmail.split('@')[0] // Default display name: provided displayName, then username, then from email
         });
 
         await newUser.save();
@@ -66,7 +67,7 @@ const signupHandler: RequestHandler = async (req, res, next) => {
         });
 
         // If the promise resolved (login successful), send the success response
-        const userResponse = { id: newUser._id, email: newUser.email, displayName: newUser.displayName, plan: newUser.plan };
+        const userResponse = { id: newUser._id, email: newUser.email, username: newUser.username, displayName: newUser.displayName, plan: newUser.plan }; // Added username to response
         res.status(201).json({ message: 'Signup successful.', user: userResponse });
         // Implicitly returns Promise<void> here
 

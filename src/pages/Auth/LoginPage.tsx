@@ -1,12 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, FormEvent } from 'react'; // Added FormEvent
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { Button } from "@/components/ui/button"; // Assuming Button component is stable
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input"; // Assuming Input component exists
+import { Label } from "@/components/ui/label"; // Assuming Label component exists
 
 export function LoginPage() {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [error, setError] = useState<string | null>(null);
+
+  // Form state for email/password login
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   // Explicitly get and log the API base URL to ensure it's loaded
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
@@ -78,24 +84,75 @@ export function LoginPage() {
     return () => {
       window.removeEventListener('message', handleMessage);
     };
-  }, [login, navigate, apiBaseUrl]); // Add apiBaseUrl to dependencies
+  }, [login, navigate, apiBaseUrl]);
+
+  const handleEmailLogin = async (e: FormEvent) => {
+    e.preventDefault();
+    setError(null); // Clear previous errors
+
+    if (!email || !password) {
+      setError('Email and password are required.');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${apiBaseUrl}/api/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.message || 'Login failed. Please check your credentials.');
+      } else {
+        console.log('Email login successful:', data.user);
+        login(data.user); // Update auth context
+        navigate('/'); // Redirect to home
+      }
+    } catch (err) {
+      console.error('Email login error:', err);
+      setError('An unexpected error occurred during login. Please try again.');
+    }
+  };
 
   return (
     <div style={{ padding: '50px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
       <h1>Login Page</h1>
-      <p style={{ margin: '10px 0' }}>
-        VITE_API_BASE_URL is configured as: <strong>{apiBaseUrl}</strong>
-      </p>
-      <Button onClick={handleGoogleLogin} style={{ marginTop: '20px', padding: '10px 20px', fontSize: '16px' }}>
+
+      {/* Email/Password Login Form */}
+      <form onSubmit={handleEmailLogin} style={{ width: '300px', marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+        <div>
+          <Label htmlFor="email">Email</Label>
+          <Input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="you@example.com" />
+        </div>
+        <div>
+          <Label htmlFor="password">Password</Label>
+          <Input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="********" />
+        </div>
+        <Button type="submit" style={{ padding: '10px 20px', fontSize: '16px' }}>Login with Email</Button>
+      </form>
+
+      <p style={{ margin: '20px 0' }}>Or</p>
+      
+      <Button onClick={handleGoogleLogin} style={{ padding: '10px 20px', fontSize: '16px' }}>
         Login with Google
       </Button>
+      
       {error && (
-        <p style={{ color: 'red', marginTop: '20px', border: '1px solid red', padding: '10px' }}>
+        <p style={{ color: 'red', marginTop: '20px', border: '1px solid red', padding: '10px', maxWidth: '300px', textAlign: 'center' }}>
           <strong>Error:</strong> {error}
         </p>
       )}
-      <div style={{ marginTop: '30px', padding: '15px', border: '1px solid #ccc', backgroundColor: '#f9f9f9' }}>
-        <p><strong>Troubleshooting Tips:</strong></p>
+      
+      <p style={{ marginTop: '20px' }}>
+        VITE_API_BASE_URL is configured as: <strong>{apiBaseUrl}</strong>
+      </p>
+      <div style={{ marginTop: '30px', padding: '15px', border: '1px solid #ccc', backgroundColor: '#f9f9f9', maxWidth: '400px' }}>
+        <p><strong>Troubleshooting Tips (OAuth):</strong></p>
         <ul style={{ textAlign: 'left', listStylePosition: 'inside' }}>
           <li>Check the browser's developer console (usually F12) for any error messages.</li>
           <li>Ensure the backend server at <code>{apiBaseUrl}</code> is running and accessible.</li>
@@ -103,6 +160,9 @@ export function LoginPage() {
           <li>Confirm that the redirect URIs in your Google Cloud Console match <code>{apiBaseUrl}/api/auth/google/callback</code>.</li>
         </ul>
       </div>
+      <p style={{ marginTop: '20px' }}>
+        Don't have an account? <a href="/signup" style={{ textDecoration: 'underline' }}>Sign up here</a>
+      </p>
     </div>
   );
 }
