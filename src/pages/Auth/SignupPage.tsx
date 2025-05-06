@@ -1,161 +1,107 @@
-import React, { useState, useEffect } from 'react'; // Import useEffect
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
-import axios from 'axios'; // Import axios
-import { useAuth } from '@/context/AuthContext'; // Import useAuth
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-// Import icons if you have them, e.g., from lucide-react
-// import { Chrome, Github } from 'lucide-react';
-import { Link } from 'react-router-dom'; // Import Link
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
+import { Button } from "@/components/ui/button"; // Assuming Button component is stable
 
 export function SignupPage() {
   const navigate = useNavigate();
-  const { login } = useAuth(); // Get login function from context
-  const [displayName, setDisplayName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const { login } = useAuth(); // Use login from AuthContext to set user state after successful OAuth
   const [error, setError] = useState<string | null>(null);
 
-  const handleEmailSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError(null);
-    try {
-       const response = await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/api/auth/signup`, // Replaced URL
-        { email, password, displayName }, // Include displayName
-        { withCredentials: true } // Send cookies
-      );
-       if (response.data.user) {
-        login(response.data.user); // Update auth context after signup
-        navigate('/'); // Redirect to home page on successful signup
+  // Explicitly get and log the API base URL to ensure it's loaded
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+  console.log('SignupPage VITE_API_BASE_URL:', apiBaseUrl);
+
+  // Render an error message if the API base URL is not set
+  if (!apiBaseUrl) {
+    return (
+      <div style={{ padding: '20px', color: 'red', textAlign: 'center' }}>
+        <h1>Configuration Error</h1>
+        <p>VITE_API_BASE_URL is not defined in your environment variables.</p>
+        <p>Please ensure it is set in your .env file and the application is rebuilt/restarted if necessary.</p>
+      </div>
+    );
+  }
+
+  const handleGoogleSignup = () => {
+    console.log('Attempting Google signup/login...');
+    // Google OAuth typically handles both signup and login through the same endpoint.
+    // The backend will create a new user if one doesn't exist or log in an existing user.
+    window.open(`${apiBaseUrl}/api/auth/google`, '_blank', 'width=500,height=600,noopener,noreferrer');
+  };
+
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      console.log('Signup Page: Message received:', event.data);
+
+      // Verify the origin of the message for security
+      let expectedOrigin = '';
+      try {
+        expectedOrigin = new URL(apiBaseUrl).origin;
+      } catch (e) {
+        console.error("Signup Page: Invalid VITE_API_BASE_URL for origin check:", apiBaseUrl, e);
+        setError("Configuration error: Invalid API base URL for origin check.");
+        return;
+      }
+
+      if (event.origin !== expectedOrigin) {
+        console.warn(`Signup Page: Message rejected from origin: ${event.origin}. Expected: ${expectedOrigin}`);
+        // setError(`Security warning: Message from unexpected origin ${event.origin}.`);
+        // return; 
       } else {
-         // Handle case where backend doesn't send user on success (shouldn't happen)
-          setError(response.data.message || 'Signup failed. Please try again.');
-       }
-     } catch (err: unknown) { // Use unknown instead of any
-        console.error('Signup error:', err);
-        let message = 'An error occurred during signup.';
-        // Type checking for AxiosError
-        if (axios.isAxiosError(err) && err.response?.data?.message) {
-          message = err.response.data.message;
-        } else if (err instanceof Error) {
-          // Fallback for generic Error objects
-          message = err.message;
-        }
-        setError(message);
-     } finally {
-      setIsLoading(false);
-    }
-  };
+        console.log(`Signup Page: Message origin ${event.origin} verified.`);
+      }
 
-   const handleGoogleLogin = () => {
-    console.log('Attempting Google login...');
-    window.open(`${import.meta.env.VITE_API_BASE_URL}/api/auth/google`, '_blank', 'width=500,height=600,noopener,noreferrer'); // Replaced URL
-  };
+      if (typeof event.data !== 'object' || event.data === null || !event.data.type) {
+        console.log('Signup Page: Received message is not in the expected format (missing type).', event.data);
+        return;
+      }
 
-  const handleGitHubLogin = () => {
-    console.log('Attempting GitHub login...');
-     window.open(`${import.meta.env.VITE_API_BASE_URL}/api/auth/github`, '_blank', 'width=500,height=600,noopener,noreferrer'); // Replaced URL
-  };
+      const { type, user, error: messageError } = event.data;
 
-  // The useEffect hook for handling postMessage has been removed as the backend now handles redirects.
-  // The AuthContext should detect the session change after the redirect.
+      if (type === 'auth-success' && user) {
+        console.log('OAuth success message received on signup page:', user);
+        login(user); // Update auth context with the user data
+        navigate('/'); // Redirect to home page after successful signup/login
+      } else if (type === 'auth-error') {
+        console.error('OAuth error message received on signup page:', messageError);
+        setError(messageError || 'OAuth authentication failed.');
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+
+    return () => {
+      window.removeEventListener('message', handleMessage);
+    };
+  }, [login, navigate, apiBaseUrl]); // Add apiBaseUrl to dependencies
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background">
-      <Card className="w-full max-w-sm">
-        <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl">Create an account</CardTitle>
-          <CardDescription>
-            Enter your details below to create your account
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4">
-          {/* OAuth Buttons */}
-           <div className="grid grid-cols-1 gap-6">
-            {/* <Button variant="outline" onClick={handleGitHubLogin} disabled={isLoading}> */}
-              {/* <Github className="mr-2 h-4 w-4" /> */}
-              {/* GitHub
-            </Button> */}
-            <Button variant="outline" onClick={handleGoogleLogin} disabled={isLoading}>
-              {/* <Chrome className="mr-2 h-4 w-4" /> */}
-              Login with Google
-            </Button>
-          </div>
-           {/* Separator */}
-           <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">
-                Or continue with
-              </span>
-            </div>
-          </div>
-          {/* Email/Password Form */}
-          <form onSubmit={handleEmailSignup} className="grid gap-2">
-             <div className="grid gap-1">
-              <Label htmlFor="displayName">Display Name (Optional)</Label>
-              <Input
-                id="displayName"
-                type="text"
-                placeholder="Your Name"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                disabled={isLoading}
-              />
-            </div>
-            <div className="grid gap-1">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="john@example.com"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={isLoading}
-              />
-            </div>
-            <div className="grid gap-1">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={isLoading}
-              />
-            </div>
-            {error && <p className="text-sm text-red-500">{error}</p>}
-            <Button type="submit" className="w-full mt-2" disabled={isLoading}>
-              {isLoading ? 'Creating Account...' : 'Create Account'}
-             </Button>
-           </form>
-           <p className="px-6 text-xs text-center text-muted-foreground">
-             We protect your password using industry-standard hashing.
-           </p>
-         </CardContent>
-          <CardFooter className="flex justify-center text-sm">
-             Already have an account?&nbsp;
-             <Link to="/login" className="underline">
-                Log in
-            </Link>
-        </CardFooter>
-      </Card>
+    <div style={{ padding: '50px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+      <h1>Signup Page</h1>
+      <p style={{ margin: '10px 0' }}>
+        VITE_API_BASE_URL is configured as: <strong>{apiBaseUrl}</strong>
+      </p>
+      <Button onClick={handleGoogleSignup} style={{ marginTop: '20px', padding: '10px 20px', fontSize: '16px' }}>
+        Sign up / Login with Google
+      </Button>
+      {error && (
+        <p style={{ color: 'red', marginTop: '20px', border: '1px solid red', padding: '10px' }}>
+          <strong>Error:</strong> {error}
+        </p>
+      )}
+      <div style={{ marginTop: '30px', padding: '15px', border: '1px solid #ccc', backgroundColor: '#f9f9f9' }}>
+        <p><strong>Troubleshooting Tips:</strong></p>
+        <ul style={{ textAlign: 'left', listStylePosition: 'inside' }}>
+          <li>Check the browser's developer console (usually F12) for any error messages.</li>
+          <li>Ensure the backend server at <code>{apiBaseUrl}</code> is running and accessible.</li>
+          <li>Verify that the Google OAuth client ID and secret are correctly configured on the backend.</li>
+          <li>Confirm that the redirect URIs in your Google Cloud Console match <code>{apiBaseUrl}/api/auth/google/callback</code>.</li>
+        </ul>
+      </div>
+       <p style={{ marginTop: '20px' }}>
+        Already have an account? <a href="/login" style={{ textDecoration: 'underline' }}>Login here</a>
+      </p>
     </div>
   );
 }
