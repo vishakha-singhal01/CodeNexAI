@@ -12,12 +12,12 @@ const TermsOfServicePage: React.FC = () => {
 
         <h2>1. Acceptance of Terms</h2>
         <p>
-          These Terms of Service (“Terms”) constitute a legally binding agreement between you (“User”, “you”) and TivaAI (“Company”, “we”, “our”, or “us”) governing your access to and use of our website located at [your-website-url] and all related services (collectively, the “Site”). By accessing or using the Site, you confirm that you have read, understood, and agreed to be bound by these Terms. If you do not agree to all of the Terms, you must not access or use the Site.
+          These Terms of Service (“Terms”) constitute a legally binding agreement between you (“User”, “you”) and CodeNexAI (“Company”, “we”, “our”, or “us”) governing your access to and use of our website located at [your-website-url] and all related services (collectively, the “Site”). By accessing or using the Site, you confirm that you have read, understood, and agreed to be bound by these Terms. If you do not agree to all of the Terms, you must not access or use the Site.
         </p>
 
         <h2>2. Intellectual Property</h2>
         <p>
-          All content on the Site, including but not limited to source code, databases, functionality, software, website design, text, graphics, audio, and video (collectively, the “Content”) and all trademarks, service marks, and logos (the “Marks”) are the property of TivaAI or its licensors and are protected by intellectual property laws.
+          All content on the Site, including but not to source code, databases, functionality, software, website design, text, graphics, audio, and video (collectively, the “Content”) and all trademarks, service marks, and logos (the “Marks”) are the property of CodeNexAI or its licensors and are protected by intellectual property laws.
         </p>
         <p>
           Any code you upload to our service for the purpose of generating documentation remains your intellectual property. We claim no ownership over your code and do not store it after processing. Please refer to our <a href="/security" className="text-blue-600 hover:underline">Security Policy</a> for more details.
@@ -70,7 +70,7 @@ const TermsOfServicePage: React.FC = () => {
 
         <h2>9. Limitation of Liability</h2>
         <p>
-          TO THE MAXIMUM EXTENT PERMITTED BY LAW,  TivaAI SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR EXEMPLARY DAMAGES ARISING OUT OF OR IN CONNECTION WITH YOUR USE OF THE SITE.
+          TO THE MAXIMUM EXTENT PERMITTED BY LAW,  CodeNexAI SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR EXEMPLARY DAMAGES ARISING OUT OF OR IN CONNECTION WITH YOUR USE OF THE SITE.
         </p>
 
         <h2>10. Contact Information</h2>
