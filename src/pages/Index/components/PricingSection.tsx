@@ -53,7 +53,7 @@ export const PricingSection = () => {
             <CardHeader>
               <CardTitle>Free</CardTitle>
               <div className="flex items-baseline mt-4">
-                <span className="text-4xl font-bold">$0</span>
+                <span className="text-4xl font-bold">₹0</span>
                 <span className="text-muted-foreground ml-1">/month</span>
               </div>
             </CardHeader>
@@ -94,10 +94,13 @@ export const PricingSection = () => {
               <div className="flex items-baseline mt-4">
                 <div className="text-2xl font-semibold">
                   <span className="line-through text-gray-500 mr-2">₹2300</span>
-                  <span className="text-4xl font-bold text-black">₹1800 <span className="text-muted-foreground ml-1"></span></span>
-                  <span className="block text-sm text-red-500 mt-1">Early bird discount — limited time offer!</span>
+                  <span className="text-4xl font-bold text-black">₹1800</span>
+                  <span className="text-sm text-muted-foreground ml-1 align-baseline">/month</span>
+                  <span className="block text-sm text-red-500 mt-1">
+                    Early bird discount — limited time offer!
+                  </span>
                 </div>
-              
+
               </div>
             </CardHeader>
             <CardContent>
