@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
 
 export const HeroSection = () => {
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
   return (
     <section className="w-full py-24 md:py-32 lg:py-40">
       <div className="container px-4 md:px-6 max-w-5xl mx-auto flex flex-col items-center text-center gap-6">
@@ -34,14 +34,14 @@ export const HeroSection = () => {
         </div>
         {/* Simplified placeholder graphic */}
         <div className="relative w-full max-w-4xl aspect-video rounded-lg border bg-muted/50 overflow-hidden mt-12 shadow-lg">
-          <div className="absolute inset-0 flex items-center justify-center p-8">
-            {/* Placeholder: Could be an abstract graphic or animation */}
-            <div className="flex items-center gap-4 text-muted-foreground">
-              <Code className="h-16 w-16 opacity-50" />
-              <ArrowRight className="h-8 w-8 opacity-30" />
-              <FileText className="h-16 w-16 opacity-50" />
-            </div>
-          </div>
+          <iframe
+            className="absolute inset-0 w-full h-full"
+            src="https://www.youtube.com/embed/-hOP15RYckM?si=WHyJ78_oXV97DtPM"
+            title="YouTube video"
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          ></iframe>
         </div>
       </div>
     </section>

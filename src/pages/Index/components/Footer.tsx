@@ -13,7 +13,7 @@ export const Footer = () => {
              <span className="font-semibold text-lg">CodeNexAI</span>
            </div>
            <div className="flex gap-6 text-sm">
-             <a href="/privacy" className="text-muted-foreground hover:text-foreground transition-colors">
+             {/* <a href="/privacy" className="text-muted-foreground hover:text-foreground transition-colors">
                Privacy
              </a>
              <a href="/terms" className="text-muted-foreground hover:text-foreground transition-colors">
@@ -21,13 +21,13 @@ export const Footer = () => {
              </a>
             <a href="/security" className="text-muted-foreground hover:text-foreground transition-colors">
               Security
-            </a>
+            </a> */}
             {/* <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
               Blog
             </a>*/}
-            <a className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer" onClick={() => navigate('/contact')}>
+            {/* <a className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer" onClick={() => navigate('/contact')}>
               Contact
-            </a> 
+            </a>  */}
           </div>
           <div className="text-sm text-muted-foreground">
             © 2025 CodeNexAI. All rights reserved.

@@ -88,13 +88,13 @@ export function SignupPage() {
               {/* <Github className="mr-2 h-4 w-4" /> */}
               {/* GitHub
             </Button> */}
-            <Button variant="outline" onClick={handleGoogleLogin} disabled={isLoading}>
+            {/* <Button variant="outline" onClick={handleGoogleLogin} disabled={isLoading}> */}
               {/* <Chrome className="mr-2 h-4 w-4" /> */}
-              Login with Google
-            </Button>
+              {/* Login with Google
+            </Button> */}
           </div>
            {/* Separator */}
-           <div className="relative">
+           {/* <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t" />
             </div>
@@ -103,7 +103,7 @@ export function SignupPage() {
                 Or continue with
               </span>
             </div>
-          </div>
+          </div> */}
           {/* Email/Password Form */}
           <form onSubmit={handleEmailSignup} className="grid gap-2">
              <div className="grid gap-1">
