@@ -28,31 +28,44 @@ const AuthRedirector = () => {
       return;
     }
 
-    // If user is logged in and they are on a public-only page (like login/signup), redirect to home
     const publicOnlyPaths = ['/login', '/signup'];
-    if (user && publicOnlyPaths.includes(location.pathname)) {
-      console.log('User logged in, redirecting from public page to /');
-      navigate('/', { replace: true });
+    // Define protected paths that require authentication.
+    // For now, let's assume all paths other than publicOnlyPaths and static info pages are protected.
+    // This example doesn't explicitly list all protected paths but demonstrates the logic.
+    // A more robust solution might involve a configuration for protected routes.
+
+    if (user) {
+      // User is logged in.
+      // Check if there's a 'from' location in the state (e.g., redirected from a protected route).
+      const fromPath = location.state?.from?.pathname;
+      const fromSearch = location.state?.from?.search;
+
+      if (fromPath) {
+        console.log(`User logged in, redirecting to originally requested path: ${fromPath}${fromSearch || ''}`);
+        // Navigate to the original path and clear the state to prevent redirect loops.
+        navigate(fromPath + (fromSearch || ''), { replace: true, state: {} });
+      } else if (publicOnlyPaths.includes(location.pathname)) {
+        // If logged in and on a public-only page like /login or /signup (and no specific 'from' path),
+        // redirect to the home page.
+        console.log('User logged in, on public-only page (no specific "from" path), redirecting to /');
+        navigate('/', { replace: true });
+      }
+      // If the user is logged in, not on a public-only page, and there's no 'from' path,
+      // they are likely on a valid page (e.g., /, /contact, /settings). No redirect needed.
+
+    } else {
+      // User is NOT logged in.
+      // If user tries to access a protected route, redirect to login and pass the current location.
+      // For this example, let's consider any page not explicitly public or informational as protected.
+      // This is a simplified check.
+      const informationalPages = ['/', '/contact', '/security', '/privacy', '/terms']; // Add root as informational for non-logged-in users
+      const isPublicOrInfo = publicOnlyPaths.includes(location.pathname) || informationalPages.includes(location.pathname);
+
+      if (!isPublicOrInfo) {
+        console.log(`User not logged in, attempting to access ${location.pathname}, redirecting to /login`);
+        navigate('/login', { replace: true, state: { from: location } });
+      }
     }
-
-    // If the user just logged in via OAuth (user state changed from null to object),
-    // and they are not already on the home page, redirect them there.
-    // This handles the post-popup scenario specifically.
-    // Note: This might cause a redirect even if they logged in via form, which is usually desired.
-    if (user && location.pathname !== '/') {
-       // We might want to be more specific here if redirects are needed only for OAuth
-       // For now, redirecting logged-in users to '/' if they aren't there seems reasonable.
-       // console.log('User logged in, redirecting to /');
-       // navigate('/', { replace: true }); // Let's comment this specific part out for now, the above check handles login/signup pages
-    }
-
-    // If user is NOT logged in and tries to access a protected route, redirect to login
-    // Example: Add protected routes logic here if needed in the future
-    // const protectedPaths = ['/dashboard', '/profile'];
-    // if (!user && protectedPaths.includes(location.pathname)) {
-    //   navigate('/login', { replace: true, state: { from: location } });
-    // }
-
   }, [user, isLoading, navigate, location]);
 
   // This component doesn't render anything itself, it just handles effects
@@ -63,6 +76,7 @@ const AuthRedirector = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
+      {/* AuthProvider is now only in main.tsx */}
       <Toaster />
       <Sonner />
       <BrowserRouter>

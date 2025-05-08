@@ -6,6 +6,7 @@ export interface IUser extends Document {
   password?: string; // Optional for OAuth users
   googleId?: string;
   githubId?: string;
+  username?: string; // Optional username
   displayName?: string; // Name from OAuth provider or user input
   plan: 'free' | 'pro' | 'enterprise'; // Subscription plan
   createdAt: Date;
@@ -36,6 +37,13 @@ const UserSchema: Schema = new Schema({
     type: String,
     unique: true,
     sparse: true,
+  },
+  username: {
+    type: String,
+    unique: true,
+    sparse: true, // Allows multiple documents to have null username
+    trim: true,
+    lowercase: true, // Optional: standardize usernames
   },
   displayName: {
     type: String,
