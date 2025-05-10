@@ -10,6 +10,9 @@ export interface IUser extends Document {
   displayName?: string; // Name from OAuth provider or user input
   plan: 'free' | 'pro' | 'enterprise'; // Subscription plan
   createdAt: Date;
+  isEmailVerified: boolean;
+  emailVerificationToken?: string;
+  emailVerificationTokenExpires?: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
@@ -58,6 +61,16 @@ const UserSchema: Schema = new Schema({
   createdAt: {
     type: Date,
     default: Date.now,
+  },
+  isEmailVerified: {
+    type: Boolean,
+    default: false,
+  },
+  emailVerificationToken: {
+    type: String,
+  },
+  emailVerificationTokenExpires: {
+    type: Date,
   },
 });
 
