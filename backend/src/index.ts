@@ -73,6 +73,7 @@ const allowedOrigins = [
   'https://www.codenexai.com',    // New production frontend
   'http://localhost:5173',        // Common Vite dev port
   'http://localhost:3000',        // Common React dev port
+  'http://localhost:8080',        // Add your current frontend dev port
   // Add any other origins you need (e.g., preview deployment URLs)
 ];
 
