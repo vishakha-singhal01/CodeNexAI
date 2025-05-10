@@ -12,7 +12,7 @@ if (!API_KEY) {
 
 const genAI = new GoogleGenerativeAI(API_KEY);
 // Use a potentially more capable model if needed for detailed analysis, but flash is fast.
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash"});
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 // Define safety settings to potentially allow more code-related content
 const safetySettings = [
@@ -49,27 +49,28 @@ export async function generateAIDocumentation(code: string, filename?: string): 
   // Construct the prompt for detailed, line-by-line analysis
   const prompt = `
     Analyze the following code snippet${filename ? ` from the file "${filename}"` : ''}.
-    Provide comprehensive documentation in Markdown format.
-    Your analysis should be detailed, explaining the purpose and logic of the code, ideally on a block-by-block or line-by-line basis where appropriate.
-    Identify the programming language if possible.
+Provide documentation in Markdown format. Your goal is to be clear and helpful.
 
-    Explain:
-    - The overall purpose of the code snippet.
+**Instructions for Documentation Verbosity:**
+- **For simple, short functions or code blocks (e.g., less than 10-15 lines, straightforward logic):** Provide a concise, one to two-sentence summary of its purpose. If it's a function, briefly state its parameters and return value. Avoid line-by-line explanation unless a specific line is unusually complex or non-obvious.
+- **For more complex or longer code snippets:** Provide a more detailed explanation. This can include:
+    - The overall purpose.
     - Key variables, functions, classes, or components and their roles.
-    - The logic flow and decision points.
-    - Any complex algorithms or operations.
+    - The logic flow and important decision points.
+    - Brief explanations of any complex algorithms or operations.
     - Input parameters and return values for functions/methods.
-    - Potential edge cases or important considerations mentioned in comments or inferrable from the code.
+    - Potential edge cases or important considerations if apparent.
+- **Overall:** Prioritize clarity and usefulness. Avoid redundant explanations or stating the obvious. Do not just repeat the code.
 
-    Format the output clearly using Markdown. Use headings, lists, and code blocks (\`\`\`) for clarity.
-    Do not just repeat the code; explain it thoroughly.
+Identify the programming language if possible.
+Format the output clearly using Markdown. Use headings, lists, and code blocks (\`\`\`) for clarity where they add value.
 
-    Code Snippet:
-    \`\`\`
-    ${code}
-    \`\`\`
+Code Snippet:
+\`\`\`
+${code}
+\`\`\`
 
-    Generate the documentation below:
+Generate the documentation below:
   `;
 
   try {
@@ -77,10 +78,10 @@ export async function generateAIDocumentation(code: string, filename?: string): 
 
     // Pass safety settings to the generation request
     const result = await model.generateContent({
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
-        safetySettings,
-        // Consider adding generationConfig if needed (e.g., temperature)
-        // generationConfig: { temperature: 0.7 }
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      safetySettings,
+      // Consider adding generationConfig if needed (e.g., temperature)
+      // generationConfig: { temperature: 0.7 }
     });
     const response = result.response;
     const text = response.text();
@@ -92,7 +93,7 @@ export async function generateAIDocumentation(code: string, filename?: string): 
   } catch (error: any) {
     console.error("Error generating documentation via Gemini:", error);
     if (error.message.includes('API key not valid')) {
-        return "Error: Invalid Gemini API Key. Please check your .env file.";
+      return "Error: Invalid Gemini API Key. Please check your .env file.";
     }
     // Re-throw or return a more specific error message
     return `Error generating documentation via Gemini: ${error.message}`;
