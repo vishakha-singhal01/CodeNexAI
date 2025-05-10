@@ -48,30 +48,32 @@ export async function generateAIDocumentation(code: string, filename?: string): 
 
   // Construct the prompt for detailed, line-by-line analysis
   const prompt = `
-    Analyze the following code snippet${filename ? ` from the file "${filename}"` : ''}.
-Provide documentation in Markdown format. Your goal is to be clear and helpful.
+Analyze the following code snippet${filename ? ` from the file "${filename}"` : ''} and generate clean, professional Markdown documentation.
 
-**Instructions for Documentation Verbosity:**
-- **For simple, short functions or code blocks (e.g., less than 10-15 lines, straightforward logic):** Provide a concise, one to two-sentence summary of its purpose. If it's a function, briefly state its parameters and return value. Avoid line-by-line explanation unless a specific line is unusually complex or non-obvious.
-- **For more complex or longer code snippets:** Provide a more detailed explanation. This can include:
-    - The overall purpose.
-    - Key variables, functions, classes, or components and their roles.
-    - The logic flow and important decision points.
-    - Brief explanations of any complex algorithms or operations.
-    - Input parameters and return values for functions/methods.
-    - Potential edge cases or important considerations if apparent.
-- **Overall:** Prioritize clarity and usefulness. Avoid redundant explanations or stating the obvious. Do not just repeat the code.
+### Documentation Guidelines:
+- **Brevity First:** 
+  - For simple or short snippets (e.g., under ~15 lines): Write a concise summary of what the code does. For functions, include a brief note on parameters and return value.
+  - For longer or more complex code: Explain the purpose, logic flow, key components, and any significant algorithms or decisions.
+- **Focus on Usefulness:**
+  - Prioritize clarity over completeness. Do not describe every line unless needed.
+  - Highlight non-obvious behavior, edge cases, or side effects.
+  - Identify input/output expectations and key roles of functions, variables, or classes.
+- **Code Optimization (if applicable):**
+  - Suggest improvements or more efficient alternatives to any part of the code if they are clearly better.
+  - Keep suggestions brief, targeted, and valuable.
 
-Identify the programming language if possible.
-Format the output clearly using Markdown. Use headings, lists, and code blocks (\`\`\`) for clarity where they add value.
+### Formatting:
+- Identify the programming language if possible.
+- Use proper Markdown: headings, subheadings, bullet points, and fenced code blocks (\`\`\`) for readability.
 
-Code Snippet:
+### Input Code:
 \`\`\`
 ${code}
 \`\`\`
 
-Generate the documentation below:
-  `;
+Generate the optimized and clean documentation below:
+`;
+
 
   try {
     console.log(`Sending code snippet${filename ? ` from ${filename}` : ''} to Gemini for detailed documentation.`);
