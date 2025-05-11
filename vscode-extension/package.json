@@ -1,0 +1,62 @@
+{
+  "name": "codenexai-documentation",
+  "displayName": "CodeNexAI Document your code",
+  "description": "Select code in your editor to generate documentation using CodenexAI.",
+  "version": "0.1.1",
+  "publisher": "CodeNexAI",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Education",
+    "Linters",
+    "Programming Languages",
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:codenexai.generateDocumentation"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "codenexai.generateDocumentation",
+        "title": "CodenexAI: Generate Documentation for Selection",
+        "category": "CodenexAI"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "when": "editorHasSelection",
+          "command": "codenexai.generateDocumentation",
+          "group": "navigation"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint . --ext .ts,.tsx",
+    "package": "vsce package",
+    "publish": "vsce publish"
+  },
+  "devDependencies": {
+    "@types/babel__parser": "^7.1.5",
+    "@types/markdown-it": "^13.0.0",
+    "@types/node": "18.x",
+    "@types/vscode": "^1.80.0",
+    "@typescript-eslint/eslint-plugin": "^5.0.0",
+    "@typescript-eslint/parser": "^5.0.0",
+    "eslint": "^8.0.0",
+    "typescript": "^5.0.0",
+    "vsce": "^2.15.0"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "markdown-it": "^14.0.0"
+  },
+  "icon": "images/icon.png"
+}

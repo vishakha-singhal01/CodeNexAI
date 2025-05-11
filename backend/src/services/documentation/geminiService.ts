@@ -12,7 +12,7 @@ if (!API_KEY) {
 
 const genAI = new GoogleGenerativeAI(API_KEY);
 // Use a potentially more capable model if needed for detailed analysis, but flash is fast.
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash"});
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 // Define safety settings to potentially allow more code-related content
 const safetySettings = [
@@ -48,39 +48,42 @@ export async function generateAIDocumentation(code: string, filename?: string): 
 
   // Construct the prompt for detailed, line-by-line analysis
   const prompt = `
-    Analyze the following code snippet${filename ? ` from the file "${filename}"` : ''}.
-    Provide comprehensive documentation in Markdown format.
-    Your analysis should be detailed, explaining the purpose and logic of the code, ideally on a block-by-block or line-by-line basis where appropriate.
-    Identify the programming language if possible.
+Analyze the following code snippet${filename ? ` from the file "${filename}"` : ''} and generate clean, professional Markdown documentation.
 
-    Explain:
-    - The overall purpose of the code snippet.
-    - Key variables, functions, classes, or components and their roles.
-    - The logic flow and decision points.
-    - Any complex algorithms or operations.
-    - Input parameters and return values for functions/methods.
-    - Potential edge cases or important considerations mentioned in comments or inferrable from the code.
+### Documentation Guidelines:
+- **Brevity First:** 
+  - For simple or short snippets (e.g., under ~15 lines): Write a concise summary of what the code does. For functions, include a brief note on parameters and return value.
+  - For longer or more complex code: Explain the purpose, logic flow, key components, and any significant algorithms or decisions.
+- **Focus on Usefulness:**
+  - Prioritize clarity over completeness. Do not describe every line unless needed.
+  - Highlight non-obvious behavior, edge cases, or side effects.
+  - Identify input/output expectations and key roles of functions, variables, or classes.
+- **Code Optimization (if applicable):**
+  - Suggest improvements or more efficient alternatives to any part of the code if they are clearly better.
+  - Keep suggestions brief, targeted, and valuable.
 
-    Format the output clearly using Markdown. Use headings, lists, and code blocks (\`\`\`) for clarity.
-    Do not just repeat the code; explain it thoroughly.
+### Formatting:
+- Identify the programming language if possible.
+- Use proper Markdown: headings, subheadings, bullet points, and fenced code blocks (\`\`\`) for readability.
 
-    Code Snippet:
-    \`\`\`
-    ${code}
-    \`\`\`
+### Input Code:
+\`\`\`
+${code}
+\`\`\`
 
-    Generate the documentation below:
-  `;
+Generate the optimized and clean documentation below:
+`;
+
 
   try {
     console.log(`Sending code snippet${filename ? ` from ${filename}` : ''} to Gemini for detailed documentation.`);
 
     // Pass safety settings to the generation request
     const result = await model.generateContent({
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
-        safetySettings,
-        // Consider adding generationConfig if needed (e.g., temperature)
-        // generationConfig: { temperature: 0.7 }
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      safetySettings,
+      // Consider adding generationConfig if needed (e.g., temperature)
+      // generationConfig: { temperature: 0.7 }
     });
     const response = result.response;
     const text = response.text();
@@ -92,7 +95,7 @@ export async function generateAIDocumentation(code: string, filename?: string): 
   } catch (error: any) {
     console.error("Error generating documentation via Gemini:", error);
     if (error.message.includes('API key not valid')) {
-        return "Error: Invalid Gemini API Key. Please check your .env file.";
+      return "Error: Invalid Gemini API Key. Please check your .env file.";
     }
     // Re-throw or return a more specific error message
     return `Error generating documentation via Gemini: ${error.message}`;
