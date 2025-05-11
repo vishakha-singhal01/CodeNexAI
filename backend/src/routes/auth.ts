@@ -1,6 +1,7 @@
-import express, { Router, Request, Response, NextFunction, RequestHandler } from 'express'; // Import RequestHandler
+import express, { Router, Request, Response, NextFunction, RequestHandler } from 'express';
 import passport from 'passport';
-import rateLimit from 'express-rate-limit'; // Import rate-limiter
+import jwt from 'jsonwebtoken'; // Import jsonwebtoken
+import rateLimit from 'express-rate-limit';
 import crypto from 'crypto'; // Import crypto for token generation
 import User, { IUser } from '../models/User'; // Adjust path if necessary
 import { sendVerificationEmail } from '../services/emailService'; // Import email service
@@ -104,43 +105,103 @@ const signupHandler: RequestHandler = async (req, res, next) => {
 // Apply the handler and limiter to the signup route
 router.post('/signup', authLimiter, signupHandler);
 
-// POST /api/auth/login (Email/Password Login)
+
+// POST /api/auth/login (Email/Password Login for existing session-based flow)
 // Apply the limiter to the login route
 router.post('/login', authLimiter, (req: Request, res: Response, next: NextFunction) => {
     passport.authenticate('local', (err: Error | null, user: IUser | false, info: { message: string }) => {
         if (err) { return next(err); }
         if (!user) {
-            // Use the message from the LocalStrategy verify callback
             return res.status(401).json({ message: info.message || 'Login failed.' });
         }
-
-        // Check if email is verified
         if (!user.isEmailVerified) {
-            // Consider if you want to allow resending verification email from here
-            // For now, just deny login.
-            return res.status(403).json({ 
-                message: 'Please verify your email address before logging in.',
-                // Optionally, provide a way to resend verification
-                // needsResend: true 
-            });
+            return res.status(403).json({ message: 'Please verify your email address before logging in.' });
         }
-
         req.logIn(user, (err) => {
             if (err) { return next(err); }
-            // Send back user info (excluding password)
-            const userResponse = { 
-                id: user._id, 
-                email: user.email, 
-                displayName: user.displayName, 
-                plan: user.plan,
-                isEmailVerified: user.isEmailVerified // Good to include this
-            };
+            const userResponse = { id: user._id, email: user.email, displayName: user.displayName, plan: user.plan, isEmailVerified: user.isEmailVerified };
             return res.json({ message: 'Login successful.', user: userResponse });
         });
     })(req, res, next);
 });
 
-// POST /api/auth/logout
+// --- New Login Handler for VS Code (JWT based) ---
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+    console.error("CRITICAL: JWT_SECRET is not defined in environment variables. VS Code login will not work.");
+    // Optionally, throw an error to prevent the app from starting without it,
+    // or disable the VS Code login route.
+}
+
+router.post('/vscode-login', authLimiter, async (req: Request, res: Response, next: NextFunction) => {
+    const { email, password, redirect_uri } = req.body;
+
+    if (!JWT_SECRET) {
+        return res.status(500).send("Authentication configuration error on server.");
+    }
+
+    if (!redirect_uri || !redirect_uri.startsWith('vscode://')) {
+        return res.status(400).send("Invalid or missing redirect_uri for VS Code login.");
+    }
+
+    // We'll manually authenticate here, similar to how passport-local strategy would,
+    // because we need to control the response (redirect with token) differently.
+    try {
+        const normalizedEmail = email.toLowerCase();
+        const user = await User.findOne({ email: normalizedEmail });
+
+        if (!user) {
+            // Instead of sending JSON, redirect with error for VS Code if possible, or show error page.
+            // For simplicity, we'll send an error that the VS Code extension won't directly parse as a token.
+            // A more advanced flow might redirect to an error page on codenexai.com that then tries to message VS Code.
+            const errorUrl = new URL(redirect_uri);
+            errorUrl.searchParams.set('error', 'invalid_credentials');
+            errorUrl.searchParams.set('message', 'Invalid email or password.');
+            return res.redirect(errorUrl.toString());
+        }
+
+        const isMatch = await user.comparePassword(password);
+        if (!isMatch) {
+            const errorUrl = new URL(redirect_uri);
+            errorUrl.searchParams.set('error', 'invalid_credentials');
+            errorUrl.searchParams.set('message', 'Invalid email or password.');
+            return res.redirect(errorUrl.toString());
+        }
+
+        if (!user.isEmailVerified) {
+            const errorUrl = new URL(redirect_uri);
+            errorUrl.searchParams.set('error', 'email_unverified');
+            errorUrl.searchParams.set('message', 'Please verify your email address before logging in.');
+            return res.redirect(errorUrl.toString());
+        }
+
+        // User is authenticated and email is verified, generate JWT
+        const payload = {
+            id: user._id,
+            email: user.email,
+            displayName: user.displayName,
+            // Add any other claims you need in the token
+        };
+        const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' }); // Token expires in 7 days
+
+        // Redirect back to VS Code with the token
+        const callbackUrl = new URL(redirect_uri);
+        callbackUrl.searchParams.set('token', token);
+        return res.redirect(callbackUrl.toString());
+
+    } catch (error) {
+        console.error("Error during VS Code login:", error);
+        // Generic error redirect
+        const errorUrl = new URL(redirect_uri);
+        errorUrl.searchParams.set('error', 'server_error');
+        errorUrl.searchParams.set('message', 'An internal server error occurred.');
+        return res.redirect(errorUrl.toString());
+    }
+});
+// --- End New Login Handler for VS Code ---
+
+
+// POST /api/auth/logout (for session-based logout)
 router.post('/logout', (req: Request, res: Response, next: NextFunction) => {
     console.log(`[Auth Route] Received POST request for /api/auth/logout. User authenticated: ${req.isAuthenticated()}`); // <-- Add logging
     req.logout((err) => { // req.logout requires a callback

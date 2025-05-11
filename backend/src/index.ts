@@ -1,7 +1,7 @@
 import express, { Express, Request, Response, NextFunction, RequestHandler } from 'express'; // Added RequestHandler
 import dotenv from 'dotenv';
 import cors from 'cors';
-import mongoose from 'mongoose'; // Added mongoose
+import mongoose from 'mongoose';
 import session from 'express-session'; // Added express-session
 import MongoStore from 'connect-mongo'; // Added connect-mongo
 import passport from 'passport'; // Added passport
@@ -9,10 +9,11 @@ import cookieParser from 'cookie-parser'; // Import cookie-parser
 // import csrf from 'csurf'; // Import csurf - Temporarily disabled for testing
 import configurePassport from './config/passport'; // Added passport config import
 import authRoutes from './routes/auth'; // Import the auth routes
-import paymentsRouter from './routes/payments'; // Import the payment routes
-import contactRouter from './routes/contact'; // Import the contact routes
+import paymentsRouter from './routes/payments';
+import contactRouter from './routes/contact';
+import { protectWithJwt, AuthenticatedRequest } from './middleware/authMiddleware'; // Import AuthenticatedRequest
 import multer from 'multer';
-import axios from 'axios'; // Import axios
+import axios from 'axios';
 import AdmZip from 'adm-zip'; // Import adm-zip
 import path from 'path'; // Import path for extension checking
 import { generateDocumentation } from './services/documentationService';
@@ -176,14 +177,9 @@ interface GenerateDocsRequestBody {
 // --- Route Handlers Refactoring ---
 
 // Endpoint to generate documentation (Refactored)
-const generateDocsHandler: RequestHandler = async (req, res) => {
-  // --- Authentication Check ---
-  if (!req.isAuthenticated()) {
-    res.status(401).json({ error: 'Unauthorized. Please log in.' });
-    return; // Use return without sending response again
-  }
-  // --- End Authentication Check ---
-
+const generateDocsHandler = async (req: AuthenticatedRequest, res: Response) => {
+  // Authentication is now handled by protectWithJwt middleware for this route
+  // req.user is available here if needed, e.g., for logging or user-specific logic
   const { code } = req.body as GenerateDocsRequestBody;
 
   if (!code) {
@@ -204,14 +200,9 @@ const generateDocsHandler: RequestHandler = async (req, res) => {
 };
 
 // Endpoint to generate documentation from uploaded files (Refactored)
-const uploadGenerateDocsHandler: RequestHandler = async (req, res) => {
-  // --- Authentication Check ---
-  if (!req.isAuthenticated()) {
-    res.status(401).json({ error: 'Unauthorized. Please log in.' });
-    return; // Use return without sending response again
-  }
-  // --- End Authentication Check ---
-
+const uploadGenerateDocsHandler = async (req: AuthenticatedRequest, res: Response) => {
+  // Authentication is now handled by protectWithJwt middleware for this route
+  // req.user is available here
   if (!req.files || (req.files as Express.Multer.File[]).length === 0) {
      res.status(400).json({ error: 'No files were uploaded.' });
      return;
@@ -275,14 +266,9 @@ function isValidGitHubUrl(url: string): boolean {
 }
 
 // Endpoint to generate documentation from a GitHub repository URL (Refactored)
-const githubRepoDocsHandler: RequestHandler = async (req, res) => {
-  // --- Authentication Check ---
-  if (!req.isAuthenticated()) {
-    res.status(401).json({ error: 'Unauthorized. Please log in.' });
-    return; // Use return without sending response again
-  }
-  // --- End Authentication Check ---
-
+const githubRepoDocsHandler = async (req: AuthenticatedRequest, res: Response) => {
+  // Authentication is now handled by protectWithJwt middleware for this route
+  // req.user is available here
   const { repoUrl } = req.body as GitHubRepoRequestBody;
 
   if (!repoUrl || !isValidGitHubUrl(repoUrl)) {
@@ -353,10 +339,10 @@ const githubRepoDocsHandler: RequestHandler = async (req, res) => {
   }
 };
 
-// --- Apply Refactored Handlers ---
-app.post('/api/generate-docs', generateDocsHandler);
-app.post('/api/upload-generate-docs', upload.array('codeFiles'), uploadGenerateDocsHandler);
-app.post('/api/github-repo-docs', githubRepoDocsHandler);
+// --- Apply Refactored Handlers with JWT Protection ---
+app.post('/api/generate-docs', protectWithJwt as RequestHandler, generateDocsHandler as RequestHandler);
+app.post('/api/upload-generate-docs', protectWithJwt as RequestHandler, upload.array('codeFiles'), uploadGenerateDocsHandler as RequestHandler);
+app.post('/api/github-repo-docs', protectWithJwt as RequestHandler, githubRepoDocsHandler as RequestHandler);
 
 
 // Placeholder for other API routes related to documentation generation
