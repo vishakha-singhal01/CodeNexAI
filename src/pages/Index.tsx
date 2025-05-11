@@ -6,6 +6,7 @@ import { Navbar } from "@/components/navbar"; // Import Navbar
 
 // Import the newly created section components
 import { HeroSection } from "./Index/components/HeroSection";
+import VSCodeExtensionAnnouncement from "./Index/components/VSCodeExtensionAnnouncement"; // Import the new announcement section
 import { GeneratorSection } from "./Index/components/GeneratorSection";
 import { ProblemSection } from "./Index/components/ProblemSection";
 import { FeaturesSection } from "./Index/components/FeaturesSection";
@@ -164,6 +165,7 @@ const Index = () => {
 
         {/* Render the extracted sections */}
         <HeroSection />
+        <VSCodeExtensionAnnouncement /> {/* Add the new announcement section here */}
 
         <GeneratorSection
           inputCode={inputCode}
