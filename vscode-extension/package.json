@@ -1,14 +1,14 @@
 {
   "name": "codenexai-documentation",
-  "displayName": "CodenexAI Documentation Generator",
+  "displayName": "CodeNexAI Document your code",
   "description": "Select code in your editor to generate documentation using CodenexAI.",
-  "version": "0.1.0",
-  "publisher": "codenexai",
+  "version": "0.1.1",
+  "publisher": "CodeNexAI",
   "engines": {
     "vscode": "^1.80.0"
   },
   "categories": [
-    "Documentation",
+    "Education",
     "Linters",
     "Programming Languages",
     "Other"
