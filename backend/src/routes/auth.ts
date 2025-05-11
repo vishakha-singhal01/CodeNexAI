@@ -1,7 +1,9 @@
 import express, { Router, Request, Response, NextFunction, RequestHandler } from 'express'; // Import RequestHandler
 import passport from 'passport';
 import rateLimit from 'express-rate-limit'; // Import rate-limiter
+import crypto from 'crypto'; // Import crypto for token generation
 import User, { IUser } from '../models/User'; // Adjust path if necessary
+import { sendVerificationEmail } from '../services/emailService'; // Import email service
 
 const router: Router = express.Router(); // Explicitly type the router
 
@@ -54,22 +56,43 @@ const signupHandler: RequestHandler = async (req, res, next) => {
 
         await newUser.save();
 
-        // Wrap req.logIn in a Promise to handle async nature correctly within RequestHandler
-        await new Promise<void>((resolve, reject) => {
-            req.logIn(newUser, (err) => {
-                if (err) {
-                    console.error("Error during req.logIn after signup:", err);
-                    // Reject the promise, which will be caught by the outer catch block
-                    return reject(new Error('Login after signup failed.'));
-                }
-                resolve(); // Resolve the promise if login is successful
-            });
-        });
+        // Generate verification token
+        const verificationToken = crypto.randomBytes(32).toString('hex');
+        newUser.emailVerificationToken = verificationToken;
+        newUser.emailVerificationTokenExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes expiry
 
-        // If the promise resolved (login successful), send the success response
-        const userResponse = { id: newUser._id, email: newUser.email, username: newUser.username, displayName: newUser.displayName, plan: newUser.plan }; // Added username to response
-        res.status(201).json({ message: 'Signup successful.', user: userResponse });
-        // Implicitly returns Promise<void> here
+        await newUser.save(); // Save user with verification token
+
+        try {
+            if (newUser.email) { // Ensure email exists before sending
+                await sendVerificationEmail(newUser.email, verificationToken);
+            } else {
+                // This case should ideally not happen if email is required for signup
+                // Or handle OAuth signups that might not have email immediately differently
+                console.warn(`User ${newUser._id} signed up without an email. Skipping verification email.`);
+            }
+        } catch (emailError) {
+            console.error("Error sending verification email:", emailError);
+            // Decide on error handling:
+            // Option 1: Let user sign up but inform them email sending failed.
+            // Option 2: Fail the signup (as implemented by passing error to next())
+            // For now, we'll pass the error, which will prevent login and send a generic server error.
+            // A more user-friendly approach might be to log the error and still allow signup,
+            // with a message to the user to try verifying later or contact support.
+            return next(new Error('Signup succeeded, but failed to send verification email. Please try logging in and resending verification.'));
+        }
+
+        // User is NOT logged in immediately after signup.
+        // They must verify their email first.
+        // The req.logIn call has been removed from here.
+        
+        // Send response indicating signup was successful and email verification is needed.
+        // No user object is sent back in the response here, as they are not logged in.
+        res.status(201).json({ 
+            message: 'Signup successful. Please check your email to verify your account.'
+            // We are not sending the user object anymore as they are not logged in.
+            // user: { email: newUser.email, isEmailVerified: newUser.isEmailVerified } 
+        });
 
     } catch (error) {
         // Catch errors from findOne, save, or the login Promise rejection
@@ -90,12 +113,30 @@ router.post('/login', authLimiter, (req: Request, res: Response, next: NextFunct
             // Use the message from the LocalStrategy verify callback
             return res.status(401).json({ message: info.message || 'Login failed.' });
         }
-         req.logIn(user, (err) => {
-             if (err) { return next(err); }
-             // Send back user info (excluding password)
-             const userResponse = { id: user._id, email: user.email, displayName: user.displayName, plan: user.plan };
-             return res.json({ message: 'Login successful.', user: userResponse });
-         });
+
+        // Check if email is verified
+        if (!user.isEmailVerified) {
+            // Consider if you want to allow resending verification email from here
+            // For now, just deny login.
+            return res.status(403).json({ 
+                message: 'Please verify your email address before logging in.',
+                // Optionally, provide a way to resend verification
+                // needsResend: true 
+            });
+        }
+
+        req.logIn(user, (err) => {
+            if (err) { return next(err); }
+            // Send back user info (excluding password)
+            const userResponse = { 
+                id: user._id, 
+                email: user.email, 
+                displayName: user.displayName, 
+                plan: user.plan,
+                isEmailVerified: user.isEmailVerified // Good to include this
+            };
+            return res.json({ message: 'Login successful.', user: userResponse });
+        });
     })(req, res, next);
 });
 
@@ -277,6 +318,54 @@ router.get('/github/callback', (req: Request, res: Response, next: NextFunction)
         });
     })(req, res, next);
 });
+
+// Define the email verification handler
+const verifyEmailHandler: RequestHandler = async (req, res, next) => {
+    const { token } = req.params;
+
+    if (!token) {
+        res.status(400).json({ message: 'Verification token is missing.' });
+        return;
+    }
+
+    try {
+        const user = await User.findOne({
+            emailVerificationToken: token,
+            emailVerificationTokenExpires: { $gt: Date.now() }, // Check if token is not expired
+        });
+
+        if (!user) {
+            res.status(400).json({ message: 'Invalid or expired verification token.' });
+            return;
+        }
+
+        user.isEmailVerified = true;
+        user.emailVerificationToken = undefined; // Clear the token
+        user.emailVerificationTokenExpires = undefined; // Clear the expiry
+
+        await user.save();
+
+        // Optionally, log the user in automatically after verification
+        // await new Promise<void>((resolve, reject) => {
+        //     req.logIn(user, (err) => {
+        //         if (err) return reject(err);
+        //         resolve();
+        //     });
+        // });
+
+        // Instead of redirecting from backend, send a success message.
+        // The frontend will handle the redirect or UI update.
+        res.status(200).json({ message: 'Email verified successfully.' /*, user: {id: user._id, email: user.email} */ });
+        return;
+
+    } catch (error) {
+        console.error("Error during email verification:", error);
+        next(error);
+    }
+};
+
+// GET /api/auth/verify-email/:token
+router.get('/verify-email/:token', verifyEmailHandler);
 
 
 export default router;

@@ -25,6 +25,7 @@ export function SignupPage() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null); // Added success message state
 
   const handleEmailSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,25 +37,31 @@ export function SignupPage() {
         { email, password, displayName }, // Include displayName
         { withCredentials: true } // Send cookies
       );
-       if (response.data.user) {
-        login(response.data.user); // Update auth context after signup
-        navigate('/'); // Redirect to home page on successful signup
+      // After signup, user is NOT logged in. Backend only sends a message.
+      if (response.status === 201 && response.data.message) {
+        setSuccessMessage(response.data.message); // Display success message from backend
+        // Clear form fields
+        setDisplayName('');
+        setEmail('');
+        setPassword('');
+        setError(null); // Clear any previous errors
       } else {
-         // Handle case where backend doesn't send user on success (shouldn't happen)
-          setError(response.data.message || 'Signup failed. Please try again.');
-       }
-     } catch (err: unknown) { // Use unknown instead of any
-        console.error('Signup error:', err);
-        let message = 'An error occurred during signup.';
-        // Type checking for AxiosError
-        if (axios.isAxiosError(err) && err.response?.data?.message) {
-          message = err.response.data.message;
-        } else if (err instanceof Error) {
-          // Fallback for generic Error objects
-          message = err.message;
-        }
-        setError(message);
-     } finally {
+        // Handle unexpected response structure or other success statuses if necessary
+        setError(response.data.message || 'Signup process completed, but response was unexpected.');
+      }
+    } catch (err: unknown) { // Use unknown instead of any
+      console.error('Signup error:', err);
+      let message = 'An error occurred during signup.';
+      // Type checking for AxiosError
+      if (axios.isAxiosError(err) && err.response?.data?.message) {
+        message = err.response.data.message;
+      } else if (err instanceof Error) {
+        // Fallback for generic Error objects
+        message = err.message;
+      }
+      setError(message);
+      setSuccessMessage(null); // Clear success message on error
+    } finally {
       setIsLoading(false);
     }
   };
@@ -82,32 +89,24 @@ export function SignupPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
-          {/* OAuth Buttons */}
-           <div className="grid grid-cols-1 gap-6">
-            {/* <Button variant="outline" onClick={handleGitHubLogin} disabled={isLoading}> */}
-              {/* <Github className="mr-2 h-4 w-4" /> */}
-              {/* GitHub
-            </Button> */}
-            {/* <Button variant="outline" onClick={handleGoogleLogin} disabled={isLoading}> */}
-              {/* <Chrome className="mr-2 h-4 w-4" /> */}
-              {/* Login with Google
-            </Button> */}
-          </div>
-           {/* Separator */}
-           {/* <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
+          {successMessage ? (
+            <div className="text-center space-y-4">
+              <p className="text-green-600 dark:text-green-400">{successMessage}</p>
+              <Button asChild>
+                <Link to="/login">Go to Login</Link>
+              </Button>
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">
-                Or continue with
-              </span>
-            </div>
-          </div> */}
-          {/* Email/Password Form */}
-          <form onSubmit={handleEmailSignup} className="grid gap-2">
-             <div className="grid gap-1">
-              <Label htmlFor="displayName">Display Name (Optional)</Label>
+          ) : (
+            <>
+              {/* OAuth Buttons - Kept commented as per original */}
+              {/* <div className="grid grid-cols-1 gap-6"> ... </div> */}
+              {/* Separator - Kept commented as per original */}
+              {/* <div className="relative"> ... </div> */}
+              
+              {/* Email/Password Form */}
+              <form onSubmit={handleEmailSignup} className="grid gap-2">
+                <div className="grid gap-1">
+                  <Label htmlFor="displayName">Display Name (Optional)</Label>
               <Input
                 id="displayName"
                 type="text"
@@ -140,21 +139,25 @@ export function SignupPage() {
                 disabled={isLoading}
               />
             </div>
-            {error && <p className="text-sm text-red-500">{error}</p>}
+            {error && <p className="text-sm text-red-500 text-center">{error}</p>}
             <Button type="submit" className="w-full mt-2" disabled={isLoading}>
               {isLoading ? 'Creating Account...' : 'Create Account'}
-             </Button>
-           </form>
-           <p className="px-6 text-xs text-center text-muted-foreground">
-             We protect your password using industry-standard hashing.
-           </p>
-         </CardContent>
+            </Button>
+          </form>
+          <p className="px-6 text-xs text-center text-muted-foreground">
+            We protect your password using industry-standard hashing.
+          </p>
+        </>
+          )}
+        </CardContent>
+        {!successMessage && (
           <CardFooter className="flex justify-center text-sm">
-             Already have an account?&nbsp;
-             <Link to="/login" className="underline">
-                Log in
+            Already have an account?&nbsp;
+            <Link to="/login" className="underline">
+              Log in
             </Link>
-        </CardFooter>
+          </CardFooter>
+        )}
       </Card>
     </div>
   );

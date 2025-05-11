@@ -13,6 +13,7 @@ import ContactPage from "./pages/ContactPage"; // Import ContactPage
 import SecurityPage from "./pages/SecurityPage"; // Import SecurityPage
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage"; // Import Privacy Policy Page
 import TermsOfServicePage from "./pages/TermsOfServicePage"; // Import Terms of Service Page
+import VerifyEmailPage from "./pages/Auth/VerifyEmailPage"; // Import VerifyEmailPage
 
 const queryClient = new QueryClient();
 
@@ -89,6 +90,7 @@ const App = () => (
           <Route path="/security" element={<SecurityPage />} /> {/* Add Security Route */}
           <Route path="/privacy" element={<PrivacyPolicyPage />} /> {/* Add Privacy Policy Route */}
           <Route path="/terms" element={<TermsOfServicePage />} /> {/* Add Terms of Service Route */}
+          <Route path="/verify-email/:token" element={<VerifyEmailPage />} /> {/* Add Verify Email Route */}
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
