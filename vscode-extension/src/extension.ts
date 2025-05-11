@@ -1,122 +1,133 @@
 import * as vscode from 'vscode';
-import axios, { AxiosInstance } from 'axios'; // Using AxiosInstance for potential cookie jar setup
+import axios, { AxiosInstance } from 'axios';
 import MarkdownIt from 'markdown-it';
 
-// It's good practice to use a more robust cookie solution for production.
-// For example, using axios-cookiejar-support and tough-cookie:
-// import { CookieJar } from 'tough-cookie';
-// import { wrapper } from 'axios-cookiejar-support';
-// const jar = new CookieJar();
-// const apiClient: AxiosInstance = wrapper(axios.create({ jar }));
-// For this example, we'll use a simpler approach and rely on withCredentials if server supports it,
-// or a manual cookie string for demonstration if not. A proper cookie jar is recommended.
 const apiClient: AxiosInstance = axios.create();
 
-const API_BASE_URL = 'https://code-whisper-docs.onrender.com';
-const LOGIN_URL = `${API_BASE_URL}/api/auth/login`;
+const API_BASE_URL = 'https://code-whisper-docs.onrender.com'; // Keep your API base URL
 const GENERATE_DOCS_URL = `${API_BASE_URL}/api/generate-docs`;
+// const LOGIN_URL = `${API_BASE_URL}/api/auth/login`; // No longer used by extension
 
-// Store session state (e.g., a session cookie string or a flag)
-// This is a simplified way to manage session state for the example.
-// In a real extension, you might store an actual session token or rely on the cookie jar.
-let activeSessionCookie: string | null = null;
+// --- New Constants for Web Auth ---
+const AUTH_TOKEN_KEY = 'codenexai.authToken';
+const CODENEXAI_PUBLISHER_NAME = 'CodeNexAI';
+const CODENEXAI_EXTENSION_NAME = 'codenexai-documentation';
+// IMPORTANT: You need to create this page on your server.
+const CODENEXAI_WEB_LOGIN_URL = 'https://codenexai.com/vscode-auth-start';
+const CALLBACK_URI_PATH = '/auth-callback';
+// --- End New Constants ---
 
-
-async function ensureLoggedIn(context: vscode.ExtensionContext): Promise<boolean> {
-    // If we think we have an active session cookie, try to use it.
-    // A more robust check would be to have a /api/auth/current_user endpoint
-    // to verify the session is still valid before proceeding.
-    if (activeSessionCookie) {
-        return true;
+// --- Auth Token Manager ---
+class AuthTokenManager {
+    static async getToken(context: vscode.ExtensionContext): Promise<string | undefined> {
+        return await context.secrets.get(AUTH_TOKEN_KEY);
     }
 
-    let email = await context.secrets.get('codenexai.email');
-    let password = await context.secrets.get('codenexai.password');
-
-    if (!email) {
-        email = await vscode.window.showInputBox({
-            prompt: 'Enter your CodenexAI email',
-            ignoreFocusOut: true
-        });
-        if (!email) {
-            vscode.window.showErrorMessage('CodenexAI: Email is required to log in.');
-            return false;
-        }
-        await context.secrets.store('codenexai.email', email);
+    static async setToken(context: vscode.ExtensionContext, token: string): Promise<void> {
+        await context.secrets.store(AUTH_TOKEN_KEY, token);
     }
 
-    if (!password) {
-        password = await vscode.window.showInputBox({
-            prompt: 'Enter your CodenexAI password',
-            password: true,
-            ignoreFocusOut: true
-        });
-        if (!password) {
-            vscode.window.showErrorMessage('CodenexAI: Password is required to log in.');
-            return false;
-        }
-        await context.secrets.store('codenexai.password', password);
-    }
-
-    try {
-        vscode.window.showInformationMessage('CodenexAI: Attempting to log in...');
-        const response = await apiClient.post(LOGIN_URL, { email, password }, {
-            // For session cookies to work across sites (like from VS Code to your server),
-            // your server needs to set cookies with SameSite=None; Secure=true
-            // and have proper CORS headers (Access-Control-Allow-Credentials: true).
-            // `withCredentials: true` tells axios to send cookies from the browser context if applicable,
-            // but for Node.js based extensions, manual cookie handling or a cookie jar is often needed.
-            // If your server sets HttpOnly cookies, they won't be accessible via document.cookie in a browser
-            // but should be handled by the HTTP client if it supports cookie jars.
-        });
-
-        if (response.status === 200 && response.data.user) {
-            // Attempt to capture the session cookie(s)
-            // This is a common but potentially fragile way if multiple cookies are set.
-            // A proper cookie jar (like tough-cookie with axios-cookiejar-support) is more reliable.
-            const setCookieHeader = response.headers['set-cookie'];
-            if (setCookieHeader && Array.isArray(setCookieHeader)) {
-                activeSessionCookie = setCookieHeader.map(cookie => cookie.split(';')[0]).join('; ');
-            } else if (typeof setCookieHeader === 'string') {
-                activeSessionCookie = (setCookieHeader as string).split(';')[0]; // Explicit type assertion
-            }
-
-            if (!activeSessionCookie) {
-                // This might happen if the server doesn't send a cookie or it's not captured.
-                // Or if the cookie is HttpOnly and not meant to be accessed by client script
-                // (though the HTTP client should still send it on subsequent requests if using a jar).
-                vscode.window.showWarningMessage('CodenexAI: Login seemed successful, but session cookie was not captured. Subsequent requests might fail. Ensure your server sets cookies correctly for cross-origin requests if needed.');
-                // For now, we'll assume login was successful if status is 200 and user data is present.
-                // The real test is if the next authenticated request works.
-            }
-
-            vscode.window.showInformationMessage(`CodenexAI: Logged in as ${response.data.user.displayName || response.data.user.email}!`);
-            return true;
-        } else {
-            vscode.window.showErrorMessage(`CodenexAI Login Failed: ${response.data.message || 'Unknown login error.'}`);
-            activeSessionCookie = null;
-            return false;
-        }
-    } catch (error: unknown) {
-        activeSessionCookie = null;
-        if (axios.isAxiosError(error) && error.response) {
-            vscode.window.showErrorMessage(`CodenexAI Login Failed: ${error.response.data?.message || error.response.statusText}`);
-        } else if (error instanceof Error) {
-            vscode.window.showErrorMessage(`CodenexAI Login Failed: ${error.message}`);
-        } else {
-            vscode.window.showErrorMessage('CodenexAI Login Failed: An unknown error occurred.');
-        }
-        // Optionally clear stored credentials on persistent failure after a few tries
-        // await context.secrets.delete('codenexai.email');
-        // await context.secrets.delete('codenexai.password');
-        return false;
+    static async deleteToken(context: vscode.ExtensionContext): Promise<void> {
+        await context.secrets.delete(AUTH_TOKEN_KEY);
     }
 }
+// --- End Auth Token Manager ---
+
+// --- URI Handler for Auth Callback ---
+class CodenexUriHandler implements vscode.UriHandler {
+    constructor(private context: vscode.ExtensionContext) {}
+
+    public async handleUri(uri: vscode.Uri): Promise<void> {
+        if (uri.path === CALLBACK_URI_PATH) {
+            try {
+                const queryParams = new URLSearchParams(uri.query);
+                const token = queryParams.get('token');
+
+                if (token) {
+                    await AuthTokenManager.setToken(this.context, token);
+                    vscode.window.showInformationMessage('CodenexAI: Successfully logged in!');
+                    // Optionally, trigger a command or refresh state here
+                } else {
+                    vscode.window.showErrorMessage('CodenexAI: Login callback received without a token.');
+                }
+            } catch (error) {
+                console.error('Error handling URI callback:', error);
+                vscode.window.showErrorMessage('CodenexAI: Error processing login callback.');
+            }
+        } else {
+            vscode.window.showWarningMessage(`CodenexAI: Received unhandled URI: ${uri.toString()}`);
+        }
+    }
+}
+// --- End URI Handler ---
+
+// --- Refactored ensureLoggedIn ---
+async function ensureLoggedIn(context: vscode.ExtensionContext): Promise<boolean> {
+    const token = await AuthTokenManager.getToken(context);
+
+    if (!token) {
+        const action = await vscode.window.showWarningMessage(
+            'CodenexAI: You are not logged in. Please log in to use this feature.',
+            'Login',
+            'Cancel'
+        );
+        if (action === 'Login') {
+            await vscode.commands.executeCommand('codenexai.login');
+        }
+        return false;
+    }
+
+    // Optional: Add a quick API call here to verify the token with your backend.
+    // If verification fails, delete the token and prompt for login again.
+    // For example:
+    // try {
+    //     await apiClient.get(`${API_BASE_URL}/api/auth/me`, { headers: { 'Authorization': `Bearer ${token}` } });
+    //     return true;
+    // } catch (error) {
+    //     await AuthTokenManager.deleteToken(context);
+    //     vscode.window.showErrorMessage('CodenexAI: Your session has expired. Please log in again.');
+    //     await vscode.commands.executeCommand('codenexai.login');
+    //     return false;
+    // }
+
+    return true; // Assume token presence means logged in for now
+}
+// --- End Refactored ensureLoggedIn ---
 
 export function activate(context: vscode.ExtensionContext) {
     console.log('CodenexAI extension is now active!');
 
-    const disposable = vscode.commands.registerCommand('codenexai.generateDocumentation', async () => {
+    // Register URI Handler
+    const uriHandler = new CodenexUriHandler(context);
+    context.subscriptions.push(vscode.window.registerUriHandler(uriHandler));
+
+    // --- New Login Command ---
+    const loginCommand = vscode.commands.registerCommand('codenexai.login', async () => {
+        const callbackUri = vscode.Uri.from({
+            scheme: 'vscode',
+            authority: `${CODENEXAI_PUBLISHER_NAME}.${CODENEXAI_EXTENSION_NAME}`,
+            path: CALLBACK_URI_PATH
+        }).toString(true); // true to skip encoding
+
+        const loginUrl = `${CODENEXAI_WEB_LOGIN_URL}?redirect_uri=${encodeURIComponent(callbackUri)}`;
+        vscode.window.showInformationMessage(`CodenexAI: Redirecting to login page: ${CODENEXAI_WEB_LOGIN_URL}`);
+        await vscode.env.openExternal(vscode.Uri.parse(loginUrl));
+    });
+    context.subscriptions.push(loginCommand);
+    // --- End New Login Command ---
+
+    // --- New Logout Command ---
+    const logoutCommand = vscode.commands.registerCommand('codenexai.logout', async () => {
+        await AuthTokenManager.deleteToken(context);
+        // Clear old email/password if they exist from previous auth method (optional, for cleanup)
+        await context.secrets.delete('codenexai.email');
+        await context.secrets.delete('codenexai.password');
+        vscode.window.showInformationMessage('CodenexAI: Successfully logged out.');
+    });
+    context.subscriptions.push(logoutCommand);
+    // --- End New Logout Command ---
+
+    const generateDisposable = vscode.commands.registerCommand('codenexai.generateDocumentation', async () => {
         const editor = vscode.window.activeTextEditor;
         if (!editor) {
             vscode.window.showErrorMessage('CodenexAI: No active text editor found.');
@@ -133,19 +144,26 @@ export function activate(context: vscode.ExtensionContext) {
 
         const isLoggedIn = await ensureLoggedIn(context);
         if (!isLoggedIn) {
-            return; // Stop if login fails or is cancelled
+            return; // Stop if login fails or is cancelled/redirected
         }
 
         await vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification,
             title: "CodenexAI: Generating documentation...",
             cancellable: false
-        }, async (progress: vscode.Progress<{ message?: string; increment?: number }>) => {
+        }, async () => {
             try {
-                const headers: Record<string, string> = {};
-                if (activeSessionCookie) {
-                    headers['Cookie'] = activeSessionCookie;
+                const token = await AuthTokenManager.getToken(context);
+                if (!token) {
+                    // This should ideally be caught by ensureLoggedIn, but as a safeguard:
+                    vscode.window.showErrorMessage('CodenexAI: Authentication token not found. Please log in.');
+                    await vscode.commands.executeCommand('codenexai.login');
+                    return;
                 }
+
+                const headers: Record<string, string> = {
+                    'Authorization': `Bearer ${token}`
+                };
 
                 const response = await apiClient.post(GENERATE_DOCS_URL,
                     { code: selectedText },
@@ -158,17 +176,12 @@ export function activate(context: vscode.ExtensionContext) {
                     const htmlContent = mdParser.render(markdownContent);
 
                     const panel = vscode.window.createWebviewPanel(
-                        'codenexaiDocumentation', // Identifies the type of the webview. Used internally
-                        'CodenexAI Documentation', // Title of the panel displayed to the user
-                        vscode.ViewColumn.Beside, // Editor column to show the new webview panel in.
-                        {
-                            enableScripts: true, // Enable JavaScript in the webview
-                            // Optionally, restrict the webview to only loading content from your extension's directory.
-                            // localResourceRoots: [vscode.Uri.joinPath(context.extensionUri, 'media')]
-                        }
+                        'codenexaiDocumentation',
+                        'CodenexAI Documentation',
+                        vscode.ViewColumn.Beside,
+                        { enableScripts: true }
                     );
 
-                    // Basic HTML structure with some styling
                     panel.webview.html = `<!DOCTYPE html>
                     <html lang="en">
                     <head>
@@ -184,7 +197,6 @@ export function activate(context: vscode.ExtensionContext) {
                             blockquote { color: #6a737d; border-left: 0.25em solid #dfe2e5; padding: 0 1em; margin-left: 0; }
                             table { border-collapse: collapse; }
                             th, td { border: 1px solid #dfe2e5; padding: 6px 13px; }
-                            /* Add more styles as needed, or link to a stylesheet */
                         </style>
                     </head>
                     <body>
@@ -198,14 +210,12 @@ export function activate(context: vscode.ExtensionContext) {
 
             } catch (error: unknown) {
                 if (axios.isAxiosError(error) && error.response) {
-                    if (error.response.status === 401) {
-                        vscode.window.showErrorMessage('CodenexAI: Authentication failed or session expired. Please try again to re-login.');
-                        activeSessionCookie = null;
-                        // Optionally clear stored credentials
-                        // await context.secrets.delete('codenexai.email');
-                        // await context.secrets.delete('codenexai.password');
+                    if (error.response.status === 401 || error.response.status === 403) {
+                        vscode.window.showErrorMessage('CodenexAI: Authentication failed or session expired. Please log in again.');
+                        await AuthTokenManager.deleteToken(context); // Clear potentially bad token
+                        await vscode.commands.executeCommand('codenexai.login');
                     } else {
-                        vscode.window.showErrorMessage(`CodenexAI Error: ${error.response.data?.error || error.response.data?.message || error.response.statusText}`);
+                        vscode.window.showErrorMessage(`CodenexAI Error: ${error.response.data?.error || error.response.data?.message || error.response.statusText || `Server error ${error.response.status}`}`);
                     }
                 } else if (error instanceof Error) {
                     vscode.window.showErrorMessage(`CodenexAI Network Error: ${error.message}`);
@@ -215,21 +225,16 @@ export function activate(context: vscode.ExtensionContext) {
             }
         });
     });
+    context.subscriptions.push(generateDisposable);
 
-    context.subscriptions.push(disposable);
-
-    // Command to clear stored credentials (for testing/logout)
-    const clearCredentialsCommand = vscode.commands.registerCommand('codenexai.clearCredentials', async () => {
-        await context.secrets.delete('codenexai.email');
-        await context.secrets.delete('codenexai.password');
-        activeSessionCookie = null;
-        vscode.window.showInformationMessage('CodenexAI: Stored credentials and session cleared.');
-    });
-    context.subscriptions.push(clearCredentialsCommand);
+    // Remove or repurpose the old clearCredentials command if it exists
+    // For example, if you had a 'codenexai.clearCredentials', you might remove its registration
+    // or make it an alias for 'codenexai.logout'.
+    // The new logout command already clears the token.
 }
 
 export function deactivate() {
     // Clean up resources if needed
-    activeSessionCookie = null;
+    // activeSessionCookie is no longer used.
     console.log('CodenexAI extension deactivated.');
 }

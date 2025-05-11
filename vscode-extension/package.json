@@ -14,7 +14,10 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:codenexai.generateDocumentation"
+    "onCommand:codenexai.generateDocumentation",
+    "onCommand:codenexai.login",
+    "onCommand:codenexai.logout",
+    "onUri"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -22,6 +25,16 @@
       {
         "command": "codenexai.generateDocumentation",
         "title": "CodenexAI: Generate Documentation for Selection",
+        "category": "CodenexAI"
+      },
+      {
+        "command": "codenexai.login",
+        "title": "CodenexAI: Login",
+        "category": "CodenexAI"
+      },
+      {
+        "command": "codenexai.logout",
+        "title": "CodenexAI: Logout",
         "category": "CodenexAI"
       }
     ],

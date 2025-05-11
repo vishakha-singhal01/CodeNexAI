@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react'; // Import useEffect
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
-import axios from 'axios'; // Import axios
+import React, { useState, useEffect, useRef } from 'react'; // Import useEffect, useRef
+import { useNavigate, useLocation } from 'react-router-dom'; // Import useNavigate, useLocation
+import axios from 'axios';
 import { useAuth } from '@/context/AuthContext'; // Import useAuth
 import { Button } from "@/components/ui/button";
 import {
@@ -19,42 +19,105 @@ import { Link } from 'react-router-dom'; // Import Link
 
 export function LoginPage() {
   const navigate = useNavigate();
-  const { login, checkAuthStatus } = useAuth(); // Get login function from context
+  const location = useLocation(); // Get location to access query params
+  const { login } = useAuth(); // Get login function from context
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isVSCodeAuthFlow, setIsVSCodeAuthFlow] = useState(false);
+  const vscodeRedirectUri = useRef<string | null>(null);
+
+  useEffect(() => {
+    // Check for VS Code redirect_uri on component mount
+    const queryParams = new URLSearchParams(location.search);
+    const redirectUriFromQuery = queryParams.get('redirect_uri');
+    if (redirectUriFromQuery && redirectUriFromQuery.startsWith('vscode://')) {
+      setIsVSCodeAuthFlow(true);
+      vscodeRedirectUri.current = redirectUriFromQuery;
+      // Optionally, display a message to the user indicating this is a VS Code login
+      console.log('VS Code authentication flow detected. Redirect URI:', redirectUriFromQuery);
+    }
+  }, [location.search]);
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
-    try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/api/auth/login`,
-        { email, password },
-        { withCredentials: true } // Send cookies
-      );
-      if (response.data.user) {
-        login(response.data.user); // Update auth context
-        navigate('/'); // Redirect to home page on successful login
-      } else {
-         // Should not happen if backend sends user on success, but handle defensively
+
+    if (isVSCodeAuthFlow && vscodeRedirectUri.current) {
+      // VS Code specific login flow
+      try {
+        // The form submission itself will be handled by browser navigation due to backend redirect
+        // We are POSTing to the backend, which will then redirect the browser to vscode://
+        // So, no direct 'response' handling here like in the standard web flow.
+        
+        // Create a hidden form and submit it programmatically to ensure proper POST
+        // and to let the browser handle the redirect from the backend.
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `${import.meta.env.VITE_API_BASE_URL}/api/auth/vscode-login`;
+
+        const emailInput = document.createElement('input');
+        emailInput.type = 'hidden';
+        emailInput.name = 'email';
+        emailInput.value = email;
+        form.appendChild(emailInput);
+
+        const passwordInput = document.createElement('input');
+        passwordInput.type = 'hidden';
+        passwordInput.name = 'password';
+        passwordInput.value = password;
+        form.appendChild(passwordInput);
+
+        const redirectInput = document.createElement('input');
+        redirectInput.type = 'hidden';
+        redirectInput.name = 'redirect_uri';
+        redirectInput.value = vscodeRedirectUri.current;
+        form.appendChild(redirectInput);
+
+        document.body.appendChild(form);
+        setError('Attempting to log in via VS Code. Please wait for redirection...'); // Inform user
+        form.submit();
+        // setIsLoading(false); // Might not be reached if submit navigates away quickly
+        // No navigation or login context update here, as VS Code will handle it via URI callback
+      } catch (err) { // This catch might not be very effective if form.submit() navigates away
+        console.error('VS Code Login submission error:', err);
+        let message = 'An error occurred while preparing VS Code login.';
+        if (axios.isAxiosError(err) && err.response?.data?.message) {
+          message = err.response.data.message;
+        } else if (err instanceof Error) {
+          message = err.message;
+        }
+        setError(message);
+        setIsLoading(false);
+      }
+    } else {
+      // Standard web login flow
+      try {
+        const response = await axios.post(
+          `${import.meta.env.VITE_API_BASE_URL}/api/auth/login`,
+          { email, password },
+          { withCredentials: true } // Send cookies for web session
+        );
+        if (response.data.user) {
+          login(response.data.user); // Update auth context
+          navigate('/'); // Redirect to home page on successful login
+        } else {
           setError(response.data.message || 'Login failed. Please try again.');
-       }
-     } catch (err: unknown) { // Use unknown instead of any
-       console.error('Login error:', err);
-       let message = 'An error occurred during login.';
-       // Type checking for AxiosError
-       if (axios.isAxiosError(err) && err.response?.data?.message) {
-         message = err.response.data.message;
-       } else if (err instanceof Error) {
-         // Fallback for generic Error objects
-         message = err.message;
-       }
-       setError(message);
-     } finally {
-      setIsLoading(false);
+        }
+      } catch (err: unknown) {
+        console.error('Standard Login error:', err);
+        let message = 'An error occurred during login.';
+        if (axios.isAxiosError(err) && err.response?.data?.message) {
+          message = err.response.data.message;
+        } else if (err instanceof Error) {
+          message = err.message;
+        }
+        setError(message);
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
