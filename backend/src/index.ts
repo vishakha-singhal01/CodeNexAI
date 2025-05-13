@@ -164,6 +164,76 @@ app.use('/api/payments', paymentsRouter); // Mount the payment routes
 // --- Contact Route ---
 app.use('/api/contact', contactRouter); // Mount the contact routes
 
+const vscodeAuthStartHandler: RequestHandler = (req: Request, res: Response) => {
+  const redirectUriFromQuery = req.query.redirect_uri as string | undefined;
+
+  // Basic validation for redirect_uri
+  if (!redirectUriFromQuery || !redirectUriFromQuery.startsWith('vscode://')) {
+    res.status(400).send('Invalid or missing redirect_uri for VS Code login.');
+    return; // Explicitly return to end execution here after sending response
+  }
+
+  // Check for error messages passed back from a failed login attempt
+  const errorParam = req.query.error as string | undefined;
+  const messageParam = req.query.message as string | undefined;
+  let errorMessage = '';
+  if (errorParam && messageParam) {
+    errorMessage = decodeURIComponent(messageParam);
+  }
+
+  const htmlContent = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodenexAI VS Code Login</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 90vh; margin: 0; background-color: #f0f2f5; color: #333; }
+        .container { background-color: #ffffff; padding: 30px 40px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: center; width: 100%; max-width: 400px; }
+        h1 { margin-bottom: 25px; color: #1a2b4d; font-size: 24px; }
+        label { display: block; margin-bottom: 8px; text-align: left; color: #555; font-weight: 500; }
+        input[type="email"], input[type="password"] { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 16px; }
+        input[type="email"]:focus, input[type="password"]:focus { border-color: #007bff; outline: none; box-shadow: 0 0 0 2px rgba(0,123,255,.25); }
+        button { background-color: #007bff; color: white; padding: 12px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%; transition: background-color 0.2s; }
+        button:hover { background-color: #0056b3; }
+        .error-message { color: #dc3545; background-color: #f8d7da; border: 1px solid #f5c6cb; padding: 10px; border-radius: 4px; margin-bottom: 20px; text-align: left; }
+        .info-message { color: #004085; background-color: #cce5ff; border: 1px solid #b8daff; padding: 10px; border-radius: 4px; margin-bottom: 20px; text-align: left; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>CodenexAI Login</h1>
+        ${errorMessage ? `<div class="error-message">${errorMessage}</div>` : ''}
+        ${!redirectUriFromQuery ? `<div class="error-message">Error: Missing or invalid redirect_uri. Cannot proceed with VS Code login. Please initiate login from VS Code again.</div>` : ''}
+        
+        <form id="loginForm" method="POST" action="/api/auth/vscode-login" style="${!redirectUriFromQuery ? 'display:none;' : ''}">
+            <input type="hidden" id="redirect_uri" name="redirect_uri" value="${redirectUriFromQuery || ''}">
+            <div>
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div>
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit">Login</button>
+        </form>
+    </div>
+    <script>
+        // No client-side JS needed for basic functionality as redirect_uri is embedded by server.
+        // Error messages are also embedded by the server.
+        // If redirect_uri was missing, the form is hidden by server-side conditional style.
+    </script>
+</body>
+</html>`;
+  res.send(htmlContent);
+};
+
+// --- VS Code Authentication Start Page ---
+app.get('/vscode-auth-start', vscodeAuthStartHandler);
+// --- End VS Code Authentication Start Page ---
+
 // Health check endpoint
 app.get('/api/health', (req: Request, res: Response) => {
   res.json({ status: 'ok', message: 'Backend is healthy' });
