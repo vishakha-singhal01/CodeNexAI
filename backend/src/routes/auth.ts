@@ -8,6 +8,8 @@ import { sendVerificationEmail } from '../services/emailService'; // Import emai
 
 const router: Router = express.Router(); // Explicitly type the router
 
+const JWT_SECRET = process.env.JWT_SECRET; // Define JWT_SECRET at module level
+
 // --- Rate Limiter for Auth Routes ---
 const authLimiter = rateLimit({
 	windowMs: 15 * 60 * 1000, // 15 minutes
@@ -117,31 +119,50 @@ router.post('/login', authLimiter, (req: Request, res: Response, next: NextFunct
         if (!user.isEmailVerified) {
             return res.status(403).json({ message: 'Please verify your email address before logging in.' });
         }
-        req.logIn(user, (err) => {
-            if (err) { return next(err); }
+        req.logIn(user, (loginErr) => { // Renamed err to loginErr to avoid conflict with outer err
+            if (loginErr) { return next(loginErr); }
+
+            if (!JWT_SECRET) { // Ensure JWT_SECRET is available
+                console.error("CRITICAL: JWT_SECRET is not defined. Cannot issue JWT for web login.");
+                return res.status(500).json({ message: 'Server configuration error.' });
+            }
+
+            // Generate JWT for the web client
+            const payload = {
+                id: user._id,
+                email: user.email,
+                displayName: user.displayName,
+                plan: user.plan // Include plan or other relevant details
+            };
+            const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' }); // Or your preferred expiration
+
             const userResponse = { id: user._id, email: user.email, displayName: user.displayName, plan: user.plan, isEmailVerified: user.isEmailVerified };
-            return res.json({ message: 'Login successful.', user: userResponse });
+            return res.json({ message: 'Login successful.', user: userResponse, token: token }); // Add token to response
         });
     })(req, res, next);
 });
 
 // --- New Login Handler for VS Code (JWT based) ---
-const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET) {
-    console.error("CRITICAL: JWT_SECRET is not defined in environment variables. VS Code login will not work.");
-    // Optionally, throw an error to prevent the app from starting without it,
-    // or disable the VS Code login route.
+// JWT_SECRET is now defined at the module level, so no need for local const or re-check here if module-level check is robust.
+// However, keeping the check inside the route handler for robustness in case the module-level one is missed or bypassed.
+if (!JWT_SECRET) { 
+    console.error("CRITICAL: JWT_SECRET is not defined in environment variables. VS Code login will not work if this check fails at runtime.");
+    // This console error serves as a warning. The route handler below will also check.
 }
 
-router.post('/vscode-login', authLimiter, async (req: Request, res: Response, next: NextFunction) => {
+router.post('/vscode-login', authLimiter, async (req: Request, res: Response, next: NextFunction) => { // Removed wrapping parenthesis
     const { email, password, redirect_uri } = req.body;
 
     if (!JWT_SECRET) {
-        return res.status(500).send("Authentication configuration error on server.");
+        // This check is critical at runtime for this specific route
+        console.error("VS Code Login: JWT_SECRET is not defined. Cannot proceed.");
+        res.status(500).send("Authentication configuration error on server.");
+        return;
     }
 
     if (!redirect_uri || !redirect_uri.startsWith('vscode://')) {
-        return res.status(400).send("Invalid or missing redirect_uri for VS Code login.");
+        res.status(400).send("Invalid or missing redirect_uri for VS Code login.");
+        return;
     }
 
     // We'll manually authenticate here, similar to how passport-local strategy would,
@@ -157,7 +178,8 @@ router.post('/vscode-login', authLimiter, async (req: Request, res: Response, ne
             const errorUrl = new URL(redirect_uri);
             errorUrl.searchParams.set('error', 'invalid_credentials');
             errorUrl.searchParams.set('message', 'Invalid email or password.');
-            return res.redirect(errorUrl.toString());
+            res.redirect(errorUrl.toString());
+            return;
         }
 
         const isMatch = await user.comparePassword(password);
@@ -165,14 +187,16 @@ router.post('/vscode-login', authLimiter, async (req: Request, res: Response, ne
             const errorUrl = new URL(redirect_uri);
             errorUrl.searchParams.set('error', 'invalid_credentials');
             errorUrl.searchParams.set('message', 'Invalid email or password.');
-            return res.redirect(errorUrl.toString());
+            res.redirect(errorUrl.toString());
+            return;
         }
 
         if (!user.isEmailVerified) {
             const errorUrl = new URL(redirect_uri);
             errorUrl.searchParams.set('error', 'email_unverified');
             errorUrl.searchParams.set('message', 'Please verify your email address before logging in.');
-            return res.redirect(errorUrl.toString());
+            res.redirect(errorUrl.toString());
+            return;
         }
 
         // User is authenticated and email is verified, generate JWT
@@ -187,15 +211,13 @@ router.post('/vscode-login', authLimiter, async (req: Request, res: Response, ne
         // Redirect back to VS Code with the token
         const callbackUrl = new URL(redirect_uri);
         callbackUrl.searchParams.set('token', token);
-        return res.redirect(callbackUrl.toString());
+        res.redirect(callbackUrl.toString());
+        return;
 
     } catch (error) {
         console.error("Error during VS Code login:", error);
-        // Generic error redirect
-        const errorUrl = new URL(redirect_uri);
-        errorUrl.searchParams.set('error', 'server_error');
-        errorUrl.searchParams.set('message', 'An internal server error occurred.');
-        return res.redirect(errorUrl.toString());
+        // Pass error to Express error handling middleware
+        next(error);
     }
 });
 // --- End New Login Handler for VS Code ---

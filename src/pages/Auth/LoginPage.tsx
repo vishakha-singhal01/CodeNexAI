@@ -100,11 +100,13 @@ export function LoginPage() {
           { email, password },
           { withCredentials: true } // Send cookies for web session
         );
-        if (response.data.user) {
-          login(response.data.user); // Update auth context
+        // Ensure response.data, response.data.user, and response.data.token exist
+        if (response.data && response.data.user && response.data.token) {
+          login(response.data.user, response.data.token); // Update auth context with user and token
           navigate('/'); // Redirect to home page on successful login
         } else {
-          setError(response.data.message || 'Login failed. Please try again.');
+          // Handle cases where user or token might be missing, or a different message structure
+          setError(response.data.message || 'Login failed. Unexpected response from server.');
         }
       } catch (err: unknown) {
         console.error('Standard Login error:', err);
@@ -145,9 +147,11 @@ export function LoginPage() {
       }
 
       const expectedOrigin = new URL(backendApiOrigin).origin;
-      if (event.origin !== expectedOrigin) {
-         console.warn(`Login Page: Message rejected from origin: ${event.origin}. Expected: ${expectedOrigin}`);
-         // return; // Uncomment this line in production for strict origin checking
+      // Allow messages from the current window's origin for direct navigation scenarios (e.g. VSCode redirect)
+      // In a production environment, you might want to be more restrictive or handle origins differently.
+      if (event.origin !== expectedOrigin && event.origin !== window.location.origin) {
+         console.warn(`Login Page: Message rejected from origin: ${event.origin}. Expected: ${expectedOrigin} or ${window.location.origin}`);
+         // return; // Uncomment this line in production for strict origin checking if window.location.origin is not needed
       } else {
          console.log(`Login Page: Message origin ${event.origin} verified.`);
       }
@@ -158,13 +162,21 @@ export function LoginPage() {
           return;
       }
 
-      const { type, user, error: messageError } = event.data;
+      const { type, user, token: oauthToken, error: messageError } = event.data; // Expect token for OAuth as well
 
-      if (type === 'auth-success' && user) {
-        console.log('OAuth success message received:', user);
-        login(user); // Update auth context
+      if (type === 'auth-success' && user && oauthToken) {
+        console.log('OAuth success message received:', user, oauthToken);
+        login(user, oauthToken); // Update auth context with user and token
         navigate('/'); // Redirect to home page
-      } else if (type === 'auth-error') {
+      } else if (type === 'auth-success' && user && !oauthToken) {
+        // This case might occur if an OAuth flow doesn't yet return a token directly via postMessage
+        // For now, we'll log a warning. Ideally, all auth flows should provide a token.
+        console.warn('OAuth success message received, but no token provided. User:', user);
+        // login(user); // Old behavior: login without token
+        setError('OAuth login succeeded but token was not provided. Some features might not work.');
+        // navigate('/'); // Still navigate, but with a warning
+      }
+      else if (type === 'auth-error') {
         console.error('OAuth error message received:', messageError);
         setError(messageError || 'OAuth authentication failed.');
       }

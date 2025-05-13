@@ -14,8 +14,10 @@ import { IntegrationsSection } from "./Index/components/IntegrationsSection";
 import { PricingSection } from "./Index/components/PricingSection";
 import { CtaSection } from "./Index/components/CtaSection";
 import { Footer } from "./Index/components/Footer";
+import { useAuth } from "@/context/AuthContext"; // Import useAuth
 
 const Index = () => {
+  const { token } = useAuth(); // Get token from AuthContext
   const [backendStatus, setBackendStatus] = useState<{ message: string; error?: boolean } | null>(null);
   const [inputCode, setInputCode] = useState<string>('');
   const [uploadedFiles, setUploadedFiles] = useState<FileList | null>(null);
@@ -54,28 +56,52 @@ const Index = () => {
   };
 
   // Generic function to handle API call and state updates
-  const generateDocsApiCall = async (endpoint: string, body: string | FormData, headers?: HeadersInit) => {
+  const generateDocsApiCall = async (endpoint: string, body: string | FormData, customHeaders?: HeadersInit) => {
     setIsLoadingDocs(true);
     setGeneratedDocs('');
     setDocsError(null);
-    // clearInputs(); // Clear other inputs when starting a new generation type <-- Removed this line
 
     const fullEndpoint = import.meta.env.PROD ? `${import.meta.env.VITE_API_BASE_URL}${endpoint}` : endpoint;
 
+    const headers: HeadersInit = { ...customHeaders }; // Start with custom headers
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     try {
-      const response = await fetch(fullEndpoint, { // Use dynamic URL
+      const response = await fetch(fullEndpoint, {
         method: 'POST',
-        headers: headers,
+        headers: headers, // Use the combined headers
         body: body,
-        credentials: 'include', // <-- Add this line to send cookies
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || `HTTP error! status: ${response.status}`);
-      setGeneratedDocs(data.documentation);
+      if (!response.ok) {
+        // If the error is specifically "Not authorized, no token provided." and we *did* send a token,
+        // it might mean the token is invalid/expired.
+        if (data.message === 'Not authorized, no token provided.' && token) {
+            setDocsError("Authentication error: Your session might have expired. Please try logging out and logging back in.");
+        } else if (data.message === 'Not authorized, token failed verification.') {
+            setDocsError("Authentication error: Your token is invalid. Please try logging out and logging back in.");
+        }
+        else {
+            throw new Error(data.message || data.error || `HTTP error! status: ${response.status}`);
+        }
+      }
+      // Only set generated docs if response was ok and data.documentation exists
+      if (response.ok && data.documentation) {
+        setGeneratedDocs(data.documentation);
+      } else if (response.ok && !data.documentation) {
+        // Handle cases where response is ok but no documentation is returned (e.g. empty input)
+        setDocsError("No documentation was generated. The input might have been empty or not processable.");
+      }
+      // If not response.ok, the error handling above should have set docsError.
     } catch (error: unknown) {
-      console.error(`Failed to generate documentation from ${fullEndpoint}:`, error); // Use dynamic URL in log
+      console.error(`Failed to generate documentation from ${fullEndpoint}:`, error);
       const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
-      setDocsError(errorMessage);
+      // Avoid overwriting specific auth errors if already set
+      if (!docsError) {
+        setDocsError(errorMessage);
+      }
     } finally {
       setIsLoadingDocs(false);
     }
@@ -88,6 +114,7 @@ const Index = () => {
       return;
     }
     setRepoUrl(''); // Clear repo URL if text is used
+    // For FormData, Content-Type is set by browser. For JSON, we set it.
     generateDocsApiCall('/api/generate-docs', JSON.stringify({ code: inputCode }), { 'Content-Type': 'application/json' });
   };
 
