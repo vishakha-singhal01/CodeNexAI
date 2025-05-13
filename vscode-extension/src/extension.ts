@@ -38,7 +38,11 @@ class CodenexUriHandler implements vscode.UriHandler {
     constructor(private context: vscode.ExtensionContext) {}
 
     public async handleUri(uri: vscode.Uri): Promise<void> {
+        console.log(`CodenexAI: handleUri called with URI: ${uri.toString()}`); // Added log
+        vscode.window.showInformationMessage(`CodenexAI: Received URI: ${uri.toString()}`); // Added for visibility
+
         if (uri.path === CALLBACK_URI_PATH) {
+            console.log(`CodenexAI: URI path matches CALLBACK_URI_PATH: ${CALLBACK_URI_PATH}`); // Added log
             try {
                 const queryParams = new URLSearchParams(uri.query);
                 const token = queryParams.get('token');
@@ -48,13 +52,15 @@ class CodenexUriHandler implements vscode.UriHandler {
                     vscode.window.showInformationMessage('CodenexAI: Successfully logged in!');
                     // Optionally, trigger a command or refresh state here
                 } else {
+                    console.log('CodenexAI: Token not found in query parameters.'); // Added log
                     vscode.window.showErrorMessage('CodenexAI: Login callback received without a token.');
                 }
             } catch (error) {
-                console.error('Error handling URI callback:', error);
+                console.error('CodenexAI: Error handling URI callback:', error);
                 vscode.window.showErrorMessage('CodenexAI: Error processing login callback.');
             }
         } else {
+            console.log(`CodenexAI: URI path "${uri.path}" does not match CALLBACK_URI_PATH "${CALLBACK_URI_PATH}".`); // Added log
             vscode.window.showWarningMessage(`CodenexAI: Received unhandled URI: ${uri.toString()}`);
         }
     }
