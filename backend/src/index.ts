@@ -11,7 +11,6 @@ import configurePassport from './config/passport'; // Added passport config impo
 import authRoutes from './routes/auth'; // Import the auth routes
 import paymentsRouter from './routes/payments';
 import contactRouter from './routes/contact';
-import { protectWithJwt, AuthenticatedRequest } from './middleware/authMiddleware'; // Import AuthenticatedRequest
 import multer from 'multer';
 import axios from 'axios';
 import AdmZip from 'adm-zip'; // Import adm-zip
@@ -410,9 +409,9 @@ const githubRepoDocsHandler = async (req: AuthenticatedRequest, res: Response) =
 };
 
 // --- Apply Refactored Handlers with JWT Protection ---
-app.post('/api/generate-docs', protectWithJwt as RequestHandler, generateDocsHandler as RequestHandler);
-app.post('/api/upload-generate-docs', protectWithJwt as RequestHandler, upload.array('codeFiles'), uploadGenerateDocsHandler as RequestHandler);
-app.post('/api/github-repo-docs', protectWithJwt as RequestHandler, githubRepoDocsHandler as RequestHandler);
+app.post('/api/generate-docs', generateDocsHandler as RequestHandler);
+app.post('/api/upload-generate-docs', upload.array('codeFiles'), uploadGenerateDocsHandler as RequestHandler);
+app.post('/api/github-repo-docs', githubRepoDocsHandler as RequestHandler);
 
 
 // Placeholder for other API routes related to documentation generation
