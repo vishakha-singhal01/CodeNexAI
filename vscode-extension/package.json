@@ -2,7 +2,7 @@
   "name": "codenexai-documentation",
   "displayName": "CodeNexAI Document your code",
   "description": "Select code in your editor to generate documentation using CodenexAI.",
-  "version": "0.1.1",
+  "version": "0.1.3",
   "publisher": "CodeNexAI",
   "engines": {
     "vscode": "^1.80.0"

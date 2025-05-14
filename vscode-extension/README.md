@@ -92,22 +92,17 @@ function add(a, b) {
 }
 ```
 
-## License
-
-[MIT](LICENSE.md)
 
 ## Release Notes
 
-### 0.1.1
+### 0.1.3
 
-*   Added extension icon.
-*   Added README.md and LICENSE.md.
+*   Added option for logout
 
-### 0.1.0
 
-*   Initial release.
-*   Generate documentation for selected code.
+### Contributors 
 
----
+- [@Vishakha Singhal](https://github.com/vishakha-singhal01)
+- [@Swadesh Kumar](https://github.com/swadesh0287)
 
 **Enjoy using CodeNexAI!**
