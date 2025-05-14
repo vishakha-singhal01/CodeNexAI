@@ -16,7 +16,6 @@ import axios from 'axios';
 import AdmZip from 'adm-zip'; // Import adm-zip
 import path from 'path'; // Import path for extension checking
 import { generateDocumentation } from './services/documentationService';
-import { protectWithJwt } from './middleware/authMiddleware';
 import { IUser } from './models/User';
 // Removed ErrorRequestHandler import
 
@@ -417,8 +416,8 @@ const githubRepoDocsHandler = async (req: Request, res: Response, next: NextFunc
 
 // --- Apply Refactored Handlers with JWT Protection ---
 app.post('/api/generate-docs', generateDocsHandler);
-app.post('/api/upload-generate-docs', protectWithJwt, upload.array('codeFiles'), uploadGenerateDocsHandler);
-app.post('/api/github-repo-docs', protectWithJwt, githubRepoDocsHandler);
+app.post('/api/upload-generate-docs', upload.array('codeFiles'), uploadGenerateDocsHandler);
+app.post('/api/github-repo-docs', githubRepoDocsHandler);
 
 
 // Placeholder for other API routes related to documentation generation
