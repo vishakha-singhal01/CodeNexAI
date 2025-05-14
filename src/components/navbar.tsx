@@ -17,6 +17,7 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@/components/ui/avatar"; // Import Avatar components
+import logo from '@/assets/logo.png'; // Import logo image
 
 export const Navbar = () => {
   const { user, isLoading, logout } = useAuth(); // Get auth state and logout function
@@ -38,14 +39,13 @@ export const Navbar = () => {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-14 max-w-screen-2xl items-center">
-        <div className="mr-4 flex">
-          <Link to="/" className="mr-6 flex items-center space-x-2"> {/* Use Link */}
-            <FileText className="h-6 w-6 text-primary" />
-            <span className="font-bold inline-block">
-              CodeNexAI
+        <div className="mr-4 flex items-center">
+          <Link to="/" className="flex items-center space-x-1 hover:opacity-90 transition-opacity duration-300">
+            <span className="font-extrabold text-2xl tracking-wide text-gradient bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 bg-clip-text text-transparent">
+              CodeNex
             </span>
+            <img src={logo} alt="Logo" className="h-11 w-12 mt-1 rounded-md border-black bg-secondary" />
           </Link>
-          {/* Add navigation links here if needed */}
         </div>
         <div className="flex flex-1 items-center justify-end space-x-4"> {/* Increased space */}
           <ModeToggle />
@@ -70,9 +70,9 @@ export const Navbar = () => {
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-medium leading-none">{user.displayName || 'User'}</p>
                     {user.email && (
-                       <p className="text-xs leading-none text-muted-foreground">
-                         {user.email}
-                       </p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {user.email}
+                      </p>
                     )}
                   </div>
                 </DropdownMenuLabel>
