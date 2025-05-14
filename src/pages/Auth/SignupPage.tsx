@@ -56,7 +56,6 @@ export function SignupPage() {
       if (axios.isAxiosError(err) && err.response?.data?.message) {
         message = err.response.data.message;
       } else if (err instanceof Error) {
-        // Fallback for generic Error objects
         message = err.message;
       }
       setError(message);
@@ -75,9 +74,6 @@ export function SignupPage() {
     console.log('Attempting GitHub login...');
      window.open(`${import.meta.env.VITE_API_BASE_URL}/api/auth/github`, '_blank', 'width=500,height=600,noopener,noreferrer'); // Replaced URL
   };
-
-  // The useEffect hook for handling postMessage has been removed as the backend now handles redirects.
-  // The AuthContext should detect the session change after the redirect.
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">

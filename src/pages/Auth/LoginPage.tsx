@@ -101,8 +101,8 @@ export function LoginPage() {
           { withCredentials: true } // Send cookies for web session
         );
         // Ensure response.data, response.data.user, and response.data.token exist
-        if (response.data && response.data.user && response.data.token) {
-          login(response.data.user, response.data.token); // Update auth context with user and token
+        if (response.data && response.data.user) {
+          login(response.data.user); // Update auth context with user
           navigate('/'); // Redirect to home page on successful login
         } else {
           // Handle cases where user or token might be missing, or a different message structure
@@ -162,19 +162,12 @@ export function LoginPage() {
           return;
       }
 
-      const { type, user, token: oauthToken, error: messageError } = event.data; // Expect token for OAuth as well
+      const { type, user, error: messageError } = event.data; // Expect token for OAuth as well
 
-      if (type === 'auth-success' && user && oauthToken) {
-        console.log('OAuth success message received:', user, oauthToken);
-        login(user, oauthToken); // Update auth context with user and token
+      if (type === 'auth-success' && user) {
+        console.log('OAuth success message received:', user);
+        login(user); // Update auth context with user
         navigate('/'); // Redirect to home page
-      } else if (type === 'auth-success' && user && !oauthToken) {
-        // This case might occur if an OAuth flow doesn't yet return a token directly via postMessage
-        // For now, we'll log a warning. Ideally, all auth flows should provide a token.
-        console.warn('OAuth success message received, but no token provided. User:', user);
-        // login(user); // Old behavior: login without token
-        setError('OAuth login succeeded but token was not provided. Some features might not work.');
-        // navigate('/'); // Still navigate, but with a warning
       }
       else if (type === 'auth-error') {
         console.error('OAuth error message received:', messageError);

@@ -1,6 +1,5 @@
 import express, { Router, Request, Response, NextFunction, RequestHandler } from 'express';
 import passport from 'passport';
-import jwt from 'jsonwebtoken'; // Import jsonwebtoken
 import rateLimit from 'express-rate-limit';
 import crypto from 'crypto'; // Import crypto for token generation
 import User, { IUser } from '../models/User'; // Adjust path if necessary
@@ -8,13 +7,11 @@ import { sendVerificationEmail } from '../services/emailService'; // Import emai
 
 const router: Router = express.Router(); // Explicitly type the router
 
-const JWT_SECRET = process.env.JWT_SECRET; // Define JWT_SECRET at module level
-
 // --- Rate Limiter for Auth Routes ---
 const authLimiter = rateLimit({
-	windowMs: 15 * 60 * 1000, // 15 minutes
-	max: 10, // Limit each IP to 10 requests per windowMs (adjust as needed)
-	message: 'Too many login/signup attempts from this IP, please try again after 15 minutes',
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 10, // Limit each IP to 10 requests per windowMs (adjust as needed)
+    message: 'Too many login/signup attempts from this IP, please try again after 15 minutes',
     standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
     legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 });
@@ -122,43 +119,15 @@ router.post('/login', authLimiter, (req: Request, res: Response, next: NextFunct
         req.logIn(user, (loginErr) => { // Renamed err to loginErr to avoid conflict with outer err
             if (loginErr) { return next(loginErr); }
 
-            if (!JWT_SECRET) { // Ensure JWT_SECRET is available
-                console.error("CRITICAL: JWT_SECRET is not defined. Cannot issue JWT for web login.");
-                return res.status(500).json({ message: 'Server configuration error.' });
-            }
-
-            // Generate JWT for the web client
-            const payload = {
-                id: user._id,
-                email: user.email,
-                displayName: user.displayName,
-                plan: user.plan // Include plan or other relevant details
-            };
-            const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' }); // Or your preferred expiration
-
             const userResponse = { id: user._id, email: user.email, displayName: user.displayName, plan: user.plan, isEmailVerified: user.isEmailVerified };
-            return res.json({ message: 'Login successful.', user: userResponse, token: token }); // Add token to response
+            return res.json({ message: 'Login successful.', user: userResponse });
         });
     })(req, res, next);
 });
 
 // --- New Login Handler for VS Code (JWT based) ---
-// JWT_SECRET is now defined at the module level, so no need for local const or re-check here if module-level check is robust.
-// However, keeping the check inside the route handler for robustness in case the module-level one is missed or bypassed.
-if (!JWT_SECRET) { 
-    console.error("CRITICAL: JWT_SECRET is not defined in environment variables. VS Code login will not work if this check fails at runtime.");
-    // This console error serves as a warning. The route handler below will also check.
-}
-
 router.post('/vscode-login', authLimiter, async (req: Request, res: Response, next: NextFunction) => { // Removed wrapping parenthesis
     const { email, password, redirect_uri } = req.body;
-
-    if (!JWT_SECRET) {
-        // This check is critical at runtime for this specific route
-        console.error("VS Code Login: JWT_SECRET is not defined. Cannot proceed.");
-        res.status(500).send("Authentication configuration error on server.");
-        return;
-    }
 
     if (!redirect_uri || !redirect_uri.startsWith('vscode://')) {
         res.status(400).send("Invalid or missing redirect_uri for VS Code login.");
@@ -198,20 +167,8 @@ router.post('/vscode-login', authLimiter, async (req: Request, res: Response, ne
             res.redirect(errorUrl.toString());
             return;
         }
-
-        // User is authenticated and email is verified, generate JWT
-        const payload = {
-            id: user._id,
-            email: user.email,
-            displayName: user.displayName,
-            // Add any other claims you need in the token
-        };
-        const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' }); // Token expires in 7 days
-
-        // Redirect back to VS Code with the token
-        const callbackUrl = new URL(redirect_uri);
-        callbackUrl.searchParams.set('token', token);
-        res.redirect(callbackUrl.toString());
+        
+        res.redirect(redirect_uri);
         return;
 
     } catch (error) {
@@ -269,7 +226,12 @@ router.get('/google/callback', (req: Request, res: Response, next: NextFunction)
         if (!user) {
             // Send error message back to opener window
             const frontendUrl = process.env.FRONTEND_URL; // Get frontend URL
-            const targetOrigin = frontendUrl ? `'${frontendUrl}'` : "'*'"; // Use specific origin if available, else '*' for error message only
+            let targetOrigin: string;
+            if (frontendUrl) {
+                targetOrigin = `'${frontendUrl}'`;
+            } else {
+                targetOrigin = "'*'";
+            }
             // Safely access message from info object
             const errorMessage = (info && typeof info === 'object' && 'message' in info && typeof info.message === 'string')
                 ? info.message
@@ -343,13 +305,18 @@ router.get('/github/callback', (req: Request, res: Response, next: NextFunction)
         if (!user) {
             // Send error message back to opener window
             const frontendUrl = process.env.FRONTEND_URL; // Get frontend URL
-            const targetOrigin = frontendUrl ? `'${frontendUrl}'` : "'*'"; // Use specific origin if available, else '*' for error message only
+            let targetOrigin: string;
+            if (frontendUrl) {
+                targetOrigin = `'${frontendUrl}'`;
+            } else {
+                targetOrigin = "'*'";
+            }
             // Safely access message from info object
             const errorMessage = (info && typeof info === 'object' && 'message' in info && typeof info.message === 'string')
                 ? info.message
                 : 'GitHub authentication failed.';
-            console.log(`[Auth Callback - GitHub Error] Sending error message to origin: ${frontendUrl || 'Not Set (using *)'}`);
-            const messagePayload = JSON.stringify({ type: 'auth-error', error: errorMessage });
+            console.log(`[Auth Callback - Google Error] Sending error message to origin: ${frontendUrl || 'Not Set (using *)'}`);
+            const messagePayload = JSON.stringify({ type: 'auth-error', errorMessage });
             const script = `
                  <!DOCTYPE html>
                 <html>
@@ -438,7 +405,7 @@ const verifyEmailHandler: RequestHandler = async (req, res, next) => {
 
         // Instead of redirecting from backend, send a success message.
         // The frontend will handle the redirect or UI update.
-        res.status(200).json({ message: 'Email verified successfully.' /*, user: {id: user._id, email: user.email} */ });
+        res.status(200).json({ message: 'Email verified successfully.' });
         return;
 
     } catch (error) {

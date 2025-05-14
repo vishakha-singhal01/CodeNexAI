@@ -16,6 +16,8 @@ import axios from 'axios';
 import AdmZip from 'adm-zip'; // Import adm-zip
 import path from 'path'; // Import path for extension checking
 import { generateDocumentation } from './services/documentationService';
+import { protectWithJwt } from './middleware/authMiddleware';
+import { IUser } from './models/User';
 // Removed ErrorRequestHandler import
 
 dotenv.config(); // Load environment variables from .env file
@@ -34,7 +36,6 @@ app.set('trust proxy', 1);
 const mongoUri = process.env.MONGO_URI;
 if (!mongoUri) {
   console.error('FATAL ERROR: MONGO_URI is not defined in .env file.');
-    console.error('FATAL ERROR: MONGO_URI is not defined in .env file.');
     process.exit(1); // Exit if DB connection string is missing
 }
 // Connect to MongoDB at top level again
@@ -246,9 +247,11 @@ interface GenerateDocsRequestBody {
 // --- Route Handlers Refactoring ---
 
 // Endpoint to generate documentation (Refactored)
-const generateDocsHandler = async (req: AuthenticatedRequest, res: Response) => {
-  // Authentication is now handled by protectWithJwt middleware for this route
-  // req.user is available here if needed, e.g., for logging or user-specific logic
+const generateDocsHandler = async (req: Request, res: Response, next: NextFunction) => {
+  let user: IUser | undefined;
+  if (req.isAuthenticated()) {
+    user = (req.user as any) as IUser;
+  }
   const { code } = req.body as GenerateDocsRequestBody;
 
   if (!code) {
@@ -260,7 +263,7 @@ const generateDocsHandler = async (req: AuthenticatedRequest, res: Response) => 
     const documentation = await generateDocumentation(code);
     res.json({ documentation });
     return;
-  } catch (error: unknown) {
+  } catch (error: any) {
     console.error("API Error generating documentation:", error);
     const message = error instanceof Error ? error.message : 'An unknown error occurred';
     res.status(500).json({ error: 'Failed to generate documentation.', details: message });
@@ -269,9 +272,11 @@ const generateDocsHandler = async (req: AuthenticatedRequest, res: Response) => 
 };
 
 // Endpoint to generate documentation from uploaded files (Refactored)
-const uploadGenerateDocsHandler = async (req: AuthenticatedRequest, res: Response) => {
-  // Authentication is now handled by protectWithJwt middleware for this route
-  // req.user is available here
+const uploadGenerateDocsHandler = async (req: Request, res: Response, next: NextFunction) => {
+  let user: IUser | undefined;
+  if (req.isAuthenticated()) {
+    user = req.user as IUser;
+  }
   if (!req.files || (req.files as Express.Multer.File[]).length === 0) {
      res.status(400).json({ error: 'No files were uploaded.' });
      return;
@@ -293,7 +298,7 @@ const uploadGenerateDocsHandler = async (req: AuthenticatedRequest, res: Respons
         console.log(`Generating documentation for: ${file.originalname}`);
         const documentation = await generateDocumentation(fileContent);
         allDocs.push(`## File: ${file.originalname}\n\n${documentation}`);
-      } catch (fileError: unknown) {
+      } catch (fileError: any) {
         console.error(`Error processing file ${file.originalname}:`, fileError);
         const fileErrorMessage = fileError instanceof Error ? fileError.message : 'An unknown error occurred processing this file';
         allDocs.push(`## File: ${file.originalname}\n\nError generating documentation for this file: ${fileErrorMessage}`);
@@ -311,7 +316,7 @@ const uploadGenerateDocsHandler = async (req: AuthenticatedRequest, res: Respons
     res.status(status).json({ documentation: combinedDocumentation });
     return;
 
-  } catch (error: unknown) {
+  } catch (error: any) {
     console.error("API Error generating documentation from upload:", error);
     const message = error instanceof Error ? error.message : 'An unknown error occurred';
     res.status(500).json({ error: 'Failed to generate documentation from uploaded files.', details: message });
@@ -335,9 +340,11 @@ function isValidGitHubUrl(url: string): boolean {
 }
 
 // Endpoint to generate documentation from a GitHub repository URL (Refactored)
-const githubRepoDocsHandler = async (req: AuthenticatedRequest, res: Response) => {
-  // Authentication is now handled by protectWithJwt middleware for this route
-  // req.user is available here
+const githubRepoDocsHandler = async (req: Request, res: Response, next: NextFunction) => {
+  let user: IUser | undefined;
+  if (req.isAuthenticated()) {
+    user = (req.user as any) as IUser;
+  }
   const { repoUrl } = req.body as GitHubRepoRequestBody;
 
   if (!repoUrl || !isValidGitHubUrl(repoUrl)) {
@@ -376,7 +383,7 @@ const githubRepoDocsHandler = async (req: AuthenticatedRequest, res: Response) =
         console.log(`Generating documentation for: ${zipEntry.entryName}`);
         const documentation = await generateDocumentation(fileContent);
         allDocs.push(`## File: ${zipEntry.entryName}\n\n${documentation}`);
-      } catch (fileGenError: unknown) {
+      } catch (fileGenError: any) {
         console.error(`Error generating docs for file ${zipEntry.entryName}:`, fileGenError);
         const fileGenErrorMessage = fileGenError instanceof Error ? fileGenError.message : 'An unknown error occurred generating docs for this file';
         allDocs.push(`## File: ${zipEntry.entryName}\n\n_Error generating documentation for this file: ${fileGenErrorMessage}_`);
@@ -396,7 +403,7 @@ const githubRepoDocsHandler = async (req: AuthenticatedRequest, res: Response) =
     res.status(status).json({ documentation: combinedDocumentation });
     return;
 
-  } catch (error: unknown) {
+  } catch (error: any) {
     console.error("API Error fetching/processing GitHub repo:", error);
     const message = error instanceof Error ? error.message : 'An unknown error occurred';
     if (axios.isAxiosError(error) && error.response?.status === 404) {
@@ -409,9 +416,9 @@ const githubRepoDocsHandler = async (req: AuthenticatedRequest, res: Response) =
 };
 
 // --- Apply Refactored Handlers with JWT Protection ---
-app.post('/api/generate-docs', generateDocsHandler as RequestHandler);
-app.post('/api/upload-generate-docs', upload.array('codeFiles'), uploadGenerateDocsHandler as RequestHandler);
-app.post('/api/github-repo-docs', githubRepoDocsHandler as RequestHandler);
+app.post('/api/generate-docs', generateDocsHandler);
+app.post('/api/upload-generate-docs', protectWithJwt, upload.array('codeFiles'), uploadGenerateDocsHandler);
+app.post('/api/github-repo-docs', protectWithJwt, githubRepoDocsHandler);
 
 
 // Placeholder for other API routes related to documentation generation
