@@ -38,7 +38,7 @@ export const Navbar = () => {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 max-w-screen-2xl items-center">
+      <div className="container flex h-14 max-w-screen-2xl items-center justify-between md:flex-row flex-col">
         <div className="mr-4 flex items-center">
           <Link to="/" className="flex items-center space-x-1 hover:opacity-90 transition-opacity duration-300">
             <span className="font-extrabold text-2xl tracking-wide text-gradient bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 bg-clip-text text-transparent">
@@ -47,7 +47,7 @@ export const Navbar = () => {
             <img src={logo} alt="Logo" className="h-11 w-12 mt-1 rounded-md border-black bg-secondary" />
           </Link>
         </div>
-        <div className="flex flex-1 items-center justify-end space-x-4"> {/* Increased space */}
+        <div className="flex items-center space-x-4 mt-2">
           <ModeToggle />
 
           {/* Conditional Auth UI */}
