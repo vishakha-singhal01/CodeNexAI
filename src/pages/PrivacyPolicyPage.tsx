@@ -12,7 +12,7 @@ const PrivacyPolicyPage: React.FC = () => {
 
         <h2>1. Introduction</h2>
         <p>
-          Welcome to CodeNexAI ("we," "us," or "our"). We are committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website [Your Website URL] and use our services. Please read this privacy policy carefully. If you do not agree with the terms of this privacy policy, please do not access the site.
+          Welcome to CodeNexAI ("we," "us," or "our"). We are committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website www.codenexai.com and use our services. Please read this privacy policy carefully. If you do not agree with the terms of this privacy policy, please do not access the site.
         </p>
 
         <h2>2. Information We Collect</h2>
@@ -76,13 +76,11 @@ const PrivacyPolicyPage: React.FC = () => {
 
         <h2>7. Contact Us</h2>
         <p>
-          If you have questions or comments about this Privacy Policy, please contact us at: [Your Contact Email Address]
+          If you have questions or comments about this Privacy Policy, please contact us at: codenexai.query@gmail.com
         </p>
 
         {/* Add sections on Cookies, Your Rights (GDPR/CCPA), Changes to Policy etc. as needed */}
-        <p className="mt-8 italic">
-          [Disclaimer: This is a template and may not be legally sufficient for your specific needs. Consult with a legal professional to ensure compliance with all applicable laws and regulations.]
-        </p>
+        
       </div>
     </div>
   );
