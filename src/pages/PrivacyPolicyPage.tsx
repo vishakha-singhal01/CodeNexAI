@@ -7,7 +7,7 @@ const PrivacyPolicyPage: React.FC = () => {
 
       <div className="prose prose-lg max-w-4xl mx-auto">
         <p>
-          <strong>Last Updated:</strong> [Date]
+          <strong>Last Updated:</strong> 15th May 2025
         </p>
 
         <h2>1. Introduction</h2>

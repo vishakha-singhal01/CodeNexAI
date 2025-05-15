@@ -101,8 +101,8 @@ const SecurityPage: React.FC = () => {
           <CardContent>
             <p>
               We value the security community. If you believe you have discovered a security vulnerability in our service, please report it to us responsibly at{' '}
-              <a href="mailto:singhalvishakha@gmail.com" className="text-blue-600 hover:underline">
-              singhalvishakha@gmail.com
+              <a href="mailto:codenexai.query@gmail.com" className="text-blue-600 hover:underline">
+              codenexai.query@gmail.com
               </a>.
               We appreciate your efforts in helping us keep our platform secure. Please provide detailed information so we can investigate thoroughly.
             </p>
