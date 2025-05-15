@@ -11,7 +11,7 @@ export default defineConfig(({ mode }) => ({
     proxy: {
       // Proxy API requests to the deployed backend server during development
       '/api': {
-        target: 'https://code-whisper-docs.onrender.com/', // Deployed backend server address
+        target: process.env.BACKEND_DEV_URL || process.env.BACKEND_MAIN_URL || 'https://code-whisper-docs.onrender.com', // Deployed backend server address
         changeOrigin: true, // Needed for virtual hosted sites
         // We keep the '/api' prefix in the frontend code, but the proxy forwards to the root of the target.
         // If your backend expects '/api' prefix (e.g. https://.../api/health), uncomment the rewrite rule below.
