@@ -70,7 +70,8 @@ const portNumber = Number(process.env.PORT || 3001);
 // --- CORS Configuration ---
 const allowedOrigins = [
   'https://dockiedoc.netlify.app', // Production frontend
-  'https://www.codenexai.com',    // New production frontend
+  'https://www.codenexai.com',    // Main branch  production frontend
+  'https://code-whisper-docs-2.onrender.com', // Dev branch Production frontend
   'http://localhost:5173',        // Common Vite dev port
   'http://localhost:3000',        // Common React dev port
   'http://localhost:8080',        // Add your current frontend dev port
