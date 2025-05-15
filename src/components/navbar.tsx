@@ -54,49 +54,56 @@ export const Navbar = () => {
             <ModeToggle />
 
             {/* Mobile Menu Button */}
-            <Button
-              variant="ghost"
-              className="md:hidden"
-              onClick={toggleMobileMenu}
-            >
-              <Menu className="h-6 w-6" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="md:hidden relative h-8 w-8 rounded-full">
+                  {user ? (
+                    <Avatar className="h-8 w-8">
+                      <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
+                    </Avatar>
+                  ) : (
+                    <Menu className="h-6 w-6" />
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                {user ? (
+                  <>
+                    <DropdownMenuLabel className="font-normal">
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">{user.displayName || 'User'}</p>
+                        {user.email && (
+                          <p className="text-xs leading-none text-muted-foreground">
+                            {user.email}
+                          </p>
+                        )}
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Log out</span>
+                    </DropdownMenuItem>
+                  </>
+                ) : (
+                  <>
+                    <DropdownMenuItem asChild>
+                      <Link to="/login">Login</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/signup">Sign Up</Link>
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             {/* Conditional Auth UI */}
             {isLoading ? (
               <Loader2 className="h-6 w-6 animate-spin" />
             ) : user ? (
               // User is logged in - Show User Dropdown
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                    <Avatar className="h-8 w-8">
-                      {/* Add AvatarImage if you store user profile picture URLs */}
-                      {/* <AvatarImage src={user.profileImageUrl} alt={user.displayName} /> */}
-                      <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end" forceMount>
-                  <DropdownMenuLabel className="font-normal">
-                    <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">{user.displayName || 'User'}</p>
-                      {user.email && (
-                        <p className="text-xs leading-none text-muted-foreground">
-                          {user.email}
-                        </p>
-                      )}
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  {/* Add other items like Profile, Settings if needed */}
-                  {/* <DropdownMenuItem>Profile</DropdownMenuItem> */}
-                  <DropdownMenuItem onClick={handleLogout}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Log out</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <></>
             ) : (
               // User is not logged in - Show Login/Signup Buttons
               <div className="hidden md:flex space-x-2">
@@ -111,22 +118,6 @@ export const Navbar = () => {
           </div>
         </div>
       </div>
-
-      {/* Mobile Menu */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden flex flex-col items-center space-y-2 p-4">
-          {!user && (
-            <>
-              <Button variant="ghost" asChild>
-                <Link to="/login">Login</Link>
-              </Button>
-              <Button asChild>
-                <Link to="/signup">Sign Up</Link>
-              </Button>
-            </>
-          )}
-        </div>
-      )}
     </header>
   );
 };
