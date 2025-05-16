@@ -1,11 +1,41 @@
 import * as vscode from 'vscode';
 import axios, { AxiosInstance } from 'axios';
 import MarkdownIt from 'markdown-it';
+import * as fs from 'fs';
+import { spawn } from 'child_process';
 
 const apiClient: AxiosInstance = axios.create();
 
 const API_BASE_URL = 'https://code-whisper-docs.onrender.com';
 const GENERATE_DOCS_URL = `${API_BASE_URL}/api/generate-docs`;
+
+function runEslintOnCode(code: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+        const eslint = spawn('npx', ['eslint', '--stdin', '--stdin-filename', 'temp.js']);
+
+        let output = '';
+        let errorOutput = '';
+
+        eslint.stdout.on('data', (data) => {
+            output += data.toString();
+        });
+
+        eslint.stderr.on('data', (data) => {
+            errorOutput += data.toString();
+        });
+
+        eslint.on('close', (code) => {
+            if (code === 0 || output) {
+                resolve(output);
+            } else {
+                reject(new Error(errorOutput || `ESLint exited with code ${code}`));
+            }
+        });
+
+        eslint.stdin.write(code);
+        eslint.stdin.end();
+    });
+}
 
 // --- Refactored ensureLoggedIn ---
 async function ensureLoggedIn(context: vscode.ExtensionContext): Promise<boolean> {
@@ -105,6 +135,8 @@ export function activate(context: vscode.ExtensionContext) {
         const email = await context.secrets.get('codenexai.email');
         const password = await context.secrets.get('codenexai.password');
 
+        const eslintCommand = `$selectedText | npx eslint --stdin --stdin-filename temp.js`;
+
         if (!email || !password) {
             vscode.window.showErrorMessage('CodenexAI: Email or password not found. Please log in.');
             await vscode.commands.executeCommand('codenexai.login');
@@ -117,10 +149,19 @@ export function activate(context: vscode.ExtensionContext) {
             cancellable: false
         }, async () => {
             try {
+                let lintOutput = '';
+                try {
+                    lintOutput = await runEslintOnCode(selectedText);
+                    console.log('ESLint Output:', lintOutput);
+                } catch (err) {
+                    vscode.window.showWarningMessage(`ESLint failed: ${(err as Error).message}`);
+                }
+
                 const response = await apiClient.post(GENERATE_DOCS_URL, {
                     code: selectedText,
                     email,
-                    password
+                    password,
+                    lintOutput: lintOutput,
                 });
 
                 if (response.status === 200 && response.data.documentation) {
@@ -190,7 +231,7 @@ export function activate(context: vscode.ExtensionContext) {
                 } else {
                     vscode.window.showErrorMessage(`CodenexAI: Failed to generate documentation. Status: ${response.status}`);
                 }
-            } catch (error: any) {
+            } catch (error: unknown) {
                 if (axios.isAxiosError(error) && error.response) {
                     vscode.window.showErrorMessage(`CodenexAI Error: ${error.response.data?.error || error.response.data?.message || error.response.statusText || "Server error " + error.response.status}`);
                 } else if (error instanceof Error) {
