@@ -7,12 +7,12 @@ const TermsOfServicePage: React.FC = () => {
 
       <div className="prose prose-lg max-w-4xl mx-auto">
         <p>
-          <strong>Last Updated:</strong> 24-04-2025
+          <strong>Last Updated:</strong> 15-05-2025
         </p>
 
         <h2>1. Acceptance of Terms</h2>
         <p>
-          These Terms of Service (“Terms”) constitute a legally binding agreement between you (“User”, “you”) and CodeNexAI (“Company”, “we”, “our”, or “us”) governing your access to and use of our website located at [your-website-url] and all related services (collectively, the “Site”). By accessing or using the Site, you confirm that you have read, understood, and agreed to be bound by these Terms. If you do not agree to all of the Terms, you must not access or use the Site.
+          These Terms of Service (“Terms”) constitute a legally binding agreement between you (“User”, “you”) and CodeNexAI (“Company”, “we”, “our”, or “us”) governing your access to and use of our website located at www.codenexai.com and all related services (collectively, the “Site”). By accessing or using the Site, you confirm that you have read, understood, and agreed to be bound by these Terms. If you do not agree to all of the Terms, you must not access or use the Site.
         </p>
 
         <h2>2. Intellectual Property</h2>
@@ -60,7 +60,7 @@ const TermsOfServicePage: React.FC = () => {
 
         <h2>7. Governing Law</h2>
         <p>
-          These Terms are governed by the laws of [Insert Jurisdiction], without regard to conflict of law principles. Any disputes arising under these Terms shall be subject to the exclusive jurisdiction of the courts located in [Insert Jurisdiction].
+          These Terms are governed by the laws of Uttar Pradesh, without regard to conflict of law principles. Any disputes arising under these Terms shall be subject to the exclusive jurisdiction of the courts located in Uttar Pradesh.
         </p>
 
         <h2>8. Disclaimer of Warranties</h2>
@@ -75,12 +75,10 @@ const TermsOfServicePage: React.FC = () => {
 
         <h2>10. Contact Information</h2>
         <p>
-          If you have any questions or concerns regarding these Terms, please contact us at: <strong>[Insert Contact Email]</strong>
+          If you have any questions or concerns regarding these Terms, please contact us at: <strong>codenexai.query@gmail.com</strong>
         </p>
 
-        <p className="mt-8 italic">
-          Disclaimer: This document is a general template and may not address all legal requirements. Please consult a qualified attorney to ensure full compliance with applicable laws.
-        </p>
+       
       </div>
     </div>
   );
