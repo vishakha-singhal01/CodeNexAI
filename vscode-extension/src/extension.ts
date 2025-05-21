@@ -1,4 +1,7 @@
 import * as vscode from 'vscode';
+import { DocumentationProvider } from './DocumentationView';
+import { CodeReviewProvider } from './CodeReviewView';
+import { SecurityAnalysisProvider } from './SecurityAnalysisView';
 import axios, { AxiosInstance } from 'axios';
 import MarkdownIt from 'markdown-it';
 import * as fs from 'fs';
@@ -8,6 +11,29 @@ const apiClient: AxiosInstance = axios.create();
 
 const API_BASE_URL = 'https://code-whisper-docs.onrender.com';
 const GENERATE_DOCS_URL = `${API_BASE_URL}/api/generate-docs`;
+
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+export async function analyzeCodeSecurity(code: string): Promise<string> {
+    const apiKey = vscode.workspace.getConfiguration('codenexai').get<string>('geminiApiKey') || "";
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "models/gemini-1.5-pro-002" });
+
+    const prompt = `Analyze the following code for security vulnerabilities: ${code}`;
+
+    try {
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const text = response.text();
+        return text;
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            return `Error analyzing code security: ${error.message}`;
+        } else {
+            return `Error analyzing code security: An unknown error occurred.`;
+        }
+    }
+}
 
 function runEslintOnCode(code: string): Promise<string> {
     return new Promise((resolve, reject) => {
@@ -78,6 +104,18 @@ async function ensureLoggedIn(context: vscode.ExtensionContext): Promise<boolean
 export function activate(context: vscode.ExtensionContext) {
     console.log('CodenexAI extension is now active!');
 
+    // Register the documentation view
+    const documentationProvider = new DocumentationProvider();
+    vscode.window.registerTreeDataProvider('documentation', documentationProvider);
+
+    // Register the code review view
+    const codeReviewProvider = new CodeReviewProvider();
+    vscode.window.registerTreeDataProvider('codeReview', codeReviewProvider);
+
+    // Register the security analysis view
+    const securityAnalysisProvider = new SecurityAnalysisProvider();
+    vscode.window.registerTreeDataProvider('securityAnalysis', securityAnalysisProvider);
+
     // --- Login Command ---
     const loginCommand = vscode.commands.registerCommand('codenexai.login', async () => {
         const email = await vscode.window.showInputBox({ prompt: 'Enter your email' });
@@ -134,14 +172,6 @@ export function activate(context: vscode.ExtensionContext) {
 
         const email = await context.secrets.get('codenexai.email');
         const password = await context.secrets.get('codenexai.password');
-
-        const eslintCommand = `$selectedText | npx eslint --stdin --stdin-filename temp.js`;
-
-        if (!email || !password) {
-            vscode.window.showErrorMessage('CodenexAI: Email or password not found. Please log in.');
-            await vscode.commands.executeCommand('codenexai.login');
-            return;
-        }
 
         await vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification,
@@ -243,6 +273,28 @@ export function activate(context: vscode.ExtensionContext) {
         });
     });
     context.subscriptions.push(generateDisposable);
+
+    // --- Analyze Security Command ---
+    const analyzeSecurityCommand = vscode.commands.registerCommand('codenexai.analyzeSecurity', async () => {
+        const editor = vscode.window.activeTextEditor;
+
+        if (!editor) {
+            vscode.window.showErrorMessage('CodenexAI: No active text editor found.');
+            return;
+        }
+
+        const selection = editor.selection;
+        const selectedText = editor.document.getText(selection);
+
+        if (selectedText.trim() === '') {
+            vscode.window.showInformationMessage('CodenexAI: No text selected.');
+            return;
+        }
+
+        const analysisResult = await analyzeCodeSecurity(selectedText);
+        vscode.window.showInformationMessage(`Security Analysis: ${analysisResult}`);
+    });
+    context.subscriptions.push(analyzeSecurityCommand);
 }
 
 // --- Deactivate Function ---
