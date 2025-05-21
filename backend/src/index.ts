@@ -164,16 +164,6 @@ app.use('/api/payments', paymentsRouter); // Mount the payment routes
 // --- Contact Route ---
 app.use('/api/contact', contactRouter); // Mount the contact routes
 
-// --- Gemini API Key Route ---
-app.get('/api/gemini-api-key', (req: Request, res: Response) => {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (apiKey) {
-    res.json({ apiKey });
-  } else {
-    res.status(500).json({ error: 'Gemini API key not configured.' });
-  }
-});
-
 const vscodeAuthStartHandler: RequestHandler = (req: Request, res: Response) => {
   const redirectUriFromQuery = req.query.redirect_uri as string | undefined;
 
@@ -260,7 +250,7 @@ interface GenerateDocsRequestBody {
 const generateDocsHandler = async (req: Request, res: Response, next: NextFunction) => {
   let user: IUser | undefined;
   if (req.isAuthenticated()) {
-    user = req.user as IUser;
+    user = (req.user as any) as IUser;
   }
   const { code } = req.body as GenerateDocsRequestBody;
 
@@ -273,7 +263,7 @@ const generateDocsHandler = async (req: Request, res: Response, next: NextFuncti
     const documentation = await generateDocumentation(code);
     res.json({ documentation });
     return;
-  } catch (error: unknown) {
+  } catch (error: any) {
     console.error("API Error generating documentation:", error);
     const message = error instanceof Error ? error.message : 'An unknown error occurred';
     res.status(500).json({ error: 'Failed to generate documentation.', details: message });
@@ -288,8 +278,8 @@ const uploadGenerateDocsHandler = async (req: Request, res: Response, next: Next
     user = req.user as IUser;
   }
   if (!req.files || (req.files as Express.Multer.File[]).length === 0) {
-    res.status(400).json({ error: 'No files were uploaded.' });
-    return;
+     res.status(400).json({ error: 'No files were uploaded.' });
+     return;
   }
 
   const files = req.files as Express.Multer.File[];
@@ -308,7 +298,7 @@ const uploadGenerateDocsHandler = async (req: Request, res: Response, next: Next
         console.log(`Generating documentation for: ${file.originalname}`);
         const documentation = await generateDocumentation(fileContent);
         allDocs.push(`## File: ${file.originalname}\n\n${documentation}`);
-      } catch (fileError: unknown) {
+      } catch (fileError: any) {
         console.error(`Error processing file ${file.originalname}:`, fileError);
         const fileErrorMessage = fileError instanceof Error ? fileError.message : 'An unknown error occurred processing this file';
         allDocs.push(`## File: ${file.originalname}\n\nError generating documentation for this file: ${fileErrorMessage}`);
@@ -317,8 +307,8 @@ const uploadGenerateDocsHandler = async (req: Request, res: Response, next: Next
     }
 
     if (allDocs.length === 0) {
-      res.status(400).json({ error: 'No processable code content found in uploaded files.' });
-      return;
+       res.status(400).json({ error: 'No processable code content found in uploaded files.' });
+       return;
     }
 
     const combinedDocumentation = allDocs.join('\n\n---\n\n');
@@ -326,7 +316,7 @@ const uploadGenerateDocsHandler = async (req: Request, res: Response, next: Next
     res.status(status).json({ documentation: combinedDocumentation });
     return;
 
-  } catch (error: unknown) {
+  } catch (error: any) {
     console.error("API Error generating documentation from upload:", error);
     const message = error instanceof Error ? error.message : 'An unknown error occurred';
     res.status(500).json({ error: 'Failed to generate documentation from uploaded files.', details: message });
@@ -353,13 +343,13 @@ function isValidGitHubUrl(url: string): boolean {
 const githubRepoDocsHandler = async (req: Request, res: Response, next: NextFunction) => {
   let user: IUser | undefined;
   if (req.isAuthenticated()) {
-    user = req.user as IUser;
+    user = (req.user as any) as IUser;
   }
   const { repoUrl } = req.body as GitHubRepoRequestBody;
 
   if (!repoUrl || !isValidGitHubUrl(repoUrl)) {
-    res.status(400).json({ error: 'Invalid or missing GitHub repository URL.' });
-    return;
+     res.status(400).json({ error: 'Invalid or missing GitHub repository URL.' });
+     return;
   }
 
   const urlParts = new URL(repoUrl);
@@ -393,7 +383,7 @@ const githubRepoDocsHandler = async (req: Request, res: Response, next: NextFunc
         console.log(`Generating documentation for: ${zipEntry.entryName}`);
         const documentation = await generateDocumentation(fileContent);
         allDocs.push(`## File: ${zipEntry.entryName}\n\n${documentation}`);
-      } catch (fileGenError: unknown) {
+      } catch (fileGenError: any) {
         console.error(`Error generating docs for file ${zipEntry.entryName}:`, fileGenError);
         const fileGenErrorMessage = fileGenError instanceof Error ? fileGenError.message : 'An unknown error occurred generating docs for this file';
         allDocs.push(`## File: ${zipEntry.entryName}\n\n_Error generating documentation for this file: ${fileGenErrorMessage}_`);
@@ -404,8 +394,8 @@ const githubRepoDocsHandler = async (req: Request, res: Response, next: NextFunc
     console.log(`Processed ${processedFileCount} code files.`);
 
     if (allDocs.length === 0) {
-      res.status(400).json({ error: 'No processable code files found in the repository.' });
-      return;
+       res.status(400).json({ error: 'No processable code files found in the repository.' });
+       return;
     }
 
     const combinedDocumentation = allDocs.join('\n\n---\n\n');
@@ -413,12 +403,12 @@ const githubRepoDocsHandler = async (req: Request, res: Response, next: NextFunc
     res.status(status).json({ documentation: combinedDocumentation });
     return;
 
-  } catch (error: unknown) {
+  } catch (error: any) {
     console.error("API Error fetching/processing GitHub repo:", error);
     const message = error instanceof Error ? error.message : 'An unknown error occurred';
     if (axios.isAxiosError(error) && error.response?.status === 404) {
-      res.status(404).json({ error: 'Repository or default branch (main) not found. Check URL or branch name.' });
-      return;
+       res.status(404).json({ error: 'Repository or default branch (main) not found. Check URL or branch name.' });
+       return;
     }
     res.status(500).json({ error: 'Failed to fetch or process GitHub repository.', details: message });
     return;
