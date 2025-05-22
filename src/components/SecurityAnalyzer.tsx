@@ -13,8 +13,10 @@ const SecurityAnalyzer: React.FC<SecurityAnalyzerProps> = ({ code }) => {
     setLoading(true);
     try {
       const response = await axios.post('/security', { code });
+      console.log('Response data:', response.data);
       setAnalysisResult(response.data.result);
     } catch (error: unknown) {
+      console.error('Error analyzing code:', error);
       setAnalysisResult(`Error analyzing code: ${(error as Error).message}`);
     } finally {
       setLoading(false);

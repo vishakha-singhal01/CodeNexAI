@@ -12,8 +12,8 @@ export async function analyzeCodeSecurity(code: string): Promise<string> {
       throw new Error(`Server error: ${response.status} - ${response.statusText}`);
     }
 
-    const data = response.data as { report: string };
-    return data.report || 'No result received.';
+    const data = response.data as { result: string };
+    return data.result || 'No result received.';
   } catch (error: unknown) {
     return `Error analyzing code security: ${(error as Error).message || 'Unknown error'}`;
   }
