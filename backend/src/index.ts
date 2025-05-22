@@ -11,6 +11,7 @@ import configurePassport from './config/passport'; // Added passport config impo
 import authRoutes from './routes/auth'; // Import the auth routes
 import paymentsRouter from './routes/payments';
 import contactRouter from './routes/contact';
+import securityRouter from './routes/security';
 import multer from 'multer';
 import axios from 'axios';
 import AdmZip from 'adm-zip'; // Import adm-zip
@@ -163,6 +164,9 @@ app.use('/api/payments', paymentsRouter); // Mount the payment routes
 
 // --- Contact Route ---
 app.use('/api/contact', contactRouter); // Mount the contact routes
+
+// --- Security Route ---
+app.use('/api/analyze', securityRouter); // Mount the security routes
 
 const vscodeAuthStartHandler: RequestHandler = (req: Request, res: Response) => {
   const redirectUriFromQuery = req.query.redirect_uri as string | undefined;

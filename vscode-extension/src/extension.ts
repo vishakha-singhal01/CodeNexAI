@@ -12,33 +12,6 @@ const apiClient: AxiosInstance = axios.create();
 const API_BASE_URL = 'https://code-whisper-docs.onrender.com';
 const GENERATE_DOCS_URL = `${API_BASE_URL}/api/generate-docs`;
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
-export async function analyzeCodeSecurity(code: string): Promise<string> {
-  const apiUrl = `${API_BASE_URL}/analyze`;
-
-  try {
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ code })
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Server error: ${response.status} - ${errorText}`);
-    }
-
-    const data = await response.json() as { result: string };
-
-    return data.result || 'No result received.';
-  } catch (error: any) {
-    return `Error analyzing code security: ${error.message || 'Unknown error'}`;
-  }
-}
-
 
 function runEslintOnCode(code: string): Promise<string> {
     return new Promise((resolve, reject) => {
@@ -296,8 +269,17 @@ export function activate(context: vscode.ExtensionContext) {
             return;
         }
 
-        const analysisResult = await analyzeCodeSecurity(selectedText);
-        vscode.window.showInformationMessage(`Security Analysis: ${analysisResult}`);
+        try {
+          const response = await apiClient.post(`${API_BASE_URL}/api/analyze`, { code: selectedText });
+          if (response.status === 200) {
+            const analysisResult = response.data.result;
+            vscode.window.showInformationMessage(`Security Analysis: ${analysisResult}`);
+          } else {
+            vscode.window.showErrorMessage(`CodenexAI: Security analysis failed. Status: ${response.status}`);
+          }
+        } catch (error: any) {
+          vscode.window.showErrorMessage(`CodenexAI: Security analysis failed. ${error}`);
+        }
     });
     context.subscriptions.push(analyzeSecurityCommand);
 }
