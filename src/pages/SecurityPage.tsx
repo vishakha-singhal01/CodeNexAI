@@ -1,11 +1,14 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ShieldCheck, Lock, DatabaseZap, Mail, FileText } from 'lucide-react'; // Example icons
+import SecurityAnalyzer from '@/components/SecurityAnalyzer';
 
 const SecurityPage: React.FC = () => {
   return (
     <div className="container mx-auto px-4 py-12">
       <h1 className="text-4xl font-bold mb-8 text-center">Our Commitment to Security</h1>
+
+      <SecurityAnalyzer code={`function hello(name) { console.log("Hello, " + name); }`} />
 
       <div className="space-y-8">
         {/* Code Privacy */}
