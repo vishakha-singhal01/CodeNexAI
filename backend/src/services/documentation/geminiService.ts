@@ -92,12 +92,77 @@ Generate the optimized and clean documentation below:
 
     return text;
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error generating documentation via Gemini:", error);
-    if (error.message.includes('API key not valid')) {
+    if (error instanceof Error && error.message.includes('API key not valid')) {
       return "Error: Invalid Gemini API Key. Please check your .env file.";
     }
     // Re-throw or return a more specific error message
-    return `Error generating documentation via Gemini: ${error.message}`;
+    return `Error generating documentation via Gemini: ${(error as Error).message || 'Unknown error'}`;
+  }
+}
+
+/**
+ * Generates a security analysis for the given code using Gemini.
+ */
+export async function generateAISecurityAnalysis(code: string, filename?: string): Promise<string> {
+  console.log('generateAISecurityAnalysis: Starting analysis');
+  if (!code || code.trim() === "") {
+    console.log('generateAISecurityAnalysis: No code provided');
+    return "No code provided to analyze.";
+  }
+
+  // Construct the prompt for security analysis
+  const prompt = `
+Analyze the following code snippet${filename ? ` from the file "${filename}"` : ''} for potential security vulnerabilities.
+
+### Security Analysis Guidelines:
+- **Identify Vulnerabilities:**
+  - Look for common security issues such as SQL injection, cross-site scripting (XSS), authentication bypass, and insecure data handling.
+- **Explain the Impact:**
+  - Describe the potential impact of each vulnerability, including how it could be exploited and the possible consequences.
+- **Suggest Remediation:**
+  - Provide specific recommendations for fixing the vulnerabilities, including code changes and security best practices.
+- **Focus on Usefulness:**
+  - Prioritize the most critical vulnerabilities and their potential impact.
+  - Provide clear and actionable recommendations.
+
+### Formatting:
+- Use proper Markdown: headings, subheadings, bullet points, and fenced code blocks (\`\`\`) for readability.
+
+### Input Code:
+\`\`\`
+${code}
+\`\`\`
+
+Generate a detailed security analysis below:
+`;
+
+  try {
+    console.log(`generateAISecurityAnalysis: Sending code snippet${filename ? ` from ${filename}` : ''} to Gemini for security analysis.`);
+
+    // Pass safety settings to the generation request
+    const result = await model.generateContent({
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      safetySettings,
+      // Consider adding generationConfig if needed (e.g., temperature)
+      // generationConfig: { temperature: 0.7 }
+    });
+    const response = result.response;
+    const text = response.text();
+
+    console.log("generateAISecurityAnalysis: Received response from Gemini:", text); // Log success
+
+    return text;
+
+  } catch (error: unknown) {
+    console.error("generateAISecurityAnalysis: Error generating security analysis via Gemini:", error);
+    if (error instanceof Error && error.message.includes('API key not valid')) {
+      console.error('generateAISecurityAnalysis: Invalid Gemini API Key');
+      return "Error: Invalid Gemini API Key. Please check your .env file.";
+    }
+    // Re-throw or return a more specific error message
+    console.error('generateAISecurityAnalysis: Gemini API error:', error);
+    return `Error generating security analysis via Gemini: ${(error as Error).message || 'Unknown error'}`;
   }
 }
