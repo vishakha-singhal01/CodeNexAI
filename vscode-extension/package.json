@@ -35,7 +35,12 @@
       {
         "command": "codenexai.logout",
         "title": "CodenexAI: Logout",
-        "category": "CodenexAI"
+        "category": "CodeNexAI"
+      },
+      {
+        "command": "codenexai.analyzeSecurity",
+        "title": "CodenexAI: Analyze Security",
+        "category": "CodeNexAI"
       }
     ],
     "menus": {
@@ -44,8 +49,50 @@
           "when": "editorHasSelection",
           "command": "codenexai.generateDocumentation",
           "group": "navigation"
+        },
+        {
+          "when": "editorHasSelection",
+          "command": "codenexai.analyzeSecurity",
+          "group": "navigation"
         }
       ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "codenexai",
+          "title": "CodeNexAI",
+          "icon": "images/icon.png"
+        }
+      ]
+    },
+    "views": {
+      "codenexai": [
+        {
+          "id": "documentation",
+          "name": "Documentation",
+          "when": "view == codenexai"
+        },
+        {
+          "id": "codeReview",
+          "name": "Code Review",
+          "when": "view == codenexai"
+        },
+        {
+          "id": "securityAnalysis",
+          "name": "Security Analysis",
+          "when": "view == codenexai"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "CodeNexAI",
+      "properties": {
+        "codenexai.geminiApiKey": {
+          "type": "string",
+          "description": "Your Gemini API key"
+        }
+      }
     }
   },
   "scripts": {
@@ -70,7 +117,8 @@
   },
   "dependencies": {
     "axios": "^1.6.0",
-    "markdown-it": "^14.0.0"
+    "markdown-it": "^14.0.0",
+    "@google/generative-ai": "^0.7.0"
   },
   "icon": "images/icon.png"
 }
