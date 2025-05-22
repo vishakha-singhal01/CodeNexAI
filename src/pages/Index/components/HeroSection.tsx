@@ -2,6 +2,7 @@ import React from 'react';
 import { ArrowRight, Code, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
+import SecurityAnalyzer from '@/components/SecurityAnalyzer';
 
 export const HeroSection = () => {
   const navigate = useNavigate();
@@ -44,6 +45,7 @@ export const HeroSection = () => {
           ></iframe>
         </div>
       </div>
+       <SecurityAnalyzer code={`function hello(name) { console.log("Hello, " + name); }`} />
     </section>
   );
 };
