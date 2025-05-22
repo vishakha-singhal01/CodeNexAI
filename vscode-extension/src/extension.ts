@@ -15,25 +15,30 @@ const GENERATE_DOCS_URL = `${API_BASE_URL}/api/generate-docs`;
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export async function analyzeCodeSecurity(code: string): Promise<string> {
-    const apiKey = vscode.workspace.getConfiguration('codenexai').get<string>('geminiApiKey') || "";
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "models/gemini-1.5-pro-002" });
+  const apiUrl = `${API_BASE_URL}/analyze`;
 
-    const prompt = `Analyze the following code for security vulnerabilities: ${code}`;
+  try {
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ code })
+    });
 
-    try {
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const text = response.text();
-        return text;
-    } catch (error: unknown) {
-        if (error instanceof Error) {
-            return `Error analyzing code security: ${error.message}`;
-        } else {
-            return `Error analyzing code security: An unknown error occurred.`;
-        }
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Server error: ${response.status} - ${errorText}`);
     }
+
+    const data = await response.json() as { result: string };
+
+    return data.result || 'No result received.';
+  } catch (error: any) {
+    return `Error analyzing code security: ${error.message || 'Unknown error'}`;
+  }
 }
+
 
 function runEslintOnCode(code: string): Promise<string> {
     return new Promise((resolve, reject) => {
