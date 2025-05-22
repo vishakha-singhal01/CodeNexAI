@@ -9,7 +9,7 @@ import { spawn } from 'child_process';
 
 const apiClient: AxiosInstance = axios.create();
 
-const API_BASE_URL = 'https://code-whisper-docs.onrender.com';
+const API_BASE_URL = 'https://code-whisper-docs-1.onrender.com';
 const GENERATE_DOCS_URL = `${API_BASE_URL}/api/generate-docs`;
 
 
@@ -291,8 +291,14 @@ export function activate(context: vscode.ExtensionContext) {
           } else {
             vscode.window.showErrorMessage(`CodenexAI: Security analysis failed. Status: ${response.status}`);
           }
-        } catch (error: any) {
-          vscode.window.showErrorMessage(`CodenexAI: Security analysis failed. ${error}`);
+        } catch (error: unknown) {
+          let errorMessage = 'CodenexAI: Security analysis failed.';
+          if (error instanceof Error) {
+            errorMessage += ` ${error.message}`;
+          } else {
+            errorMessage += ` An unknown error occurred.`;
+          }
+          vscode.window.showErrorMessage(errorMessage);
         }
     });
     context.subscriptions.push(analyzeSecurityCommand);
