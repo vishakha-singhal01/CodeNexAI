@@ -1,19 +1,9 @@
-import axios from 'axios';
-
-const API_BASE_URL = 'https://gemini.example.com/api'; // Placeholder URL
+import { generateAIDocumentation } from './documentation/geminiService';
 
 export async function analyzeCodeSecurity(code: string): Promise<string> {
-  const apiUrl = `${API_BASE_URL}/security_analysis`;
-
   try {
-    const response = await axios.post(apiUrl, { code });
-
-    if (response.status !== 200) {
-      throw new Error(`Server error: ${response.status} - ${response.statusText}`);
-    }
-
-    const data = response.data as { result: string };
-    return data.result || 'No result received.';
+    const analysisResult = await generateAIDocumentation(code, 'security_analysis');
+    return analysisResult || 'No result received.';
   } catch (error: unknown) {
     return `Error analyzing code security: ${(error as Error).message || 'Unknown error'}`;
   }
