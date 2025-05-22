@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://code-whisper-docs.onrender.com';
+const API_BASE_URL = 'https://code-whisper-docs-1.onrender.com';
 
 export async function analyzeCodeSecurity(code: string): Promise<string> {
   const apiUrl = `${API_BASE_URL}/analyze`;

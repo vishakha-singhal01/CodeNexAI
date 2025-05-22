@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { analyzeCodeSecurity } from './extension';
 
 export class SecurityAnalysisProvider implements vscode.TreeDataProvider<SecurityAnalysisItem> {
   private _onDidChangeTreeData: vscode.EventEmitter<SecurityAnalysisItem | undefined | null | void> = new vscode.EventEmitter<SecurityAnalysisItem | undefined | null | void>();
@@ -24,10 +23,27 @@ export class SecurityAnalysisProvider implements vscode.TreeDataProvider<Securit
         const selection = editor.selection;
         const code = editor.document.getText(selection);
         if (code) {
-          return analyzeCodeSecurity(code).then((analysis: string) => {
-            return [
-              new SecurityAnalysisItem(analysis, vscode.TreeItemCollapsibleState.None, { command: 'codenexai.generateDocumentation', title: 'Generate Documentation' })
-            ];
+          return vscode.commands.executeCommand<{ email?: string, password?: string }>('codenexai.getEmailAndPassword').then(credentials => {
+            if (credentials && credentials.email && credentials.password) {
+              return fetch('https://code-whisper-docs.onrender.com/api/analyze', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Basic ${btoa(`${credentials.email}:${credentials.password}`)}`
+                },
+                body: JSON.stringify({ code })
+              })
+              .then(response => response.json())
+              .then((data: any) => {
+                const analysis = data.result;
+                return [
+                  new SecurityAnalysisItem(analysis, vscode.TreeItemCollapsibleState.None, { command: 'codenexai.generateDocumentation', title: 'Generate Documentation' })
+                ];
+              });
+            } else {
+              vscode.window.showErrorMessage('CodenexAI: Email and password are required to perform security analysis.');
+              return [new SecurityAnalysisItem("Email and password are required", vscode.TreeItemCollapsibleState.None)];
+            }
           });
         } else {
           return Promise.resolve([new SecurityAnalysisItem("No code selected", vscode.TreeItemCollapsibleState.None)]);

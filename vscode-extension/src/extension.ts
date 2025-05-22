@@ -131,6 +131,20 @@ export function activate(context: vscode.ExtensionContext) {
     });
     context.subscriptions.push(logoutCommand);
 
+    // --- Get Email and Password Command ---
+    const getEmailAndPasswordCommand = vscode.commands.registerCommand('codenexai.getEmailAndPassword', async () => {
+      const email = await context.secrets.get('codenexai.email');
+      const password = await context.secrets.get('codenexai.password');
+    
+      if (!email || !password) {
+        vscode.window.showErrorMessage('CodenexAI: Please log in to use this feature.');
+        return {};
+      }
+    
+      return { email, password };
+    });
+    context.subscriptions.push(getEmailAndPasswordCommand);
+
     // --- Generate Documentation Command ---
     const generateDisposable = vscode.commands.registerCommand('codenexai.generateDocumentation', async () => {
         const editor = vscode.window.activeTextEditor;

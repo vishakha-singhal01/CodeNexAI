@@ -3,7 +3,7 @@ import { analyzeCodeSecurity } from '../services/securityService';
 
 const router = express.Router();
 
-router.post('/analyze', async (req: Request, res: Response) => {
+router.post('/', async (req: Request, res: Response) => {
   try {
     const { code } = req.body;
     const analysisResult = await analyzeCodeSecurity(code);
