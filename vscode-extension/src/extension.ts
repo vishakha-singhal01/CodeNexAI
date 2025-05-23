@@ -103,7 +103,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Register command to show the code review view
     const showCodeReviewCommand = vscode.commands.registerCommand('codenexai.showCodeReview', () => {
-      vscode.commands.executeCommand('workbench.view.extension.codenexai');
+      vscode.commands.executeCommand('workbench.view.extension.codenexai.codeReview');
     });
     context.subscriptions.push(showCodeReviewCommand);
 
