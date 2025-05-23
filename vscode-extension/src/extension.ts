@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 import axios, { AxiosInstance } from 'axios';
 import MarkdownIt from 'markdown-it';
 
@@ -84,6 +85,54 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.window.showInformationMessage('CodenexAI: Successfully logged out.');
     });
     context.subscriptions.push(logoutCommand);
+
+    // --- Code Review Command ---
+    const codeReviewCommand = vscode.commands.registerCommand('codenexai.codeReview', async () => {
+        const editor = vscode.window.activeTextEditor;
+
+        if (!editor) {
+            vscode.window.showErrorMessage('CodenexAI: No active text editor found.');
+            return;
+        }
+
+        const document = editor.document;
+        const filePath = document.fileName;
+
+        // Execute ESLint
+        const { exec } = require('child_process');
+        const eslintPath = path.join(vscode.workspace.rootPath || '', 'node_modules', '.bin', 'eslint');
+        exec(`"${eslintPath}" "${filePath}"`, { cwd: vscode.workspace.rootPath }, (err: any, stdout: string, stderr: string) => {
+            if (err) {
+                console.error(err);
+                vscode.window.showErrorMessage(`CodenexAI: Code review failed. ${stderr}`);
+                return;
+            }
+
+            // Display ESLint results in a webview panel
+            const panel = vscode.window.createWebviewPanel(
+                'codenexaiCodeReview',
+                'CodenexAI Code Review',
+                vscode.ViewColumn.Beside,
+                {
+                    enableScripts: true,
+                    retainContextWhenHidden: true
+                }
+            );
+
+            panel.webview.html = `<!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>CodenexAI Code Review</title>
+            </head>
+            <body>
+                <pre>${stdout}</pre>
+            </body>
+            </html>`;
+        });
+    });
+    context.subscriptions.push(codeReviewCommand);
 
     // --- Generate Documentation Command ---
     const generateDisposable = vscode.commands.registerCommand('codenexai.generateDocumentation', async () => {

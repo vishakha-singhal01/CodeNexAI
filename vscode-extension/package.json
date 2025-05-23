@@ -17,6 +17,7 @@
     "onCommand:codenexai.generateDocumentation",
     "onCommand:codenexai.login",
     "onCommand:codenexai.logout",
+    "onCommand:codenexai.codeReview",
     "onUri"
   ],
   "main": "./dist/extension.js",
@@ -36,6 +37,11 @@
         "command": "codenexai.logout",
         "title": "CodenexAI: Logout",
         "category": "CodenexAI"
+      },
+      {
+        "command": "codenexai.codeReview",
+        "title": "CodenexAI: Code Review",
+        "category": "CodenexAI"
       }
     ],
     "menus": {
@@ -52,18 +58,23 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "lint": "eslint . --ext .ts,.tsx",
     "package": "vsce package",
-    "publish": "vsce publish"
+    "publish": "vsce publish",
+    "format": "prettier --write .",
+    "lint": "eslint . --ext .ts,.tsx",
+    "lint:fix": "eslint . --ext .ts,.tsx --fix"
   },
   "devDependencies": {
     "@types/babel__parser": "^7.1.5",
     "@types/markdown-it": "^13.0.0",
     "@types/node": "18.x",
     "@types/vscode": "^1.80.0",
-    "@typescript-eslint/eslint-plugin": "^5.0.0",
-    "@typescript-eslint/parser": "^5.0.0",
-    "eslint": "^8.0.0",
+    "@typescript-eslint/eslint-plugin": "^5.62.0",
+    "@typescript-eslint/parser": "^5.62.0",
+    "eslint": "^8.57.1",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-react": "^7.37.5",
+    "prettier": "^3.5.3",
     "typescript": "^5.0.0",
     "vsce": "^2.15.0"
   },
