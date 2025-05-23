@@ -70,18 +70,15 @@
       "codenexai": [
         {
           "id": "documentation",
-          "name": "Documentation",
-          "when": "view == codenexai"
+          "name": "Documentation"
         },
         {
           "id": "codeReview",
-          "name": "Code Review",
-          "when": "view == codenexai"
+          "name": "Code Review"
         },
         {
           "id": "securityAnalysis",
-          "name": "Security Analysis",
-          "when": "view == codenexai"
+          "name": "Security Analysis"
         }
       ]
     },
@@ -116,9 +113,9 @@
     "vsce": "^2.15.0"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.7.0",
     "axios": "^1.6.0",
-    "markdown-it": "^14.0.0",
-    "@google/generative-ai": "^0.7.0"
+    "markdown-it": "^14.0.0"
   },
   "icon": "images/icon.png"
 }
