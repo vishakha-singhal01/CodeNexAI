@@ -41,9 +41,20 @@
         "command": "codenexai.analyzeSecurity",
         "title": "CodenexAI: Analyze Security",
         "category": "CodeNexAI"
+      },
+      {
+        "command": "codenexai.showCodeReview",
+        "title": "CodenexAI: Show Code Review",
+        "category": "CodeNexAI"
       }
     ],
     "menus": {
+      "commandpalette": [
+        {
+          "command": "codenexai.showCodeReview",
+          "when": "true"
+        }
+      ],
       "editor/context": [
         {
           "when": "editorHasSelection",

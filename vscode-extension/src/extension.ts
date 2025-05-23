@@ -1,3 +1,4 @@
+/// <reference types="vscode" />
 import * as vscode from 'vscode';
 import { DocumentationProvider } from './DocumentationView';
 import { CodeReviewProvider } from './CodeReviewView';
@@ -89,6 +90,22 @@ export function activate(context: vscode.ExtensionContext) {
     // Register the code review view
     const codeReviewProvider = new CodeReviewProvider();
     vscode.window.registerTreeDataProvider('codeReview', codeReviewProvider);
+    context.globalState.update('codeReviewProvider', codeReviewProvider);
+
+    // Register command to refresh the code review view
+    const refreshCodeReviewCommand = vscode.commands.registerCommand('codenexai.refreshCodeReview', () => {
+      const codeReviewProvider = context.globalState.get<CodeReviewProvider>('codeReviewProvider');
+      if (codeReviewProvider) {
+        codeReviewProvider.refresh();
+      }
+    });
+    context.subscriptions.push(refreshCodeReviewCommand);
+
+    // Register command to show the code review view
+    const showCodeReviewCommand = vscode.commands.registerCommand('codenexai.showCodeReview', () => {
+      vscode.commands.executeCommand('workbench.view.extension.codeReview');
+    });
+    context.subscriptions.push(showCodeReviewCommand);
 
     // Register the security analysis view
     const securityAnalysisProvider = new SecurityAnalysisProvider();
@@ -302,6 +319,56 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
     context.subscriptions.push(analyzeSecurityCommand);
+
+    function parseEslintOutput(lintOutput: string): any[] {
+      // Implement logic to parse ESLint output and generate code fixes
+      // This is a placeholder implementation
+      console.log('ESLint Output:', lintOutput);
+      return [];
+    }
+
+    async function applyCodeFixes(document: vscode.TextDocument, fixes: any[]): Promise<void> {
+      // Implement logic to apply the code fixes to the file
+      // This is a placeholder implementation
+      if (fixes.length > 0) {
+        vscode.window.showInformationMessage(`Applying ${fixes.length} code fixes...`);
+      } else {
+        vscode.window.showInformationMessage('No code fixes to apply.');
+      }
+    }
+
+    // --- Analyze Code Command ---
+    const analyzeCodeCommand = vscode.commands.registerCommand('codenexai.analyzeCode', async (fileUri: vscode.Uri) => {
+      await vscode.window.withProgress({
+        location: vscode.ProgressLocation.Notification,
+        title: "CodenexAI: Analyzing code...",
+        cancellable: false
+      }, async () => {
+        try {
+          const document = await vscode.workspace.openTextDocument(fileUri);
+          const code = document.getText();
+
+          let lintOutput = '';
+          try {
+            lintOutput = await runEslintOnCode(code);
+            console.log('ESLint Output:', lintOutput);
+          } catch (err) {
+            vscode.window.showWarningMessage(`ESLint failed: ${(err as Error).message}`);
+            return;
+          }
+
+          // Parse ESLint output and generate code fixes
+          const fixes = parseEslintOutput(lintOutput);
+
+          // Apply the code fixes
+          await applyCodeFixes(document, fixes);
+
+        } catch (error: any) {
+          vscode.window.showErrorMessage(`CodenexAI: Failed to analyze code. ${error}`);
+        }
+      });
+    });
+    context.subscriptions.push(analyzeCodeCommand);
 }
 
 // --- Deactivate Function ---
