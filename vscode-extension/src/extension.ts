@@ -5,6 +5,68 @@ import MarkdownIt from 'markdown-it';
 
 const apiClient: AxiosInstance = axios.create();
 
+// --- Code Analysis Function ---
+async function analyzeCode(code: string, reviewInstructions: string, filePath: string): Promise<{ message: string; line: number }[]> {
+    const issues: { message: string; line: number }[] = [];
+
+    // Detect console.log statements
+    const consoleLogRegex = /console\.log\((.*)\);/g;
+    let match;
+    while ((match = consoleLogRegex.exec(code)) !== null) {
+        issues.push({ message: 'Remove console.log statement', line: code.substring(0, match.index).split('\n').length });
+    }
+
+    // Detect TODO comments
+    const todoRegex = /TODO:(.*)/g;
+    while ((match = todoRegex.exec(code)) !== null) {
+        issues.push({ message: 'Address TODO comment', line: code.substring(0, match.index).split('\n').length });
+    }
+
+    // Detect eval statements
+    const evalRegex = /eval\((.*)\)/g;
+    while ((match = evalRegex.exec(code)) !== null) {
+        issues.push({ message: 'Remove eval statement (potential security vulnerability)', line: code.substring(0, match.index).split('\n').length });
+    }
+
+    // Check for missing unit tests
+    if (filePath.endsWith('.ts') && !filePath.endsWith('.d.ts') && !filePath.endsWith('.test.ts')) {
+        const testFilePath = filePath.replace('.ts', '.test.ts');
+        try {
+            const exists = await vscode.workspace.fs.stat(vscode.Uri.file(testFilePath));
+        } catch (e) {
+            issues.push({ message: 'Missing unit test file', line: 1 });
+        }
+    }
+
+    return issues;
+}
+
+// --- Diff Analysis Function ---
+async function analyzeDiff(diffContent: string, reviewInstructions: string): Promise<{ message: string; line: number }[]> {
+    const issues: { message: string; line: number }[] = [];
+
+    // Detect console.log statements
+    const consoleLogRegex = /console\.log\((.*)\);/g;
+    let match;
+    while ((match = consoleLogRegex.exec(diffContent)) !== null) {
+        issues.push({ message: 'Remove console.log statement', line: diffContent.substring(0, match.index).split('\n').length });
+    }
+
+    // Detect TODO comments
+    const todoRegex = /TODO:(.*)/g;
+    while ((match = todoRegex.exec(diffContent)) !== null) {
+        issues.push({ message: 'Address TODO comment', line: diffContent.substring(0, match.index).split('\n').length });
+    }
+
+    // Detect eval statements
+    const evalRegex = /eval\((.*)\)/g;
+    while ((match = evalRegex.exec(diffContent)) !== null) {
+        issues.push({ message: 'Remove eval statement (potential security vulnerability)', line: diffContent.substring(0, match.index).split('\n').length });
+    }
+
+    return issues;
+}
+
 const API_BASE_URL = 'https://code-whisper-docs.onrender.com';
 const GENERATE_DOCS_URL = `${API_BASE_URL}/api/generate-docs`;
 
@@ -97,11 +159,17 @@ export function activate(context: vscode.ExtensionContext) {
 
         const document = editor.document;
         const filePath = document.fileName;
+        const code = document.getText();
+        const reviewInstructions = vscode.workspace.getConfiguration('codenexai').get<string>('reviewInstructions') || '';
+
+        console.log('Review instructions:', reviewInstructions);
+
+        const issues = await analyzeCode(code, reviewInstructions, filePath);
 
         // Execute ESLint
         const { exec } = require('child_process');
         const eslintPath = path.join(vscode.workspace.rootPath || '', 'node_modules', '.bin', 'eslint');
-        exec(`"${eslintPath}" "${filePath}"`, { cwd: vscode.workspace.rootPath }, (err: any, stdout: string, stderr: string) => {
+        exec(`"${eslintPath}" "${filePath}"`, { cwd: vscode.workspace.rootPath }, async (err: any, stdout: string, stderr: string) => {
             if (err) {
                 console.error(err);
                 vscode.window.showErrorMessage(`CodenexAI: Code review failed. ${stderr}`);
@@ -119,7 +187,16 @@ export function activate(context: vscode.ExtensionContext) {
                 }
             );
 
-            panel.webview.html = `<!DOCTYPE html>
+            // Generate HTML for the issues with line numbers
+            let issuesHtml = '<ul style="list-style-type: none; padding-left: 0;">';
+            issues.forEach(issue => {
+                issuesHtml += `<li style="margin-bottom: 0.5rem;">Line ${issue.line}: ${issue.message}</li>`;
+            });
+            issuesHtml += '</ul>';
+
+            // Construct the HTML content for the webview panel
+            panel.webview.html = `
+            <!DOCTYPE html>
             <html lang="en">
             <head>
                 <meta charset="UTF-8">
@@ -127,12 +204,68 @@ export function activate(context: vscode.ExtensionContext) {
                 <title>CodenexAI Code Review</title>
             </head>
             <body>
+                <h1>Code Review Issues</h1>
+                ${issuesHtml}
+                <h2>ESLint Output</h2>
                 <pre>${stdout}</pre>
             </body>
             </html>`;
         });
     });
     context.subscriptions.push(codeReviewCommand);
+
+    // --- Review Diff Command ---
+    const reviewDiffCommand = vscode.commands.registerCommand('codenexai.reviewDiff', async () => {
+        const diffFilePath = await vscode.window.showInputBox({ prompt: 'Enter the path to the .diff file' });
+
+        if (!diffFilePath) {
+            vscode.window.showErrorMessage('CodenexAI: Diff file path is required.');
+            return;
+        }
+
+        try {
+            const diffUri = vscode.Uri.file(diffFilePath);
+            const diffContent = (await vscode.workspace.fs.readFile(diffUri)).toString();
+
+            // Analyze the diff content
+            const reviewInstructions = vscode.workspace.getConfiguration('codenexai').get<string>('reviewInstructions') || '';
+            console.log('Review instructions:', reviewInstructions);
+
+            const issues = await analyzeDiff(diffContent, reviewInstructions);
+
+            // Display the results in a webview panel
+            const panel = vscode.window.createWebviewPanel(
+                'codenexaiDiffReview',
+                'CodenexAI Diff Review',
+                vscode.ViewColumn.Beside,
+                {
+                    enableScripts: true,
+                    retainContextWhenHidden: true
+                }
+            );
+
+            const issuesHtml = issues.map((issue: { message: string; line: number }) => `<li>${issue.message} (Line: ${issue.line})</li>`).join('');
+
+            panel.webview.html = `<!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>CodenexAI Diff Review</title>
+            </head>
+            <body>
+                <h1>Diff Review Issues</h1>
+                <ul>${issuesHtml}</ul>
+                <h2>Diff Content</h2>
+                <pre>${diffContent}</pre>
+            </body>
+            </html>`;
+
+        } catch (error: any) {
+            vscode.window.showErrorMessage(`CodenexAI: Failed to review diff. ${error}`);
+        }
+    });
+    context.subscriptions.push(reviewDiffCommand);
 
     // --- Generate Documentation Command ---
     const generateDisposable = vscode.commands.registerCommand('codenexai.generateDocumentation', async () => {

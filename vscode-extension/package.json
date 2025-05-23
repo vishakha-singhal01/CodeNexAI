@@ -42,6 +42,11 @@
         "command": "codenexai.codeReview",
         "title": "CodenexAI: Code Review",
         "category": "CodenexAI"
+      },
+      {
+        "command": "codenexai.reviewDiff",
+        "title": "CodenexAI: Review Diff",
+        "category": "CodenexAI"
       }
     ],
     "menus": {
@@ -52,6 +57,16 @@
           "group": "navigation"
         }
       ]
+    }
+  },
+  "configuration": {
+    "title": "CodeNexAI",
+    "properties": {
+      "codenexai.reviewInstructions": {
+        "type": "string",
+        "default": "Detect and fix functional bugs, code smells, missed unit tests, and security vulnerabilities.",
+        "description": "Custom instructions for the code review."
+      }
     }
   },
   "scripts": {
