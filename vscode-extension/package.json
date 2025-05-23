@@ -46,6 +46,11 @@
         "command": "codenexai.showCodeReview",
         "title": "CodenexAI: Show Code Review",
         "category": "CodeNexAI"
+      },
+      {
+        "command": "codenexai.analyzeCode",
+        "title": "CodenexAI: Analyze Code",
+        "category": "CodeNexAI"
       }
     ],
     "menus": {
