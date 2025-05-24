@@ -7,17 +7,17 @@ import MongoStore from 'connect-mongo';
 import passport from 'passport';
 import cookieParser from 'cookie-parser';
 // import csrf from 'csurf';
-import configurePassport from './config/passport.js';
+import configurePassport from './config/passport';
 import authRoutes from './routes/auth.js';
-import paymentsRouter from './routes/payments.js';
-import contactRouter from './routes/contact.js';
+import paymentsRouter from './routes/payments';
+import contactRouter from './routes/contact';
 import multer from 'multer';
 import axios from 'axios';
 import AdmZip from 'adm-zip';
 import path from 'path';
-import { generateDocumentation } from './services/documentationService.js';
-import { IUser } from './models/User.js';
-import { indexCodebase, codeSearch } from './code-search/index.js';
+import { generateDocumentation } from './services/documentationService';
+import { IUser } from './models/User';
+import { indexCodebase, codeSearch } from './code-search/index';
 // Removed ErrorRequestHandler import
 
 dotenv.config();
