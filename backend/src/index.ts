@@ -15,8 +15,8 @@ import multer from 'multer';
 import axios from 'axios';
 import AdmZip from 'adm-zip';
 import path from 'path';
-import { generateDocumentation } from './services/documentationService';
-import { IUser } from './models/User';
+import { generateDocumentation } from './services/documentationService.js';
+import { IUser } from './models/User.js';
 import { indexCodebase, codeSearch } from './code-search';
 // Removed ErrorRequestHandler import
 
