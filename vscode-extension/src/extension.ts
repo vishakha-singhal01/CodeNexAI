@@ -127,10 +127,12 @@ export function activate(context: vscode.ExtensionContext) {
             cancellable: false
         }, async () => {
             try {
+const githubToken = await vscode.window.showInputBox({ prompt: 'Enter your GitHub token (optional)' });
                 const response = await apiClient.post(GENERATE_DOCS_URL, {
                     code: selectedText,
                     email,
-                    password
+                    password,
+                    githubToken
                 });
 
                 if (response.status === 200 && response.data.documentation) {
