@@ -9,7 +9,7 @@ import cookieParser from 'cookie-parser';
 // import csrf from 'csurf';
 import configurePassport from './config/passport.js';
 import authRoutes from './routes/auth.js';
-import paymentsRouter from './routes/auth.js';
+import paymentsRouter from './routes/payments.js';
 import contactRouter from './routes/contact.js';
 import multer from 'multer';
 import axios from 'axios';
