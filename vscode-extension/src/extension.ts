@@ -226,14 +226,15 @@ const githubToken = await vscode.window.showInputBox({ prompt: 'Enter your GitHu
         vscode.window.showInformationMessage(`CodenexAI: Searching for "${query}"...`);
 
         try {
-            const response: { status: number; data: CodeSearchResult[] } = await apiClient.post(`${API_BASE_URL}/api/code-search`, { query });
-            if (response.status === 200 && response.data) {
-                const results: CodeSearchResult[] = response.data;
+            const response: { status: number; data: CodeSearchResult[] } = await apiClient.get(`${API_BASE_URL}/api/code-search?query=${query}`);
+            
+            // Create an output channel to display the results
+            const outputChannel = vscode.window.createOutputChannel('CodenexAI Search Results');
+            outputChannel.clear();
+            outputChannel.show(true);
 
-                // Create an output channel to display the results
-                const outputChannel = vscode.window.createOutputChannel('CodenexAI Search Results');
-                outputChannel.clear();
-                outputChannel.show(true);
+            if (response.status === 200) {
+                const results: CodeSearchResult[] = response.data;
 
                 if (Array.isArray(results) && results.length > 0) {
                     results.forEach((result: CodeSearchResult) => {
@@ -246,7 +247,9 @@ const githubToken = await vscode.window.showInputBox({ prompt: 'Enter your GitHu
                 vscode.window.showErrorMessage(`CodenexAI: Failed to search. Status: ${response.status}`);
             }
         } catch (error: unknown) {
-            if (error instanceof Error) {
+            if (axios.isAxiosError(error) && error.response) {
+                vscode.window.showErrorMessage(`CodenexAI Error: ${error.response.data?.error || error.response.data?.message || error.response.statusText || "Server error " + error.response.status}`);
+            } else if (error instanceof Error) {
                 vscode.window.showErrorMessage(`CodenexAI: Search failed. ${error.message}`);
             } else {
                 vscode.window.showErrorMessage(`CodenexAI: Search failed. ${error}`);

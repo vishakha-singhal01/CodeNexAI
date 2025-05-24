@@ -17,6 +17,7 @@
     "onCommand:codenexai.generateDocumentation",
     "onCommand:codenexai.login",
     "onCommand:codenexai.logout",
+    "onCommand:codenexai.smartSearch",
     "onUri"
   ],
   "main": "./dist/extension.js",
@@ -35,6 +36,11 @@
       {
         "command": "codenexai.logout",
         "title": "CodenexAI: Logout",
+        "category": "CodenexAI"
+      },
+      {
+        "command": "codenexai.smartSearch",
+        "title": "CodenexAI: Smart Search",
         "category": "CodenexAI"
       }
     ],
