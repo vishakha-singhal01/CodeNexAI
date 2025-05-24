@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { AlertCircle, Upload, Download, Github } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,6 +20,17 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from '@/context/AuthContext'; // Import useAuth
 
+interface ExtendedUser {
+  id: string;
+  email?: string;
+  username?: string;
+  displayName?: string;
+  googleId?: string;
+  githubId?: string;
+  plan: 'free' | 'pro' | 'enterprise';
+  accessToken?: string;
+}
+
 interface GeneratorSectionProps {
   inputCode: string;
   setInputCode: (value: string) => void;
@@ -36,7 +47,6 @@ interface GeneratorSectionProps {
   handleGenerateDocsFromText: () => void;
   handleFileChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   handleGenerateDocsFromUpload: () => void;
-  handleGenerateDocsFromRepo: () => void;
   isValidGitHubUrl: (url: string) => boolean;
   handleDownloadDocs: () => void;
   clearInputs: () => void; // Add clearInputs prop
@@ -58,7 +68,6 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
   handleGenerateDocsFromText,
   handleFileChange,
   handleGenerateDocsFromUpload,
-  handleGenerateDocsFromRepo,
   isValidGitHubUrl,
   handleDownloadDocs,
   clearInputs, // Destructure clearInputs
@@ -66,6 +75,8 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
   const { user } = useAuth(); // Get user from AuthContext
   const userPlan = user?.plan || 'free'; // Default to 'free' if no user or plan
   const [selectedTab, setSelectedTab] = useState("paste"); // State for active tab
+  const [loadingQuote, setLoadingQuote] = useState("");
+  const [isLoadingDocsInternal, setIsLoadingDocsInternal] = useState(false);
 
   const tabOptions = [
     { value: "paste", label: "Paste Code", disabled: false, badge: null },
@@ -75,7 +86,7 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
 
   const currentTabLabel = tabOptions.find(tab => tab.value === selectedTab)?.label || "Select Option";
 
-  const handleDownloadPDF = () => {
+  const handleDownloadPDF = useCallback(() => {
     const preview = document.getElementById('markdown-preview');
     if (!preview) return;
 
@@ -100,7 +111,7 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
     printWindow.document.close();
     printWindow.focus();
     printWindow.print();
-  };
+  }, []);
 
   const loadingQuotes = [
     "Good things take time. Great code takes a bit longer.",
@@ -113,8 +124,7 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
     "Hold tight! Your code is getting smarter.",
   ];
 
-  const [loadingQuote, setLoadingQuote] = useState("");
-  const randomQuote = loadingQuotes[Math.floor(Math.random() * loadingQuotes.length)];
+  
   useEffect(() => {
     if (isLoadingDocs) {
       setLoadingQuote(loadingQuotes[Math.floor(Math.random() * loadingQuotes.length)]);
@@ -128,6 +138,75 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
     setGeneratedDocs(''); // Clear generated docs
     setDocsError(null); // Clear any errors
   };
+
+  async function generateDocsApiCall(endpoint: string, body: string | FormData, customHeaders?: HeadersInit) {
+    setIsLoadingDocsInternal(true);
+    setGeneratedDocs('');
+    setDocsError(null);
+
+    const fullEndpoint = import.meta.env.PROD ? `${import.meta.env.VITE_API_BASE_URL}${endpoint}` : endpoint;
+
+    const headers = new Headers(customHeaders); // Start with custom headers
+    const token = (user as ExtendedUser)?.accessToken;
+    if (token && !headers.has('Authorization')) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
+
+    try {
+      const response = await fetch(fullEndpoint, {
+        method: 'POST',
+        headers: headers, // Use the combined headers
+        body: body,
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        // If the error is specifically "Not authorized, no token provided." and we *did* send a token,
+        // it might mean the token is invalid/expired.
+        if (data.message === 'Not authorized, no token provided.' && token) {
+            setDocsError("Authentication error: Your session might have expired. Please try logging out and logging back in.");
+        } else if (data.message === 'Not authorized, token failed verification.') {
+            setDocsError("Authentication error: Your token is invalid. Please try logging out and logging back in.");
+        }
+        else {
+            throw new Error(data.message || data.error || `HTTP error! status: ${response.status}`);
+        }
+      }
+      // Only set generated docs if response was ok and data.documentation exists
+      if (response.ok && data.documentation) {
+        setGeneratedDocs(data.documentation);
+      } else if (response.ok && !data.documentation) {
+        // Handle cases where response is ok but no documentation is returned (e.g. empty input)
+        setDocsError("No documentation was generated. The input might have been empty or not processable.");
+      }
+      // If not response.ok, the error handling above should have set docsError.
+    } catch (error: unknown) {
+      console.error(`Failed to generate documentation from ${fullEndpoint}:`, error);
+      let errorMessage = "An unknown error occurred.";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      // Avoid overwriting specific auth errors if already set
+      if (!docsError) {
+        setDocsError(errorMessage);
+      }
+    } finally {
+      setIsLoadingDocsInternal(false);
+    }
+  }
+
+  // Handler for GitHub Repo URL
+   const handleGenerateDocsFromRepo = useCallback(async () => {
+    if (!repoUrl.trim() || !isValidGitHubUrl(repoUrl)) {
+      setDocsError("Please enter a valid GitHub repository URL (e.g., https://github.com/user/repo).");
+      return;
+    }
+    const githubToken = prompt("Enter your GitHub token (optional):");
+    setInputCode('');
+    setUploadedFiles(null);
+    await generateDocsApiCall('/api/github-repo-docs', JSON.stringify({ repoUrl, githubToken }), {
+      'Content-Type': 'application/json',
+    });
+  }, [generateDocsApiCall, isValidGitHubUrl, repoUrl, setDocsError, setInputCode, setUploadedFiles]);
 
   return (
     // Added id="generator-section" here
@@ -152,7 +231,7 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
           </div>
         </div>
 
-        <Card className="max-w-4xl mx-auto shadow-md border rounded-2xl bg-card"> {/* Changed bg-white to bg-card */}
+        <Card className="max-w-4xl mx-auto shadow-md border rounded-2xl bg-card"> {/* Changed bg-card */}
           <CardContent className="p-8 space-y-6">
             <Tabs value={selectedTab} onValueChange={handleTabChangeInternal} className="w-full">
               {/* Desktop TabsList */}
@@ -215,7 +294,7 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
                     size="lg"
                     className="w-full"
                     onClick={handleGenerateDocsFromText}
-                    disabled={isLoadingDocs || !inputCode.trim()}
+                    disabled={isLoadingDocs}
                   >
                     {isLoadingDocs ? "Generating..." : "Generate from Text"}
                   </Button>
@@ -260,7 +339,7 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
                     size="lg"
                     className="w-full"
                     onClick={handleGenerateDocsFromUpload}
-                    disabled={isLoadingDocs || !uploadedFiles || uploadedFiles.length === 0 || userPlan === 'free'} // Disable button for free users
+                    disabled={isLoadingDocs}
                   >
                     {isLoadingDocs ? "Generating..." : <> <Upload className="mr-2 h-4 w-4" /> Generate from Upload </>}
                   </Button>
@@ -292,7 +371,7 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
                     size="lg"
                     className="w-full"
                     onClick={handleGenerateDocsFromRepo}
-                    disabled={isLoadingDocs || !repoUrl.trim() || !isValidGitHubUrl(repoUrl) || userPlan === 'free' || userPlan === 'pro'} // Disable button for free/pro users
+                    disabled={isLoadingDocs || !repoUrl.trim() || !isValidGitHubUrl(repoUrl) || userPlan === 'free' || userPlan === 'pro'}
                   >
                     {isLoadingDocs ? "Generating..." : <> <Github className="mr-2 h-4 w-4" /> Generate from Repo </>}
                   </Button>
@@ -323,7 +402,7 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
                 </Alert>
               )}
               {generatedDocs && (
-                <Card className="max-w-4xl mx-auto shadow-md border rounded-2xl bg-card"> {/* Changed bg-white to bg-card */}
+                <Card className="max-w-4xl mx-auto shadow-md border rounded-2xl bg-card"> {/* Changed bg-card */}
                   <CardHeader className="flex flex-row items-center justify-between pb-3 pt-4 px-5">
                     <CardTitle className="text-xl font-semibold">Generated Documentation</CardTitle>
                     <DropdownMenu>
@@ -352,7 +431,8 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
                       <div id="markdown-preview" className="prose prose-sm max-w-none dark:prose-invert bg-muted/30 p-4 rounded-md border overflow-y-auto max-h-[60vh]
                       [&_p]:mb-4
                       [&_h1]:mb-6 [&_h2]:mb-5 [&_h3]:mb-4
-                      [&_ul]:mb-4 [&_ol]:mb-4
+                      [&_ul]:mb-4
+                      [&_ol]:mb-4
                       [&_li]:mb-2
                       [&_pre]:my-4
                       [&_blockquote]:my-4

@@ -1,25 +1,24 @@
-import express, { Express, Request, Response, NextFunction, RequestHandler } from 'express'; // Added RequestHandler
+import express, { Express, Request, Response, NextFunction, RequestHandler } from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import mongoose from 'mongoose';
-import session from 'express-session'; // Added express-session
-import MongoStore from 'connect-mongo'; // Added connect-mongo
-import passport from 'passport'; // Added passport
-import cookieParser from 'cookie-parser'; // Import cookie-parser
-// import csrf from 'csurf'; // Import csurf - Temporarily disabled for testing
-import configurePassport from './config/passport'; // Added passport config import
-import authRoutes from './routes/auth'; // Import the auth routes
+import session from 'express-session';
+import MongoStore from 'connect-mongo';
+import passport from 'passport';
+import cookieParser from 'cookie-parser';
+// import csrf from 'csurf';
+import configurePassport from './config/passport';
+import authRoutes from './routes/auth';
 import paymentsRouter from './routes/payments';
 import contactRouter from './routes/contact';
 import multer from 'multer';
 import axios from 'axios';
-import AdmZip from 'adm-zip'; // Import adm-zip
-import path from 'path'; // Import path for extension checking
+import AdmZip from 'adm-zip';
+import path from 'path';
 import { generateDocumentation } from './services/documentationService';
 import { IUser } from './models/User';
-// Removed ErrorRequestHandler import
 
-dotenv.config(); // Load environment variables from .env file
+dotenv.config();
 
 // --- Passport Configuration ---
 configurePassport(); // Call the function to set up strategies
@@ -249,7 +248,7 @@ interface GenerateDocsRequestBody {
 const generateDocsHandler = async (req: Request, res: Response, next: NextFunction) => {
   let user: IUser | undefined;
   if (req.isAuthenticated()) {
-    user = (req.user as any) as IUser;
+    user = req.user as IUser;
   }
   const { code } = req.body as GenerateDocsRequestBody;
 
@@ -262,7 +261,7 @@ const generateDocsHandler = async (req: Request, res: Response, next: NextFuncti
     const documentation = await generateDocumentation(code);
     res.json({ documentation });
     return;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("API Error generating documentation:", error);
     const message = error instanceof Error ? error.message : 'An unknown error occurred';
     res.status(500).json({ error: 'Failed to generate documentation.', details: message });
@@ -274,7 +273,7 @@ const generateDocsHandler = async (req: Request, res: Response, next: NextFuncti
 const uploadGenerateDocsHandler = async (req: Request, res: Response, next: NextFunction) => {
   let user: IUser | undefined;
   if (req.isAuthenticated()) {
-    user = req.user as IUser;
+    user = (req.user as IUser) as IUser;
   }
   if (!req.files || (req.files as Express.Multer.File[]).length === 0) {
      res.status(400).json({ error: 'No files were uploaded.' });
@@ -297,7 +296,7 @@ const uploadGenerateDocsHandler = async (req: Request, res: Response, next: Next
         console.log(`Generating documentation for: ${file.originalname}`);
         const documentation = await generateDocumentation(fileContent);
         allDocs.push(`## File: ${file.originalname}\n\n${documentation}`);
-      } catch (fileError: any) {
+      } catch (fileError: unknown) {
         console.error(`Error processing file ${file.originalname}:`, fileError);
         const fileErrorMessage = fileError instanceof Error ? fileError.message : 'An unknown error occurred processing this file';
         allDocs.push(`## File: ${file.originalname}\n\nError generating documentation for this file: ${fileErrorMessage}`);
@@ -315,7 +314,7 @@ const uploadGenerateDocsHandler = async (req: Request, res: Response, next: Next
     res.status(status).json({ documentation: combinedDocumentation });
     return;
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("API Error generating documentation from upload:", error);
     const message = error instanceof Error ? error.message : 'An unknown error occurred';
     res.status(500).json({ error: 'Failed to generate documentation from uploaded files.', details: message });
@@ -326,6 +325,7 @@ const uploadGenerateDocsHandler = async (req: Request, res: Response, next: Next
 // Define interface for GitHub repo request body
 interface GitHubRepoRequestBody {
   repoUrl: string;
+  githubToken?: string;
 }
 
 // Helper function to validate GitHub URL
@@ -342,9 +342,9 @@ function isValidGitHubUrl(url: string): boolean {
 const githubRepoDocsHandler = async (req: Request, res: Response, next: NextFunction) => {
   let user: IUser | undefined;
   if (req.isAuthenticated()) {
-    user = (req.user as any) as IUser;
+    user = (req.user as IUser) as IUser;
   }
-  const { repoUrl } = req.body as GitHubRepoRequestBody;
+const { repoUrl, githubToken } = req.body as GitHubRepoRequestBody;
 
   if (!repoUrl || !isValidGitHubUrl(repoUrl)) {
      res.status(400).json({ error: 'Invalid or missing GitHub repository URL.' });
@@ -358,7 +358,8 @@ const githubRepoDocsHandler = async (req: Request, res: Response, next: NextFunc
   console.log(`Attempting to download repo zip from: ${downloadUrl}`);
 
   try {
-    const response = await axios.get(downloadUrl, { responseType: 'arraybuffer' });
+    const headers = githubToken ? { Authorization: `token ${githubToken}` } : {};
+    const response = await axios.get(downloadUrl, { responseType: 'arraybuffer', headers });
     console.log(`Downloaded ${response.headers['content-length']} bytes.`);
 
     const zip = new AdmZip(response.data);
@@ -382,7 +383,7 @@ const githubRepoDocsHandler = async (req: Request, res: Response, next: NextFunc
         console.log(`Generating documentation for: ${zipEntry.entryName}`);
         const documentation = await generateDocumentation(fileContent);
         allDocs.push(`## File: ${zipEntry.entryName}\n\n${documentation}`);
-      } catch (fileGenError: any) {
+      } catch (fileGenError: unknown) {
         console.error(`Error generating docs for file ${zipEntry.entryName}:`, fileGenError);
         const fileGenErrorMessage = fileGenError instanceof Error ? fileGenError.message : 'An unknown error occurred generating docs for this file';
         allDocs.push(`## File: ${zipEntry.entryName}\n\n_Error generating documentation for this file: ${fileGenErrorMessage}_`);
@@ -402,7 +403,7 @@ const githubRepoDocsHandler = async (req: Request, res: Response, next: NextFunc
     res.status(status).json({ documentation: combinedDocumentation });
     return;
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("API Error fetching/processing GitHub repo:", error);
     const message = error instanceof Error ? error.message : 'An unknown error occurred';
     if (axios.isAxiosError(error) && error.response?.status === 404) {
