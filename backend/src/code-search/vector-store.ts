@@ -1,4 +1,5 @@
 import { processNaturalLanguageQuery } from './nlp';
+import { generateEmbedding } from './embedding';
 
 // In-memory vector store (replace with Qdrant or Pinecone for production)
 const vectorStore: { [key: string]: number[] } = {};
@@ -12,22 +13,26 @@ export async function searchCode(query: string, topN: number = 5): Promise<strin
   const processedQuery = processNaturalLanguageQuery(query);
 
   // Generate embedding for the processed query
-  // Replace with actual OpenAI embedding generation logic
-  const queryEmbedding = Array(1536).fill(Math.random());
+  try {
+    const queryEmbedding = await generateEmbedding(processedQuery);
 
-  // Calculate cosine similarity between query embedding and all code chunk embeddings
-  const similarities = Object.entries(vectorStore).map(([id, embedding]) => {
-    const similarity = cosineSimilarity(queryEmbedding, embedding);
-    return { id, similarity };
-  });
+    // Calculate cosine similarity between query embedding and all code chunk embeddings
+    const similarities = Object.entries(vectorStore).map(([id, embedding]) => {
+      const similarity = cosineSimilarity(queryEmbedding, embedding);
+      return { id, similarity };
+    });
 
-  // Sort by similarity in descending order
-  similarities.sort((a, b) => b.similarity - a.similarity);
+    // Sort by similarity in descending order
+    similarities.sort((a, b) => b.similarity - a.similarity);
 
-  // Get the top N most similar code chunk IDs
-  const topIds = similarities.slice(0, topN).map(item => item.id);
+    // Get the top N most similar code chunk IDs
+    const topIds = similarities.slice(0, topN).map(item => item.id);
 
-  return topIds;
+    return topIds;
+  } catch (error: unknown) {
+    console.error("Error generating embedding:", error);
+    return []; // Return empty array in case of error
+  }
 }
 
 // Cosine similarity function
