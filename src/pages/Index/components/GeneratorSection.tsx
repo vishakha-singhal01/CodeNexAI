@@ -49,34 +49,35 @@ interface GeneratorSectionProps {
   handleGenerateDocsFromUpload: () => void;
   isValidGitHubUrl: (url: string) => boolean;
   handleDownloadDocs: () => void;
-  clearInputs: () => void; // Add clearInputs prop
+  clearInputs: () => void;
 }
 
 export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
   inputCode,
   setInputCode,
   uploadedFiles,
-  setUploadedFiles, // Pass this down
+  setUploadedFiles,
   repoUrl,
   setRepoUrl,
   generatedDocs,
-  setGeneratedDocs, // Pass this down
+  setGeneratedDocs,
   isLoadingDocs,
   docsError,
-  setDocsError, // Pass this down
+  setDocsError,
   fileInputRef,
   handleGenerateDocsFromText,
   handleFileChange,
   handleGenerateDocsFromUpload,
   isValidGitHubUrl,
   handleDownloadDocs,
-  clearInputs, // Destructure clearInputs
+  clearInputs,
 }) => {
-  const { user } = useAuth(); // Get user from AuthContext
-  const userPlan = user?.plan || 'free'; // Default to 'free' if no user or plan
-  const [selectedTab, setSelectedTab] = useState("paste"); // State for active tab
+  const { user } = useAuth();
+  const userPlan = user?.plan || "free";
+  const [selectedTab, setSelectedTab] = useState("paste");
   const [loadingQuote, setLoadingQuote] = useState("");
   const [isLoadingDocsInternal, setIsLoadingDocsInternal] = useState(false);
+  const [githubToken, setGithubToken] = useState("");
 
   const tabOptions = [
     { value: "paste", label: "Paste Code", disabled: false, badge: null },
@@ -200,13 +201,16 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
       setDocsError("Please enter a valid GitHub repository URL (e.g., https://github.com/user/repo).");
       return;
     }
-    const githubToken = prompt("Enter your GitHub token (optional):");
-    setInputCode('');
+    setInputCode("");
     setUploadedFiles(null);
-    await generateDocsApiCall('/api/github-repo-docs', JSON.stringify({ repoUrl, githubToken }), {
-      'Content-Type': 'application/json',
-    });
-  }, [generateDocsApiCall, isValidGitHubUrl, repoUrl, setDocsError, setInputCode, setUploadedFiles]);
+    await generateDocsApiCall(
+      "/api/github-repo-docs",
+      JSON.stringify({ repoUrl, githubToken }),
+      {
+        "Content-Type": "application/json",
+      }
+    );
+  }, [generateDocsApiCall, isValidGitHubUrl, repoUrl, setDocsError, setInputCode, setUploadedFiles, githubToken]);
 
   return (
     // Added id="generator-section" here
@@ -231,7 +235,7 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
           </div>
         </div>
 
-        <Card className="max-w-4xl mx-auto shadow-md border rounded-2xl bg-card"> {/* Changed bg-card */}
+        <Card className="max-w-4xl mx-auto shadow-md border rounded-2xl bg-card">
           <CardContent className="p-8 space-y-6">
             <Tabs value={selectedTab} onValueChange={handleTabChangeInternal} className="w-full">
               {/* Desktop TabsList */}
@@ -357,7 +361,6 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
                       value={repoUrl}
                       onChange={(e) => {
                         setRepoUrl(e.target.value);
-                        // Keep clearing other inputs on change within a tab
                         setInputCode(''); setUploadedFiles(null); setGeneratedDocs(''); setDocsError(null);
                       }}
                       className="font-mono text-sm h-11 rounded-md"
@@ -365,6 +368,21 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
                     />
                     <p className="text-sm text-muted-foreground pt-1">
                       Enter the full URL of a public GitHub repository. (Available for Enterprise plan)
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="github-token-input" className="text-base font-medium">GitHub Token (Optional)</Label>
+                    <Input
+                      id="github-token-input"
+                      type="password"
+                      placeholder="Enter your GitHub token"
+                      value={githubToken}
+                      onChange={(e) => setGithubToken(e.target.value)}
+                      className="font-mono text-sm h-11 rounded-md"
+                      disabled={isLoadingDocs}
+                    />
+                    <p className="text-sm text-muted-foreground pt-1">
+                      Enter your GitHub token to access private repositories.
                     </p>
                   </div>
                   <Button
