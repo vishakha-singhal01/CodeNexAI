@@ -4,7 +4,7 @@ import { Strategy as GoogleStrategy, Profile as GoogleProfile } from 'passport-g
 import { Strategy as GitHubStrategy, Profile as GitHubProfile } from 'passport-github2';
 // import mongoose from 'mongoose'; // No longer needed here
 import { Request } from 'express';
-import User from '../models/User';
+import User from '../models/User.js';
 
 export default function configurePassport() {
   // --- Local Strategy (Email/Password) ---
