@@ -8,7 +8,7 @@ import passport from 'passport';
 import cookieParser from 'cookie-parser';
 // import csrf from 'csurf';
 import configurePassport from './config/passport.js';
-import authRoutes from './routes/auth';
+import authRoutes from './routes/auth.js';
 import paymentsRouter from './routes/payments';
 import contactRouter from './routes/contact';
 import multer from 'multer';
