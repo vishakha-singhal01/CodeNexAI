@@ -16,8 +16,8 @@ import axios from 'axios';
 import AdmZip from 'adm-zip';
 import path from 'path';
 import { generateDocumentation } from './services/documentationService.js';
-import { IUser } from './models/User';
-import { indexCodebase, codeSearch } from './code-search';
+import { IUser } from './models/User.js';
+import { indexCodebase, codeSearch } from './code-search/index.js';
 // Removed ErrorRequestHandler import
 
 dotenv.config();
