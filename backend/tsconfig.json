@@ -1,16 +1,17 @@
 {
   "compilerOptions": {
-    "target": "ES2016", // Specify ECMAScript target version
-    "module": "CommonJS", // Specify module code generation
-    "outDir": "./dist", // Redirect output structure to the directory
-    "rootDir": "./src", // Specify the root directory of input files
-    "strict": true, // Enable all strict type-checking options
-    "esModuleInterop": true, // Enables emit interoperability between CommonJS and ES Modules
-    "skipLibCheck": true, // Skip type checking of declaration files
-    "forceConsistentCasingInFileNames": true, // Disallow inconsistently-cased references to the same file.
-    "resolveJsonModule": true, // Include modules imported with .json extension
-    "types": ["node"] // Explicitly include necessary types (matching @types package name) - Removed babel__parser
+    "target": "ES2016",
+    "module": "ESNext",
+    "moduleResolution": "node", // ✅ FIX HERE
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "types": ["node"]
   },
-  "include": ["src/**/*"], // Specifies the files to include in the program
-  "exclude": ["node_modules", "**/*.spec.ts"] // Specifies the files to exclude
+  "include": ["src/**/*", "src/code-search/natural.d.ts"],
+  "exclude": ["node_modules", "**/*.spec.ts"]
 }
