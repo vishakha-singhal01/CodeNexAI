@@ -117,10 +117,12 @@ export function activate(context: vscode.ExtensionContext) {
             cancellable: false
         }, async () => {
             try {
+const githubToken = await vscode.window.showInputBox({ prompt: 'Enter your GitHub token (optional)' });
                 const response = await apiClient.post(GENERATE_DOCS_URL, {
                     code: selectedText,
                     email,
-                    password
+                    password,
+                    githubToken
                 });
 
                 if (response.status === 200 && response.data.documentation) {
@@ -190,7 +192,7 @@ export function activate(context: vscode.ExtensionContext) {
                 } else {
                     vscode.window.showErrorMessage(`CodenexAI: Failed to generate documentation. Status: ${response.status}`);
                 }
-            } catch (error: any) {
+} catch (error: unknown) {
                 if (axios.isAxiosError(error) && error.response) {
                     vscode.window.showErrorMessage(`CodenexAI Error: ${error.response.data?.error || error.response.data?.message || error.response.statusText || "Server error " + error.response.status}`);
                 } else if (error instanceof Error) {
