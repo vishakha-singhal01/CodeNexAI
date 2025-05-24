@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "ES2016",
     "module": "ESNext",
-    "moduleResolution": "node", // ✅ FIX HERE
+    "moduleResolution": "node", 
     "outDir": "./dist",
     "rootDir": "./src",
     "strict": true,
