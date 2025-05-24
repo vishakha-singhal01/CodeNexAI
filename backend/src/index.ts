@@ -17,6 +17,8 @@ import AdmZip from 'adm-zip';
 import path from 'path';
 import { generateDocumentation } from './services/documentationService';
 import { IUser } from './models/User';
+import { indexCodebase, codeSearch } from './code-search';
+// Removed ErrorRequestHandler import
 
 dotenv.config();
 
@@ -420,10 +422,25 @@ app.post('/api/generate-docs', generateDocsHandler);
 app.post('/api/upload-generate-docs', upload.array('codeFiles'), uploadGenerateDocsHandler);
 app.post('/api/github-repo-docs', githubRepoDocsHandler);
 
+// API endpoint for code search
+app.get('/api/code-search', async (req: Request, res: any) => {
+  const query = req.query.query as string;
 
-// Placeholder for other API routes related to documentation generation
-// app.use('/api/docs', otherDocsRoutes);
+  if (!query) {
+    return res.status(400).json({ error: 'Missing query parameter' });
+  }
 
+  try {
+    const topResults = await codeSearch(query); // make sure codeSearch is defined
+    return res.json({ results: topResults });
+  } catch (error: any) {
+    console.error('Error searching code:', error);
+    return res.status(500).json({ error: 'Failed to search code' });
+  }
+});
+
+// Call indexCodebase on startup
+indexCodebase('./');
 
 // Listen on all network interfaces, crucial for deployment environments like Render
 app.listen(portNumber, '0.0.0.0', () => {

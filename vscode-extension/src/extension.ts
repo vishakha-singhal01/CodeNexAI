@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { CodeSearchResult } from './types';
 import axios, { AxiosInstance } from 'axios';
 import MarkdownIt from 'markdown-it';
 
@@ -35,14 +36,17 @@ async function ensureLoggedIn(context: vscode.ExtensionContext): Promise<boolean
             await vscode.commands.executeCommand('codenexai.login');
             return false;
         }
-    } catch (error) {
-        await context.secrets.delete('codenexai.email');
-        await context.secrets.delete('codenexai.password');
-        vscode.window.showErrorMessage('CodenexAI: Your session has expired. Please log in again.');
-        await vscode.commands.executeCommand('codenexai.login');
-        return false;
+        } catch (error: unknown) {
+            if (axios.isAxiosError(error) && error.response) {
+                vscode.window.showErrorMessage(`CodenexAI Error: ${error.response.data?.error || error.response.data?.message || error.response.statusText || "Server error " + error.response.status}`);
+            } else if (error instanceof Error) {
+                vscode.window.showErrorMessage(`CodenexAI Network Error: ${error.message}`);
+            } else {
+                vscode.window.showErrorMessage('CodenexAI: An unknown error occurred while generating documentation.');
+            }
+            return false;
+        }
     }
-}
 
 // --- Activate Function ---
 export function activate(context: vscode.ExtensionContext) {
@@ -69,10 +73,16 @@ export function activate(context: vscode.ExtensionContext) {
                 await context.secrets.store('codenexai.password', password);
                 vscode.window.showInformationMessage('CodenexAI: Successfully logged in!');
             } else {
-                vscode.window.showErrorMessage('CodenexAI: Login failed. Invalid credentials.');
+            vscode.window.showErrorMessage(`CodenexAI: Login failed. Invalid credentials.`);
             }
-        } catch (error) {
-            vscode.window.showErrorMessage(`CodenexAI: Login failed. ${error}`);
+        } catch (error: unknown) {
+            if (axios.isAxiosError(error) && error.response) {
+                vscode.window.showErrorMessage(`CodenexAI Error: ${error.response.data?.error || error.response.data?.message || error.response.statusText || "Server error " + error.response.status}`);
+            } else if (error instanceof Error) {
+                vscode.window.showErrorMessage(`CodenexAI: Login failed. ${error.message}`);
+            } else {
+                vscode.window.showErrorMessage('CodenexAI: An unknown error occurred while generating documentation.');
+            }
         }
     });
     context.subscriptions.push(loginCommand);
@@ -192,7 +202,7 @@ const githubToken = await vscode.window.showInputBox({ prompt: 'Enter your GitHu
                 } else {
                     vscode.window.showErrorMessage(`CodenexAI: Failed to generate documentation. Status: ${response.status}`);
                 }
-} catch (error: unknown) {
+            } catch (error: unknown) {
                 if (axios.isAxiosError(error) && error.response) {
                     vscode.window.showErrorMessage(`CodenexAI Error: ${error.response.data?.error || error.response.data?.message || error.response.statusText || "Server error " + error.response.status}`);
                 } else if (error instanceof Error) {
@@ -204,6 +214,46 @@ const githubToken = await vscode.window.showInputBox({ prompt: 'Enter your GitHu
         });
     });
     context.subscriptions.push(generateDisposable);
+
+    // --- Smart Search Command ---
+    const smartSearchCommand = vscode.commands.registerCommand('codenexai.smartSearch', async () => {
+        const query = await vscode.window.showInputBox({ prompt: 'Enter your search query' });
+        if (!query) {
+            vscode.window.showErrorMessage('Search query is required.');
+            return;
+        }
+
+        vscode.window.showInformationMessage(`CodenexAI: Searching for "${query}"...`);
+
+        try {
+            const response: { status: number; data: CodeSearchResult[] } = await apiClient.post(`${API_BASE_URL}/api/code-search`, { query });
+            if (response.status === 200 && response.data) {
+                const results: CodeSearchResult[] = response.data;
+
+                // Create an output channel to display the results
+                const outputChannel = vscode.window.createOutputChannel('CodenexAI Search Results');
+                outputChannel.clear();
+                outputChannel.show(true);
+
+                if (Array.isArray(results) && results.length > 0) {
+                    results.forEach((result: CodeSearchResult) => {
+                        outputChannel.appendLine(`${result.id}: ${result.content}`);
+                    });
+                } else {
+                    outputChannel.appendLine('No results found.');
+                }
+            } else {
+                vscode.window.showErrorMessage(`CodenexAI: Failed to search. Status: ${response.status}`);
+            }
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+                vscode.window.showErrorMessage(`CodenexAI: Search failed. ${error.message}`);
+            } else {
+                vscode.window.showErrorMessage(`CodenexAI: Search failed. ${error}`);
+            }
+        }
+    });
+    context.subscriptions.push(smartSearchCommand);
 }
 
 // --- Deactivate Function ---
