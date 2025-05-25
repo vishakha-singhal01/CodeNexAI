@@ -1,7 +1,8 @@
 import { generateEmbedding } from './embedding';
 import * as fs from 'fs';
 import * as path from 'path';
-
+import { parseCode } from './parser';
+import { CodeSearchResult } from '../../../vscode-extension/src/types';
 // In-memory vector store (replace with Qdrant or Pinecone for production)
 const vectorStore: { [key: string]: number[] } = {};
 
@@ -25,7 +26,7 @@ export async function storeEmbedding(id: string, embedding: number[]) {
   fs.writeFileSync(vectorStorePath, JSON.stringify(vectorStore));
 }
 
-export async function searchCode(processedQuery: string, topN: number = 5): Promise<string[]> {
+export async function searchCode(processedQuery: string, topN: number = 5): Promise<CodeSearchResult[]> {
   // Generate embedding for the processed query
   try {
     const queryEmbedding = await generateEmbedding(processedQuery);
@@ -42,7 +43,27 @@ export async function searchCode(processedQuery: string, topN: number = 5): Prom
     // Get the top N most similar code chunk IDs
     const topIds = similarities.slice(0, topN).map(item => item.id);
 
-    return topIds;
+    // Retrieve the content of the code chunks from the original files
+    const topResults = await Promise.all(topIds.map(async (id) => {
+      const [file, chunkName] = id.split('-');
+      const filePath = path.resolve(__dirname, '..', '..', file); // Adjust path as needed
+      try {
+        const fileContent = await fs.promises.readFile(filePath, 'utf-8');
+        // Extract the content of the chunk based on the chunkName
+        // This will require parsing the file again, but it's necessary to get the content
+        const codeChunks = await parseCode(filePath);
+        const chunk = codeChunks.find(c => `${file}-${c.name}` === id);
+        if (chunk) {
+          return { id: id, content: chunk.content };
+        } else {
+          return { id: id, content: `Chunk ${chunkName} not found in ${file}` };
+        }
+      } catch (error: Error | any) {
+        return { id: id, content: `Error reading file ${file}: ${error.message}` };
+      }
+    }));
+
+    return topResults;
   } catch (error: unknown) {
     console.error("Error generating embedding:", error);
     return []; // Return empty array in case of error

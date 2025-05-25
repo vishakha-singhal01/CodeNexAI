@@ -6,6 +6,7 @@ import * as fs from 'fs';
 import { preprocessText } from './nlp';
 
 import * as path from 'path';
+import { CodeSearchResult } from '../../../vscode-extension/src/types';
 
 export async function indexCodebase(directory: string) {
   const absoluteDirectory = path.resolve(directory);
@@ -35,7 +36,7 @@ export async function indexCodebase(directory: string) {
   }
 }
 
-export async function codeSearch(query: string): Promise<string[]> {
+export async function codeSearch(query: string): Promise<CodeSearchResult[]> {
   // Process the query using NLP techniques
   const processedQuery = processNaturalLanguageQuery(query);
 
