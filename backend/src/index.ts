@@ -75,6 +75,7 @@ const allowedOrigins = [
   'http://localhost:5173',        // Common Vite dev port
   'http://localhost:3000',        // Common React dev port
   'http://localhost:8080',        // Add your current frontend dev port
+  'vscode-resource://file',           // Allow requests from VS Code extension
   // Add any other origins you need (e.g., preview deployment URLs)
 ];
 
