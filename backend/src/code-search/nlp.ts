@@ -1,16 +1,12 @@
-import * as natural from 'natural';
+export function preprocessText(text: string): string {
+  // Lowercase the text
+  text = text.toLowerCase();
 
-export function processNaturalLanguageQuery(query: string): string {
-  // Tokenize the query
-  const tokenizer = new natural.WordTokenizer();
-  const tokens = tokenizer.tokenize(query);
+  // Remove punctuation
+  text = text.replace(/[^\w\s]/g, '');
 
-  // Stem the tokens
-  const stemmer = natural.PorterStemmer;
-  const stemmedTokens = tokens.map((token: string) => stemmer.stem(token));
+  // Remove extra whitespace
+  text = text.replace(/\s+/g, ' ').trim();
 
-  // Join the stemmed tokens back into a string
-  const processedQuery = stemmedTokens.join(' ');
-
-  return processedQuery;
+  return text;
 }

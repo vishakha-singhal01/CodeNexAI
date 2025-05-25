@@ -105,7 +105,12 @@ export function extractReturnType(node: t.FunctionDeclaration | t.ArrowFunctionE
  * @param filename Optional filename for context.
  * @returns An array of objects containing extracted code structure information.
  */
+import { preprocessText } from '../../code-search/nlp';
+
 export function extractCodeStructures(code: string, filename?: string): CodeDocumentation[] {
+    // Preprocess the code
+    code = preprocessText(code);
+
     let ast: t.File;
     try {
         ast = parser.parse(code, {

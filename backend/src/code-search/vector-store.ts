@@ -1,4 +1,3 @@
-import { processNaturalLanguageQuery } from './nlp';
 import { generateEmbedding } from './embedding';
 
 // In-memory vector store (replace with Qdrant or Pinecone for production)
@@ -8,10 +7,7 @@ export async function storeEmbedding(id: string, embedding: number[]) {
   vectorStore[id] = embedding;
 }
 
-export async function searchCode(query: string, topN: number = 5): Promise<string[]> {
-  // Process the query using NLP techniques
-  const processedQuery = processNaturalLanguageQuery(query);
-
+export async function searchCode(processedQuery: string, topN: number = 5): Promise<string[]> {
   // Generate embedding for the processed query
   try {
     const queryEmbedding = await generateEmbedding(processedQuery);

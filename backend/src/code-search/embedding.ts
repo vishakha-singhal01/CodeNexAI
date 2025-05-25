@@ -1,17 +1,23 @@
 import { generateAIDocumentation } from '../services/documentation/geminiService';
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+const API_KEY = process.env.GEMINI_API_KEY;
+
+if (!API_KEY) {
+  throw new Error("GEMINI_API_KEY is not defined in the environment variables.");
+}
+
+const genAI = new GoogleGenerativeAI(API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
 export async function generateEmbedding(text: string): Promise<number[]> {
-  const geminiApiKey = process.env.GEMINI_API_KEY;
-  if (!geminiApiKey) {
-    throw new Error('GEMINI_API_KEY is not defined in .env file.');
-  }
   try {
-    const summary = await generateAIDocumentation(text);
-    // Use the summary to generate an embedding
-    const embedding: number[] = [];
-    for (let i = 0; i < 1536; i++) {
-      embedding.push(summary.charCodeAt(i % summary.length) / 100);
-    }
+    const prompt = `Return the embedding for the following text: ${text}. Return a JSON array of 1536 numbers.`;
+    const result = await model.generateContent(prompt);
+    const response = result.response;
+    const embeddingString = response.text();
+    console.log("embeddingString:", embeddingString);
+    const embedding = JSON.parse(embeddingString) as number[];
     return embedding;
   } catch (error: unknown) {
     console.error("Error generating embedding:", error);

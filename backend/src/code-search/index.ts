@@ -3,11 +3,13 @@ import { generateEmbedding } from './embedding';
 import { storeEmbedding, searchCode } from './vector-store';
 import * as fs from 'fs';
 
+import { preprocessText } from './nlp';
+
 export async function indexCodebase(directory: string) {
   const files = await fs.promises.readdir(directory);
 
   for (const file of files) {
-    if (file.endsWith('.ts') || file.endsWith('.js')) {
+    if (file.endsWith('.ts') || file.endsWith('.js') || file.endsWith('.tsx')) {
       try {
         const codeChunks = await parseCode(`${directory}/${file}`);
         for (const chunk of codeChunks) {
@@ -33,6 +35,6 @@ export async function codeSearch(query: string): Promise<any[]> {
 }
 
 function processNaturalLanguageQuery(query: string): string {
-  // TODO: Implement NLP processing here
-  return query;
+  // Preprocess the query
+  return preprocessText(query);
 }
