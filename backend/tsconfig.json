@@ -4,7 +4,7 @@
     "module": "CommonJS",
     "moduleResolution": "node",
     "outDir": "./dist",
-    "rootDir": "../",
+    "rootDir": "./src",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -12,6 +12,6 @@
     "resolveJsonModule": true,
     "types": ["node"]
   },
-  "include": ["src/**/*", "src/code-search/natural.d.ts", "../../vscode-extension/src/**/*"],
+  "include": ["src/**/*", "../../vscode-extension/src/types.ts"],
   "exclude": ["node_modules", "**/*.spec.ts"]
 }
