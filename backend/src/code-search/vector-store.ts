@@ -1,10 +1,28 @@
 import { generateEmbedding } from './embedding';
+import * as fs from 'fs';
+import * as path from 'path';
 
 // In-memory vector store (replace with Qdrant or Pinecone for production)
 const vectorStore: { [key: string]: number[] } = {};
 
+const vectorStorePath = path.join(__dirname, 'vector-store.json');
+
+// Load vector store from file on startup
+try {
+  const data = fs.readFileSync(vectorStorePath, 'utf-8');
+  const parsedVectorStore = JSON.parse(data);
+  Object.assign(vectorStore, parsedVectorStore);
+  console.log("Vector store loaded from file:", Object.keys(vectorStore).length, "entries");
+} catch (error) {
+  console.log("No vector store file found, starting with empty store.");
+}
+
+console.log("Vector store size:", Object.keys(vectorStore).length);
+
 export async function storeEmbedding(id: string, embedding: number[]) {
   vectorStore[id] = embedding;
+  // Save vector store to file after every update
+  fs.writeFileSync(vectorStorePath, JSON.stringify(vectorStore));
 }
 
 export async function searchCode(processedQuery: string, topN: number = 5): Promise<string[]> {

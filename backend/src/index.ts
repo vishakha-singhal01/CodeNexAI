@@ -423,21 +423,25 @@ app.post('/api/upload-generate-docs', upload.array('codeFiles'), uploadGenerateD
 app.post('/api/github-repo-docs', githubRepoDocsHandler);
 
 // API endpoint for code search
-app.get('/api/code-search', async (req: Request, res: any) => {
-  const query = req.query.query as string;
+app.post('/api/code-search', async (req: Request, res: Response) => {
+  const query = req.body.query as string;
 
   if (!query) {
     return res.status(400).json({ error: 'Missing query parameter' });
   }
 
   try {
-    const topResults = await codeSearch(query); // make sure codeSearch is defined
-    return res.json({ results: topResults });
-  } catch (error: any) {
+    const topResults = await codeSearch(query); // Ensure codeSearch is defined
+    res.json({ results: topResults });
+  } catch (error: unknown) {
     console.error('Error searching code:', error);
-    return res.status(500).json({ error: 'Failed to search code' });
+    return res.status(500).json({
+      error: 'Failed to search code',
+      details: error instanceof Error ? error.message : String(error),
+    });
   }
 });
+
 
 // Call indexCodebase on startup
 indexCodebase('./');

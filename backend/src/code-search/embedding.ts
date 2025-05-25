@@ -15,10 +15,15 @@ export async function generateEmbedding(text: string): Promise<number[]> {
     const prompt = `Return the embedding for the following text: ${text}. Return a JSON array of 1536 numbers.`;
     const result = await model.generateContent(prompt);
     const response = result.response;
-    const embeddingString = response.text();
-    console.log("embeddingString:", embeddingString);
-    const embedding = JSON.parse(embeddingString) as number[];
-    return embedding;
+    let embeddingString = response.text().trim();
+    embeddingString = embeddingString.replace(/```(?:json)?/g, '').replace(/```/g, '').trim();
+    try {
+      const embedding = JSON.parse(embeddingString) as number[];
+      return embedding;
+    } catch (parseError: unknown) {
+      console.error("Error parsing embedding:", parseError);
+      return Array(1536).fill(0); // Return a zero vector in case of error
+    }
   } catch (error: unknown) {
     console.error("Error generating embedding:", error);
     return Array(1536).fill(0); // Return a zero vector in case of error
