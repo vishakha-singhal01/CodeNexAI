@@ -1,8 +1,14 @@
 import { generateEmbedding } from './embedding';
 import * as fs from 'fs';
 import * as path from 'path';
+
 import { parseCode } from './parser';
-import { CodeSearchResult } from '../../../vscode-extension/src/types';
+
+export interface CodeSearchResult {
+    id: string;
+    content: string;
+}
+
 // In-memory vector store (replace with Qdrant or Pinecone for production)
 const vectorStore: { [key: string]: number[] } = {};
 
@@ -58,7 +64,7 @@ export async function searchCode(processedQuery: string, topN: number = 5): Prom
         } else {
           return { id: id, content: `Chunk ${chunkName} not found in ${file}` };
         }
-      } catch (error: Error | any) {
+      } catch (error: any) {
         return { id: id, content: `Error reading file ${file}: ${error.message}` };
       }
     }));
