@@ -127,12 +127,12 @@ export function activate(context: vscode.ExtensionContext) {
             cancellable: false
         }, async () => {
             try {
-const githubToken = await vscode.window.showInputBox({ prompt: 'Enter your GitHub token (optional)' });
+// const githubToken = await vscode.window.showInputBox({ prompt: 'Enter your GitHub token (optional)' });
                 const response = await apiClient.post(GENERATE_DOCS_URL, {
                     code: selectedText,
                     email,
                     password,
-                    githubToken
+                    // githubToken
                 });
 
                 if (response.status === 200 && response.data.documentation) {
@@ -226,8 +226,8 @@ const githubToken = await vscode.window.showInputBox({ prompt: 'Enter your GitHu
         vscode.window.showInformationMessage(`CodenexAI: Searching for "${query}"...`);
 
         try {
-            const response: { status: number; data: CodeSearchResult[] } = await apiClient.get(`${API_BASE_URL}/api/code-search?query=${query}`);
-            
+            const response: { status: number; data: CodeSearchResult[] } = await apiClient.post(`${API_BASE_URL}/api/code-search`, { query });
+
             // Create an output channel to display the results
             const outputChannel = vscode.window.createOutputChannel('CodenexAI Search Results');
             outputChannel.clear();
@@ -241,6 +241,8 @@ const githubToken = await vscode.window.showInputBox({ prompt: 'Enter your GitHu
                         outputChannel.appendLine(`${result.id}: ${result.content}`);
                     });
                 } else {
+                    console.log({aa: response.status})
+                    console.log({aa: response.data})
                     outputChannel.appendLine('No results found.');
                 }
             } else {

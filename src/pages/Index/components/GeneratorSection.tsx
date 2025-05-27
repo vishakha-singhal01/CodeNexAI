@@ -125,7 +125,7 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
     "Hold tight! Your code is getting smarter.",
   ];
 
-  
+
   useEffect(() => {
     if (isLoadingDocs) {
       setLoadingQuote(loadingQuotes[Math.floor(Math.random() * loadingQuotes.length)]);
@@ -164,12 +164,12 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
         // If the error is specifically "Not authorized, no token provided." and we *did* send a token,
         // it might mean the token is invalid/expired.
         if (data.message === 'Not authorized, no token provided.' && token) {
-            setDocsError("Authentication error: Your session might have expired. Please try logging out and logging back in.");
+          setDocsError("Authentication error: Your session might have expired. Please try logging out and logging back in.");
         } else if (data.message === 'Not authorized, token failed verification.') {
-            setDocsError("Authentication error: Your token is invalid. Please try logging out and logging back in.");
+          setDocsError("Authentication error: Your token is invalid. Please try logging out and logging back in.");
         }
         else {
-            throw new Error(data.message || data.error || `HTTP error! status: ${response.status}`);
+          throw new Error(data.message || data.error || `HTTP error! status: ${response.status}`);
         }
       }
       // Only set generated docs if response was ok and data.documentation exists
@@ -196,7 +196,7 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
   }
 
   // Handler for GitHub Repo URL
-   const handleGenerateDocsFromRepo = useCallback(async () => {
+  const handleGenerateDocsFromRepo = useCallback(async () => {
     if (!repoUrl.trim() || !isValidGitHubUrl(repoUrl)) {
       setDocsError("Please enter a valid GitHub repository URL (e.g., https://github.com/user/repo).");
       return;
@@ -354,7 +354,7 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
               <TabsContent value="github">
                 <div className="grid gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="repo-url-input" className="text-base font-medium">Public GitHub Repository URL</Label>
+                    <Label htmlFor="repo-url-input" className="text-base font-medium">GitHub Repository URL</Label>
                     <Input
                       id="repo-url-input"
                       placeholder="https://github.com/username/repository-name"
@@ -367,11 +367,14 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
                       disabled={isLoadingDocs || userPlan === 'free' || userPlan === 'pro'} // Also disable input if free/pro
                     />
                     <p className="text-sm text-muted-foreground pt-1">
-                      Enter the full URL of a public GitHub repository. (Available for Enterprise plan)
+                      Enter the full URL of a GitHub repository. (Available for Enterprise plan)
                     </p>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="github-token-input" className="text-base font-medium">GitHub Token (Optional)</Label>
+                    <Label htmlFor="github-token-input" className="text-base font-medium">
+                      GitHub Token{" "}
+                      <span className="text-muted-foreground">(Optional for public repos, required for private)</span>
+                    </Label>
                     <Input
                       id="github-token-input"
                       type="password"
@@ -384,6 +387,17 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
                     <p className="text-sm text-muted-foreground pt-1">
                       Enter your GitHub token to access private repositories.
                     </p>
+                    <div className="text-sm text-muted-foreground space-y-1 pt-2">
+                      <p className="font-medium">Steps to get a GitHub Token:</p>
+                      <ol className="list-decimal list-inside space-y-1">
+                        <li>Go to <a href="https://github.com/settings/tokens" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">GitHub Developer Settings</a>.</li>
+                        <li>Click on <strong>"Generate new token"</strong> (or <strong>"Fine-grained token"</strong> for more control).</li>
+                        <li>Set a name and expiration date for your token.</li>
+                        <li>Select the scopes/permissions you need (e.g., <code>repo</code> to access private repositories).</li>
+                        <li>Click <strong>"Generate token"</strong> at the bottom.</li>
+                        <li>Copy and paste the token here. You won’t be able to view it again later.</li>
+                      </ol>
+                    </div>
                   </div>
                   <Button
                     size="lg"

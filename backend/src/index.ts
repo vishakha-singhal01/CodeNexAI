@@ -36,7 +36,7 @@ app.set('trust proxy', 1);
 const mongoUri = process.env.MONGO_URI;
 if (!mongoUri) {
   console.error('FATAL ERROR: MONGO_URI is not defined in .env file.');
-    process.exit(1); // Exit if DB connection string is missing
+  process.exit(1); // Exit if DB connection string is missing
 }
 // Connect to MongoDB at top level again
 mongoose.connect(mongoUri)
@@ -110,21 +110,21 @@ app.use(cookieParser());
 // --- Session Configuration ---
 const sessionSecret = process.env.SESSION_SECRET;
 if (!sessionSecret) {
-    console.error('FATAL ERROR: SESSION_SECRET is not defined in .env file.');
-    process.exit(1); // Exit if session secret is missing
+  console.error('FATAL ERROR: SESSION_SECRET is not defined in .env file.');
+  process.exit(1); // Exit if session secret is missing
 }
 // Removed unused @ts-expect-error
 app.use(session({
-    secret: sessionSecret,
-    resave: false, // Don't save session if unmodified
-    saveUninitialized: false, // Don't create session until something stored
-    store: MongoStore.create({ mongoUrl: mongoUri }), // Store session in MongoDB
-    cookie: {
-        secure: process.env.NODE_ENV === 'production', // Use secure cookies in production (requires HTTPS)
-        httpOnly: true, // Prevent client-side JS from accessing cookie
-        maxAge: 1000 * 60 * 60 * 24 * 7, // Example: 1 week
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax' // Crucial for cross-site requests in prod (needs secure:true)
-    }
+  secret: sessionSecret,
+  resave: false, // Don't save session if unmodified
+  saveUninitialized: false, // Don't create session until something stored
+  store: MongoStore.create({ mongoUrl: mongoUri }), // Store session in MongoDB
+  cookie: {
+    secure: process.env.NODE_ENV === 'production', // Use secure cookies in production (requires HTTPS)
+    httpOnly: true, // Prevent client-side JS from accessing cookie
+    maxAge: 1000 * 60 * 60 * 24 * 7, // Example: 1 week
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax' // Crucial for cross-site requests in prod (needs secure:true)
+  }
 })); // Removed cast
 
 // --- Passport Middleware ---
@@ -279,8 +279,8 @@ const uploadGenerateDocsHandler = async (req: Request, res: Response, next: Next
     user = (req.user as IUser) as IUser;
   }
   if (!req.files || (req.files as Express.Multer.File[]).length === 0) {
-     res.status(400).json({ error: 'No files were uploaded.' });
-     return;
+    res.status(400).json({ error: 'No files were uploaded.' });
+    return;
   }
 
   const files = req.files as Express.Multer.File[];
@@ -308,8 +308,8 @@ const uploadGenerateDocsHandler = async (req: Request, res: Response, next: Next
     }
 
     if (allDocs.length === 0) {
-       res.status(400).json({ error: 'No processable code content found in uploaded files.' });
-       return;
+      res.status(400).json({ error: 'No processable code content found in uploaded files.' });
+      return;
     }
 
     const combinedDocumentation = allDocs.join('\n\n---\n\n');
@@ -347,11 +347,11 @@ const githubRepoDocsHandler = async (req: Request, res: Response, next: NextFunc
   if (req.isAuthenticated()) {
     user = (req.user as IUser) as IUser;
   }
-const { repoUrl, githubToken } = req.body as GitHubRepoRequestBody;
+  const { repoUrl, githubToken } = req.body as GitHubRepoRequestBody;
 
   if (!repoUrl || !isValidGitHubUrl(repoUrl)) {
-     res.status(400).json({ error: 'Invalid or missing GitHub repository URL.' });
-     return;
+    res.status(400).json({ error: 'Invalid or missing GitHub repository URL.' });
+    return;
   }
 
   const urlParts = new URL(repoUrl);
@@ -397,8 +397,8 @@ const { repoUrl, githubToken } = req.body as GitHubRepoRequestBody;
     console.log(`Processed ${processedFileCount} code files.`);
 
     if (allDocs.length === 0) {
-       res.status(400).json({ error: 'No processable code files found in the repository.' });
-       return;
+      res.status(400).json({ error: 'No processable code files found in the repository.' });
+      return;
     }
 
     const combinedDocumentation = allDocs.join('\n\n---\n\n');
@@ -410,8 +410,10 @@ const { repoUrl, githubToken } = req.body as GitHubRepoRequestBody;
     console.error("API Error fetching/processing GitHub repo:", error);
     const message = error instanceof Error ? error.message : 'An unknown error occurred';
     if (axios.isAxiosError(error) && error.response?.status === 404) {
-       res.status(404).json({ error: 'Repository or default branch (main) not found. Check URL or branch name.' });
-       return;
+      res.status(404).json({
+        error: 'Repository or default branch (main) not found. Check the repository URL, branch name, or make sure to provide a GitHub token if accessing a private repository.'
+      });
+      return;
     }
     res.status(500).json({ error: 'Failed to fetch or process GitHub repository.', details: message });
     return;
