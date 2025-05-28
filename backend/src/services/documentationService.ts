@@ -7,11 +7,12 @@ import { generateAIDocumentation } from "./documentation/geminiService";
  * @param code The code content as a string.
  * @param filename Optional filename for context (can be passed to AI).
  * @param docType The type of documentation to generate.
- * @param diagramType The type of diagram to generate.
+ * @param diagramTypes The types of diagrams to generate.
  * @returns A promise that resolves to the generated documentation string (Markdown).
  */
-export async function generateDocumentation(code: string, filename?: string, docType?: string, diagramType?: string): Promise<string> {
+export async function generateDocumentation(code: string, filename?: string, docType?: string, diagramTypes?: string[]): Promise<string> {
   try {
+    let documentation = "";
     // If docType is not provided, try to extract it from the code
     if (!docType) {
       if (code.includes("API")) {
@@ -22,9 +23,18 @@ export async function generateDocumentation(code: string, filename?: string, doc
         docType = "detailed"; // Default docType
       }
     }
-    // Directly pass the raw code and optional filename to the AI service
-    // The AI service will be responsible for the detailed analysis.
-    const documentation = await generateAIDocumentation(code, filename, docType, diagramType);
+
+    if (diagramTypes && diagramTypes.length > 0) {
+      for (const diagramType of diagramTypes) {
+        // Directly pass the raw code and optional filename to the AI service
+        // The AI service will be responsible for the detailed analysis.
+        const diagramDocumentation = await generateAIDocumentation(code, filename, docType, diagramType);
+        documentation += `\n\n## ${diagramType}\n${diagramDocumentation}`;
+      }
+    } else {
+      // If no diagram types are selected, generate detailed documentation
+      documentation = await generateAIDocumentation(code, filename, docType);
+    }
 
     return documentation;
 

@@ -77,6 +77,7 @@ const allowedOrigins = [
   'http://localhost:8080',        // Add your current frontend dev port
   'vscode-resource://file',           // Allow requests from VS Code extension
   // Add any other origins you need (e.g., preview deployment URLs)
+  // Add any other origins you need (e.g., preview deployment URLs)
 ];
 
 app.use(cors({
@@ -187,14 +188,14 @@ const vscodeAuthStartHandler: RequestHandler = (req: Request, res: Response) => 
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=width, initial-scale=1.0">
     <title>CodenexAI VS Code Login</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 90vh; margin: 0; background-color: #f0f2f5; color: #333; }
         .container { background-color: #ffffff; padding: 30px 40px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: center; width: 100%; max-width: 400px; }
         h1 { margin-bottom: 25px; color: #1a2b4d; font-size: 24px; }
         label { display: block; margin-bottom: 8px; text-align: left; color: #555; font-weight: 500; }
-        input[type="email"], input[type="password"] { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 16px; }
+        input[type="email"], input[type="password"] { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 4px; box-sizing: width; font-size: 16px; }
         input[type="email"]:focus, input[type="password"]:focus { border-color: #007bff; outline: none; box-shadow: 0 0 0 2px rgba(0,123,255,.25); }
         button { background-color: #007bff; color: white; padding: 12px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%; transition: background-color 0.2s; }
         button:hover { background-color: #0056b3; }
@@ -244,34 +245,34 @@ app.get('/api/health', (req: Request, res: Response) => {
 interface GenerateDocsRequestBody {
   code: string;
   docType?: string;
-  diagramType?: string;
+  diagramTypes?: string[];
 }
 
 // --- Route Handlers Refactoring ---
 
 // Endpoint to generate documentation (Refactored)
 const generateDocsHandler = async (req: Request, res: Response, next: NextFunction) => {
-  let user: IUser | undefined;
-  if (req.isAuthenticated()) {
-    user = req.user as IUser;
-  }
-  const { code, docType, diagramType } = req.body as GenerateDocsRequestBody;
+ let user: IUser | undefined;
+ if (req.isAuthenticated()) {
+  user = req.user as IUser;
+ }
+ const { code, docType, diagramTypes } = req.body as GenerateDocsRequestBody;
 
-  if (!code) {
-    res.status(400).json({ error: 'Missing "code" field in request body.' });
-    return;
-  }
+ if (!code) {
+  res.status(400).json({ error: 'Missing "code" field in request body.' });
+  return;
+ }
 
-  try {
-    const documentation = await generateDocumentation(code, undefined, docType, diagramType);
-    res.json({ documentation });
-    return;
-  } catch (error: unknown) {
-    console.error("API Error generating documentation:", error);
-    const message = error instanceof Error ? error.message : 'An unknown error occurred';
-    res.status(500).json({ error: 'Failed to generate documentation.', details: message });
-    return;
-  }
+ try {
+  const documentation = await generateDocumentation(code, undefined, docType, diagramTypes);
+  res.json({ documentation });
+  return;
+ } catch (error: unknown) {
+  console.error("API Error generating documentation:", error);
+  const message = error instanceof Error ? error.message : 'An unknown error occurred';
+  res.status(500).json({ error: 'Failed to generate documentation.', details: message });
+  return;
+ }
 };
 
 // Endpoint to generate documentation from uploaded files (Refactored)
@@ -280,7 +281,7 @@ const uploadGenerateDocsHandler = async (req: Request, res: Response, next: Next
   if (req.isAuthenticated()) {
     user = (req.user as IUser) as IUser;
   }
-  const { docType, diagramType } = req.body as GenerateDocsRequestBody;
+  const { docType, diagramTypes } = req.body as GenerateDocsRequestBody;
   if (!req.files || (req.files as Express.Multer.File[]).length === 0) {
     res.status(400).json({ error: 'No files were uploaded.' });
     return;
@@ -300,7 +301,7 @@ const uploadGenerateDocsHandler = async (req: Request, res: Response, next: Next
 
       try {
         console.log(`Generating documentation for: ${file.originalname}`);
-        const documentation = await generateDocumentation(fileContent, undefined, docType, diagramType);
+        const documentation = await generateDocumentation(fileContent, undefined, docType, diagramTypes);
         allDocs.push(`## File: ${file.originalname}\n\n${documentation}`);
       } catch (fileError: unknown) {
         console.error(`Error processing file ${file.originalname}:`, fileError);
@@ -331,7 +332,7 @@ const uploadGenerateDocsHandler = async (req: Request, res: Response, next: Next
 interface GenerateDocsRequestBody {
   code: string;
   docType?: string;
-  diagramType?: string;
+  diagramTypes?: string[];
 }
 
 // Define interface for GitHub repo request body
@@ -356,7 +357,7 @@ const githubRepoDocsHandler = async (req: Request, res: Response, next: NextFunc
   if (req.isAuthenticated()) {
     user = req.user as IUser;
   }
-  const { repoUrl, githubToken, docType, diagramType } = req.body as GitHubRepoRequestBody;
+  const { repoUrl, githubToken, docType, diagramTypes } = req.body as GitHubRepoRequestBody;
 
   if (!repoUrl || !isValidGitHubUrl(repoUrl)) {
     res.status(400).json({ error: "Invalid or missing GitHub repository URL." });
@@ -393,7 +394,7 @@ const githubRepoDocsHandler = async (req: Request, res: Response, next: NextFunc
       processedFileCount++;
       try {
         console.log(`Generating documentation for: ${zipEntry.entryName}`);
-        const documentation = await generateDocumentation(fileContent, undefined, docType, diagramType);
+        const documentation = await generateDocumentation(fileContent, undefined, docType, diagramTypes);
         allDocs.push(`## File: ${zipEntry.entryName}\n\n${documentation}`);
       } catch (fileGenError: unknown) {
         console.error(`Error generating docs for file ${zipEntry.entryName}:`, fileGenError);
@@ -435,22 +436,24 @@ app.post('/api/github-repo-docs', githubRepoDocsHandler);
 
 // API endpoint for code search
 app.post('/api/code-search', async (req: Request, res: Response) => {
-  const query = req.body.query as string;
+ const query = req.body.query as string;
 
-  if (!query) {
-    return res.status(400).json({ error: 'Missing query parameter' });
-  }
+ if (!query) {
+  res.status(400).json({ error: 'Missing query parameter' });
+  return;
+ }
 
-  try {
-    const topResults = await codeSearch(query); // Ensure codeSearch is defined
-    res.json({ results: topResults });
-  } catch (error: unknown) {
-    console.error('Error searching code:', error);
-    return res.status(500).json({
-      error: 'Failed to search code',
-      details: error instanceof Error ? error.message : String(error),
-    });
-  }
+ try {
+  const topResults = await codeSearch(query);
+  res.json({ results: topResults });
+ } catch (error: unknown) {
+  console.error('Error searching code:', error);
+  res.status(500).json({
+   error: 'Failed to search code',
+   details: error instanceof Error ? error.message : String(error),
+  });
+  return;
+ }
 });
 
 
