@@ -78,6 +78,14 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
   const [loadingQuote, setLoadingQuote] = useState("");
   const [isLoadingDocsInternal, setIsLoadingDocsInternal] = useState(false);
   const [githubToken, setGithubToken] = useState("");
+  const [selectedDocType, setSelectedDocType] = useState("API Documentation");
+
+  const docTypeOptions = [
+    "API Documentation",
+    "Codebase Documentation",
+    "Tutorials/Guides",
+    "Conceptual Overviews",
+  ];
 
   const tabOptions = [
     { value: "paste", label: "Paste Code", disabled: false, badge: null },
@@ -142,10 +150,39 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
 
   async function generateDocsApiCall(endpoint: string, body: string | FormData, customHeaders?: HeadersInit) {
     setIsLoadingDocsInternal(true);
-    setGeneratedDocs('');
+    setGeneratedDocs("");
     setDocsError(null);
 
-    const fullEndpoint = import.meta.env.PROD ? `${import.meta.env.VITE_API_BASE_URL}${endpoint}` : endpoint;
+    let prompt = "";
+    switch (selectedDocType) {
+      case "API Documentation":
+        prompt = `Generate comprehensive API documentation for the following code. Include details about each endpoint, its parameters, request and response formats, authentication methods, and example usage. Focus on providing clear and concise information for developers who want to integrate with this API.`;
+        break;
+      case "Codebase Documentation":
+        prompt = `Generate detailed codebase documentation for the following code. Explain the purpose of each class, function, and module, as well as the relationships between them. Include information about data structures, algorithms, and design patterns used in the code. Focus on providing a clear understanding of the codebase for developers who want to maintain or extend it.`;
+        break;
+      case "Tutorials/Guides":
+        prompt = `Generate step-by-step tutorials and guides for using the following code. Provide clear and concise instructions, code examples, and screenshots where appropriate. Focus on helping users learn how to use the code to accomplish specific tasks.`;
+        break;
+      case "Conceptual Overviews":
+        prompt = `Generate high-level conceptual overviews of the following code. Explain the system's architecture, design principles, and key concepts. Focus on providing a clear understanding of the code for stakeholders who want to understand the big picture.`;
+        break;
+      default:
+        prompt = `Generate documentation for the following code.`;
+    }
+
+    // Include the selected documentation type in the request body
+    // The API endpoint should handle this parameter and generate documentation accordingly
+    const requestBody = typeof body === "string" ? JSON.parse(body) : body;
+    if (typeof requestBody === "object" && requestBody !== null) {
+      requestBody.docType = selectedDocType;
+      requestBody.prompt = prompt; // Add the prompt to the request body
+      body = JSON.stringify(requestBody);
+    }
+
+    const fullEndpoint = import.meta.env.PROD
+      ? `${import.meta.env.VITE_API_BASE_URL}${endpoint}`
+      : endpoint;
 
     const headers = new Headers(customHeaders); // Start with custom headers
     const token = (user as ExtendedUser)?.accessToken;
@@ -237,6 +274,20 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
 
         <Card className="max-w-4xl mx-auto shadow-md border rounded-2xl bg-card">
           <CardContent className="p-8 space-y-6">
+            <div className="mb-6">
+              <Label htmlFor="doc-type-select" className="text-base font-medium">Documentation Type</Label>
+              <select
+                id="doc-type-select"
+                className="w-full h-11 rounded-md border border-border bg-muted/30 text-sm font-mono focus-visible:ring-2 focus-visible:ring-primary"
+                value={selectedDocType}
+                onChange={(e) => setSelectedDocType(e.target.value)}
+                disabled={isLoadingDocs}
+              >
+                {docTypeOptions.map((option) => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </select>
+            </div>
             <Tabs value={selectedTab} onValueChange={handleTabChangeInternal} className="w-full">
               {/* Desktop TabsList */}
               <TabsList className="hidden w-full md:grid md:grid-cols-3 gap-2 bg-muted/40 p-1 rounded-lg mb-6">
