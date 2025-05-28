@@ -461,6 +461,3 @@ indexCodebase('./');
 app.listen(portNumber, '0.0.0.0', () => {
   console.log(`[server]: Server listening on port ${portNumber}`);
 });
-// Removed startServer function and globalErrorHandler
-</file_content>
-</write_to_file>
