@@ -78,6 +78,7 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
   const [isLoadingDocsInternal, setIsLoadingDocsInternal] = useState(false);
   const [githubToken, setGithubToken] = useState("");
   const [selectedDocType, setSelectedDocType] = useState("API Documentation");
+  const [selectedDiagramType, setSelectedDiagramType] = useState("Sequence Diagram");
 
   const docTypeOptions = [
     "API Documentation",
@@ -239,7 +240,7 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
     setGeneratedDocs('');
     generateDocsApiCall(
       "/api/generate-docs",
-      JSON.stringify({ code: inputCode, docType: selectedDocType }),
+      JSON.stringify({ code: inputCode, docType: selectedDocType, diagramType: selectedDiagramType }),
       {
         "Content-Type": "application/json",
       }
@@ -256,12 +257,12 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
     setUploadedFiles(null);
     await generateDocsApiCall(
       "/api/github-repo-docs",
-      JSON.stringify({ repoUrl, githubToken }),
+      JSON.stringify({ repoUrl, githubToken, diagramType: selectedDiagramType }),
       {
         "Content-Type": "application/json",
       }
     );
-  }, [generateDocsApiCall, isValidGitHubUrl, repoUrl, setDocsError, setInputCode, setUploadedFiles, githubToken, inputCode, selectedDocType]);
+  }, [generateDocsApiCall, isValidGitHubUrl, repoUrl, setDocsError, setInputCode, setUploadedFiles, githubToken, inputCode, selectedDocType, selectedDiagramType]);
 
   return (
     // Added id="generator-section" here
@@ -300,6 +301,20 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
                 {docTypeOptions.map((option) => (
                   <option key={option} value={option}>{option}</option>
                 ))}
+              </select>
+            </div>
+            <div className="mb-6">
+              <Label htmlFor="diagram-type-select" className="text-base font-medium">Diagram Type</Label>
+              <select
+                id="diagram-type-select"
+                className="w-full h-11 rounded-md border border-border bg-muted/30 text-sm font-mono focus-visible:ring-2 focus-visible:ring-primary"
+                value={selectedDiagramType}
+                onChange={(e) => setSelectedDiagramType(e.target.value)}
+                disabled={isLoadingDocs}
+              >
+                <option value="Sequence Diagram">Sequence Diagram</option>
+                <option value="UML Diagram">UML Diagram</option>
+                <option value="Flowchart">Flowchart</option>
               </select>
             </div>
             <Tabs value={selectedTab} onValueChange={handleTabChangeInternal} className="w-full">
@@ -411,10 +426,25 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
                       </div>
                     )}
                   </div>
+                  
                   <Button
                     size="lg"
                     className="w-full"
-                    onClick={handleGenerateDocsFromUpload}
+                    onClick={() => {
+                      const formData = new FormData();
+                      if (uploadedFiles) {
+                        for (let i = 0; i < uploadedFiles.length; i++) {
+                          formData.append("files", uploadedFiles[i]);
+                        }
+                      }
+                      formData.append("docType", selectedDocType);
+                      formData.append("diagramType", selectedDiagramType);
+                      generateDocsApiCall(
+                        "/api/generate-docs-upload",
+                        formData,
+                        {}
+                      );
+                    }}
                     disabled={isLoadingDocs}
                   >
                     {isLoadingDocs ? "Generating..." : <> <Upload className="mr-2 h-4 w-4" /> Generate from Upload </>}

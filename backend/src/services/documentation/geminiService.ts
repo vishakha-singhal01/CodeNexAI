@@ -40,9 +40,10 @@ const safetySettings = [
  * @param code The raw code content as a string.
  * @param filename Optional filename for context.
  * @param docType The type of documentation to generate.
+ * @param diagramType The type of diagram to generate.
  * @returns A promise that resolves to the generated documentation string (Markdown).
  */
-export async function generateAIDocumentation(code: string, filename?: string, docType: string = "detailed"): Promise<string> {
+export async function generateAIDocumentation(code: string, filename?: string, docType: string = "detailed", diagramType?: string): Promise<string> {
   if (!code || code.trim() === "") {
     return "No code provided to document.";
   }
@@ -80,7 +81,7 @@ Generate the optimized and clean documentation below:
        break;
     case "diagrammatical":
       prompt = `
-Analyze the following code snippet${filename ? ` from the file "${filename}"` : ''} and generate a diagram illustrating the code's structure and functionality. Use Mermaid syntax.
+Analyze the following code snippet${filename ? ` from the file "${filename}"` : ''} and generate a ${diagramType || 'sequence diagram'} illustrating the code's structure and functionality. Use Mermaid syntax.
 `;
       break;
     default:
