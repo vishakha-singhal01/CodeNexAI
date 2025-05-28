@@ -192,13 +192,17 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
     }
 
     if (typeof body === "string") {
-      const requestBody = JSON.parse(body);
-      requestBody.docType = mappedDocType;
-      requestBody.prompt = prompt;
+      const requestBody: any = JSON.parse(body);
+      if (selectedDiagramType.length === 0) {
+        requestBody.docType = mappedDocType;
+        requestBody.prompt = prompt;
+      }
       body = JSON.stringify(requestBody);
     } else if (body instanceof FormData) {
-      body.append("docType", mappedDocType);
-      body.append("prompt", prompt);
+      if (selectedDiagramType.length === 0) {
+        body.append("docType", mappedDocType);
+        body.append("prompt", prompt);
+      }
     }
 
     const fullEndpoint = import.meta.env.PROD
