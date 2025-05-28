@@ -81,7 +81,7 @@ Generate the optimized and clean documentation below:
        break;
     case "diagrammatical":
       prompt = `
-Analyze the following code snippet${filename ? ` from the file "${filename}"` : ''} and generate a ${diagramType || 'sequence diagram'} illustrating the code's structure and functionality. Use Mermaid syntax.
+Analyze the following code snippet${filename ? ` from the file "${filename}"` : ''} and generate a ${diagramType || 'sequence diagram'} illustrating the code's structure and functionality. Use Mermaid syntax. Ensure the generated Mermaid syntax is valid.
 `;
       break;
     default:

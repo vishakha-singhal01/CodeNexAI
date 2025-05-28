@@ -48,7 +48,8 @@
     "passport-google-oauth20": "^2.0.0",
     "passport-local": "^1.0.0",
     "qdrant-client": "^0.0.1",
-    "razorpay": "^2.9.6"
+    "razorpay": "^2.9.6",
+    "remark-mermaid": "^0.2.0"
   },
   "resolutions": {
     "@types/express": "^4.17.0",

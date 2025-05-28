@@ -24,16 +24,16 @@ export async function generateDocumentation(code: string, filename?: string, doc
       }
     }
 
+    // Always generate detailed documentation first
+    documentation = await generateAIDocumentation(code, filename, docType);
+
     if (diagramTypes && diagramTypes.length > 0) {
       for (const diagramType of diagramTypes) {
         // Directly pass the raw code and optional filename to the AI service
         // The AI service will be responsible for the detailed analysis.
-        const diagramDocumentation = await generateAIDocumentation(code, filename, docType, diagramType);
+        const diagramDocumentation = await generateAIDocumentation(code, filename, "diagrammatical", diagramType);
         documentation += `\n\n## ${diagramType}\n${diagramDocumentation}`;
       }
-    } else {
-      // If no diagram types are selected, generate detailed documentation
-      documentation = await generateAIDocumentation(code, filename, docType);
     }
 
     return documentation;

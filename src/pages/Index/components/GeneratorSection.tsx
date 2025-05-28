@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChevronDown } from "lucide-react"; // Added for dropdown indicator
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkMermaid from 'remark-mermaid';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -633,7 +634,7 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
                       [&_pre]:my-4
                       [&_blockquote]:my-4
                     ">
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{generatedDocs}</ReactMarkdown>
+                        <ReactMarkdown remarkPlugins={[remarkGfm, remarkMermaid]}>{generatedDocs}</ReactMarkdown>
 
                       </div>
                     </div>
