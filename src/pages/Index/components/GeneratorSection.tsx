@@ -103,6 +103,7 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
     if (!printWindow) return;
 
     printWindow.document.write(`
+      <!DOCTYPE html>
       <html>
         <head>
           <title>Generated Documentation</title>
