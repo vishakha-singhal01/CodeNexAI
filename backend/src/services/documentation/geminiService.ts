@@ -39,15 +39,19 @@ const safetySettings = [
  * Generates detailed, line-by-line documentation for the given code using Gemini.
  * @param code The raw code content as a string.
  * @param filename Optional filename for context.
+ * @param docType The type of documentation to generate.
  * @returns A promise that resolves to the generated documentation string (Markdown).
  */
-export async function generateAIDocumentation(code: string, filename?: string): Promise<string> {
+export async function generateAIDocumentation(code: string, filename?: string, docType: string = "detailed"): Promise<string> {
   if (!code || code.trim() === "") {
     return "No code provided to document.";
   }
 
-  // Construct the prompt for detailed, line-by-line analysis
-  const prompt = `
+  let prompt = "";
+
+  switch (docType) {
+    case "detailed":
+      prompt = `
 Analyze the following code snippet${filename ? ` from the file "${filename}"` : ''} and generate clean, professional Markdown documentation.
 
 ### Documentation Guidelines:
@@ -73,7 +77,15 @@ ${code}
 
 Generate the optimized and clean documentation below:
 `;
-
+       break;
+    case "diagrammatical":
+      prompt = `
+Analyze the following code snippet${filename ? ` from the file "${filename}"` : ''} and generate a diagram illustrating the code's structure and functionality. Use Mermaid syntax.
+`;
+      break;
+    default:
+      return "Invalid docType";
+  }
 
   try {
     console.log(`Sending code snippet${filename ? ` from ${filename}` : ''} to Gemini for detailed documentation.`);
