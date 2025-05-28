@@ -243,6 +243,8 @@ app.get('/api/health', (req: Request, res: Response) => {
 // Define interface for request body
 interface GenerateDocsRequestBody {
   code: string;
+  docType?: string;
+  diagramType?: string;
 }
 
 // --- Route Handlers Refactoring ---
@@ -253,7 +255,7 @@ const generateDocsHandler = async (req: Request, res: Response, next: NextFuncti
   if (req.isAuthenticated()) {
     user = req.user as IUser;
   }
-  const { code } = req.body as GenerateDocsRequestBody;
+  const { code, docType, diagramType } = req.body as GenerateDocsRequestBody;
 
   if (!code) {
     res.status(400).json({ error: 'Missing "code" field in request body.' });
@@ -261,7 +263,7 @@ const generateDocsHandler = async (req: Request, res: Response, next: NextFuncti
   }
 
   try {
-    const documentation = await generateDocumentation(code);
+    const documentation = await generateDocumentation(code, undefined, docType, diagramType);
     res.json({ documentation });
     return;
   } catch (error: unknown) {
@@ -278,6 +280,7 @@ const uploadGenerateDocsHandler = async (req: Request, res: Response, next: Next
   if (req.isAuthenticated()) {
     user = (req.user as IUser) as IUser;
   }
+  const { docType, diagramType } = req.body as GenerateDocsRequestBody;
   if (!req.files || (req.files as Express.Multer.File[]).length === 0) {
     res.status(400).json({ error: 'No files were uploaded.' });
     return;
@@ -297,7 +300,7 @@ const uploadGenerateDocsHandler = async (req: Request, res: Response, next: Next
 
       try {
         console.log(`Generating documentation for: ${file.originalname}`);
-        const documentation = await generateDocumentation(fileContent);
+        const documentation = await generateDocumentation(fileContent, undefined, docType, diagramType);
         allDocs.push(`## File: ${file.originalname}\n\n${documentation}`);
       } catch (fileError: unknown) {
         console.error(`Error processing file ${file.originalname}:`, fileError);
@@ -316,7 +319,6 @@ const uploadGenerateDocsHandler = async (req: Request, res: Response, next: Next
     const status = hasErrors ? 207 : 200;
     res.status(status).json({ documentation: combinedDocumentation });
     return;
-
   } catch (error: unknown) {
     console.error("API Error generating documentation from upload:", error);
     const message = error instanceof Error ? error.message : 'An unknown error occurred';
@@ -325,8 +327,15 @@ const uploadGenerateDocsHandler = async (req: Request, res: Response, next: Next
   }
 };
 
+// Define interface for request body
+interface GenerateDocsRequestBody {
+  code: string;
+  docType?: string;
+  diagramType?: string;
+}
+
 // Define interface for GitHub repo request body
-interface GitHubRepoRequestBody {
+interface GitHubRepoRequestBody extends GenerateDocsRequestBody {
   repoUrl: string;
   githubToken?: string;
 }
@@ -345,12 +354,12 @@ function isValidGitHubUrl(url: string): boolean {
 const githubRepoDocsHandler = async (req: Request, res: Response, next: NextFunction) => {
   let user: IUser | undefined;
   if (req.isAuthenticated()) {
-    user = (req.user as IUser) as IUser;
+    user = req.user as IUser;
   }
-  const { repoUrl, githubToken } = req.body as GitHubRepoRequestBody;
+  const { repoUrl, githubToken, docType, diagramType } = req.body as GitHubRepoRequestBody;
 
   if (!repoUrl || !isValidGitHubUrl(repoUrl)) {
-    res.status(400).json({ error: 'Invalid or missing GitHub repository URL.' });
+    res.status(400).json({ error: "Invalid or missing GitHub repository URL." });
     return;
   }
 
@@ -384,7 +393,7 @@ const githubRepoDocsHandler = async (req: Request, res: Response, next: NextFunc
       processedFileCount++;
       try {
         console.log(`Generating documentation for: ${zipEntry.entryName}`);
-        const documentation = await generateDocumentation(fileContent);
+        const documentation = await generateDocumentation(fileContent, undefined, docType, diagramType);
         allDocs.push(`## File: ${zipEntry.entryName}\n\n${documentation}`);
       } catch (fileGenError: unknown) {
         console.error(`Error generating docs for file ${zipEntry.entryName}:`, fileGenError);
@@ -405,7 +414,6 @@ const githubRepoDocsHandler = async (req: Request, res: Response, next: NextFunc
     const status = hasErrors ? 207 : 200;
     res.status(status).json({ documentation: combinedDocumentation });
     return;
-
   } catch (error: unknown) {
     console.error("API Error fetching/processing GitHub repo:", error);
     const message = error instanceof Error ? error.message : 'An unknown error occurred';
@@ -454,3 +462,5 @@ app.listen(portNumber, '0.0.0.0', () => {
   console.log(`[server]: Server listening on port ${portNumber}`);
 });
 // Removed startServer function and globalErrorHandler
+</file_content>
+</write_to_file>

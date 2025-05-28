@@ -65,7 +65,6 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
   docsError,
   setDocsError,
   fileInputRef,
-  handleGenerateDocsFromText,
   handleFileChange,
   handleGenerateDocsFromUpload,
   isValidGitHubUrl,
@@ -79,6 +78,7 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
   const [isLoadingDocsInternal, setIsLoadingDocsInternal] = useState(false);
   const [githubToken, setGithubToken] = useState("");
   const [selectedDocType, setSelectedDocType] = useState("API Documentation");
+  const [selectedDiagramType, setSelectedDiagramType] = useState("Sequence Diagram");
 
   const docTypeOptions = [
     "API Documentation",
@@ -173,11 +173,14 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
 
     // Include the selected documentation type in the request body
     // The API endpoint should handle this parameter and generate documentation accordingly
-    const requestBody = typeof body === "string" ? JSON.parse(body) : body;
-    if (typeof requestBody === "object" && requestBody !== null) {
+    if (typeof body === "string") {
+      const requestBody = JSON.parse(body);
       requestBody.docType = selectedDocType;
       requestBody.prompt = prompt; // Add the prompt to the request body
       body = JSON.stringify(requestBody);
+    } else if (body instanceof FormData) {
+      body.append("docType", selectedDocType);
+      body.append("prompt", prompt);
     }
 
     const fullEndpoint = import.meta.env.PROD
@@ -232,6 +235,18 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
     }
   }
 
+  const handleGenerateDocsFromText = () => {
+    setDocsError(null);
+    setGeneratedDocs('');
+    generateDocsApiCall(
+      "/api/generate-docs",
+      JSON.stringify({ code: inputCode, docType: selectedDocType, diagramType: selectedDiagramType }),
+      {
+        "Content-Type": "application/json",
+      }
+    );
+  };
+
   // Handler for GitHub Repo URL
   const handleGenerateDocsFromRepo = useCallback(async () => {
     if (!repoUrl.trim() || !isValidGitHubUrl(repoUrl)) {
@@ -242,12 +257,12 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
     setUploadedFiles(null);
     await generateDocsApiCall(
       "/api/github-repo-docs",
-      JSON.stringify({ repoUrl, githubToken }),
+      JSON.stringify({ repoUrl, githubToken, diagramType: selectedDiagramType }),
       {
         "Content-Type": "application/json",
       }
     );
-  }, [generateDocsApiCall, isValidGitHubUrl, repoUrl, setDocsError, setInputCode, setUploadedFiles, githubToken]);
+  }, [generateDocsApiCall, isValidGitHubUrl, repoUrl, setDocsError, setInputCode, setUploadedFiles, githubToken, inputCode, selectedDocType, selectedDiagramType]);
 
   return (
     // Added id="generator-section" here
@@ -288,8 +303,22 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
                 ))}
               </select>
             </div>
+            <div className="mb-6">
+              <Label htmlFor="diagram-type-select" className="text-base font-medium">Diagram Type</Label>
+              <select
+                id="diagram-type-select"
+                className="w-full h-11 rounded-md border border-border bg-muted/30 text-sm font-mono focus-visible:ring-2 focus-visible:ring-primary"
+                value={selectedDiagramType}
+                onChange={(e) => setSelectedDiagramType(e.target.value)}
+                disabled={isLoadingDocs}
+              >
+                <option value="Sequence Diagram">Sequence Diagram</option>
+                <option value="UML Diagram">UML Diagram</option>
+                <option value="Flowchart">Flowchart</option>
+              </select>
+            </div>
             <Tabs value={selectedTab} onValueChange={handleTabChangeInternal} className="w-full">
-              {/* Desktop TabsList */}
+             
               <TabsList className="hidden w-full md:grid md:grid-cols-3 gap-2 bg-muted/40 p-1 rounded-lg mb-6">
                 {tabOptions.map(tab => (
                   <TabsTrigger
@@ -303,7 +332,6 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
                 ))}
               </TabsList>
 
-              {/* Mobile Dropdown */}
               <div className="md:hidden mb-6">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -327,7 +355,6 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
                 </DropdownMenu>
               </div>
 
-              {/* Paste Code Tab */}
               <TabsContent value="paste">
                 <div className="grid gap-6">
                   <div className="space-y-2">
@@ -348,7 +375,17 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
                   <Button
                     size="lg"
                     className="w-full"
-                    onClick={handleGenerateDocsFromText}
+                    onClick={() => {
+                      setDocsError(null);
+                      setGeneratedDocs('');
+                      generateDocsApiCall(
+                        "/api/generate-docs",
+                        JSON.stringify({ code: inputCode }),
+                        {
+                          "Content-Type": "application/json",
+                        }
+                      );
+                    }}
                     disabled={isLoadingDocs}
                   >
                     {isLoadingDocs ? "Generating..." : "Generate from Text"}
@@ -356,7 +393,6 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
                 </div>
               </TabsContent>
 
-              {/* Upload Tab */}
               <TabsContent value="upload">
                 <div className="grid gap-6">
                   <div className="space-y-2">
@@ -390,10 +426,25 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
                       </div>
                     )}
                   </div>
+                  
                   <Button
                     size="lg"
                     className="w-full"
-                    onClick={handleGenerateDocsFromUpload}
+                    onClick={() => {
+                      const formData = new FormData();
+                      if (uploadedFiles) {
+                        for (let i = 0; i < uploadedFiles.length; i++) {
+                          formData.append("files", uploadedFiles[i]);
+                        }
+                      }
+                      formData.append("docType", selectedDocType);
+                      formData.append("diagramType", selectedDiagramType);
+                      generateDocsApiCall(
+                        "/api/generate-docs-upload",
+                        formData,
+                        {}
+                      );
+                    }}
                     disabled={isLoadingDocs}
                   >
                     {isLoadingDocs ? "Generating..." : <> <Upload className="mr-2 h-4 w-4" /> Generate from Upload </>}
@@ -401,7 +452,6 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
                 </div>
               </TabsContent>
 
-              {/* GitHub Repo Tab */}
               <TabsContent value="github">
                 <div className="grid gap-6">
                   <div className="space-y-2">
@@ -423,8 +473,7 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="github-token-input" className="text-base font-medium">
-                      GitHub Token{" "}
-                      <span className="text-muted-foreground">(Optional for public repos, required for private)</span>
+                      GitHub Token<span className="text-muted-foreground">(Optional for public repos, required for private)</span>
                     </Label>
                     <Input
                       id="github-token-input"
@@ -471,21 +520,20 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
                 <h3 className="text-2xl md:text-3xl lg:text-4xl font-semibold text-center text-muted-foreground animate-pulse">
                   {loadingQuote}
                 </h3>
-                {/* Changed shimmer color for better dark mode compatibility */}
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-foreground/10 to-transparent animate-shimmer" />
               </div>
             </div>
           ) : (
             <>
               {docsError && (
-                <Alert variant="destructive" className="mb-6"> {/* Increased margin */}
+                <Alert variant="destructive" className="mb-6"> 
                   <AlertCircle className="h-4 w-4" />
                   <AlertTitle>Generation Error</AlertTitle>
                   <AlertDescription>{docsError}</AlertDescription>
                 </Alert>
               )}
               {generatedDocs && (
-                <Card className="max-w-4xl mx-auto shadow-md border rounded-2xl bg-card"> {/* Changed bg-card */}
+                <Card className="max-w-4xl mx-auto shadow-md border rounded-2xl bg-card"> 
                   <CardHeader className="flex flex-row items-center justify-between pb-3 pt-4 px-5">
                     <CardTitle className="text-xl font-semibold">Generated Documentation</CardTitle>
                     <DropdownMenu>
