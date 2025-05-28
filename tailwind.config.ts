@@ -89,6 +89,48 @@ export default {
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out'
+			},
+			prose: {
+				dark: {
+					css: {
+						body: 'hsl(var(--foreground))',
+						h1: 'hsl(var(--primary))',
+						h2: 'hsl(var(--primary))',
+						h3: 'hsl(var(--primary))',
+						h4: 'hsl(var(--primary))',
+						h5: 'hsl(var(--primary))',
+						h6: 'hsl(var(--primary))',
+						ul: {
+							color: 'hsl(var(--foreground))',
+						},
+						ol: {
+							color: 'hsl(var(--foreground))',
+						},
+						li: {
+							color: 'hsl(var(--foreground))',
+						},
+						code: {
+							color: 'hsl(var(--foreground))',
+							backgroundColor: 'hsl(var(--muted))',
+						},
+						blockquote: {
+							color: 'hsl(var(--foreground))',
+							borderLeftColor: 'hsl(var(--border))',
+						},
+						select: {
+							backgroundColor: 'hsl(var(--background))',
+							color: 'hsl(var(--foreground))',
+							borderColor: 'hsl(var(--border))',
+						},
+					}
+				}
+			},
+			dark: {
+				select: {
+					backgroundColor: 'hsl(var(--background))',
+					color: 'hsl(var(--foreground))',
+					borderColor: 'hsl(var(--border))',
+				},
 			}
 		}
 	},

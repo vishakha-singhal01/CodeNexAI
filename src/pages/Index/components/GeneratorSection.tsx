@@ -293,7 +293,7 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
               <Label htmlFor="doc-type-select" className="text-base font-medium">Documentation Type</Label>
               <select
                 id="doc-type-select"
-                className="w-full h-11 rounded-md border border-border bg-muted/30 text-sm font-mono focus-visible:ring-2 focus-visible:ring-primary"
+                className="w-full h-11 rounded-md border border-border bg-muted/30 dark:bg-black dark:text-white text-sm font-mono focus-visible:ring-2 focus-visible:ring-primary"
                 value={selectedDocType}
                 onChange={(e) => setSelectedDocType(e.target.value)}
                 disabled={isLoadingDocs}
@@ -307,7 +307,7 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
               <Label htmlFor="diagram-type-select" className="text-base font-medium">Diagram Type</Label>
               <select
                 id="diagram-type-select"
-                className="w-full h-11 rounded-md border border-border bg-muted/30 text-sm font-mono focus-visible:ring-2 focus-visible:ring-primary"
+                className="w-full h-11 rounded-md border border-border bg-muted/30 dark:bg-black dark:text-white text-sm font-mono focus-visible:ring-2 focus-visible:ring-primary"
                 value={selectedDiagramType}
                 onChange={(e) => setSelectedDiagramType(e.target.value)}
                 disabled={isLoadingDocs}
