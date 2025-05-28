@@ -87,6 +87,13 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
     "Conceptual Overviews",
   ];
 
+  const docTypeMapping: { [key: string]: string } = {
+    "API Documentation": "detailed",
+    "Codebase Documentation": "detailed",
+    "Tutorials/Guides": "detailed",
+    "Conceptual Overviews": "detailed",
+  };
+
   const tabOptions = [
     { value: "paste", label: "Paste Code", disabled: false, badge: null },
     { value: "upload", label: "Upload", disabled: userPlan === 'free', badge: userPlan === 'free' ? "Pro+" : null },
@@ -174,13 +181,15 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
 
     // Include the selected documentation type in the request body
     // The API endpoint should handle this parameter and generate documentation accordingly
+    const mappedDocType = docTypeMapping[selectedDocType] || "detailed";
+
     if (typeof body === "string") {
       const requestBody = JSON.parse(body);
-      requestBody.docType = selectedDocType;
+      requestBody.docType = mappedDocType;
       requestBody.prompt = prompt; // Add the prompt to the request body
       body = JSON.stringify(requestBody);
     } else if (body instanceof FormData) {
-      body.append("docType", selectedDocType);
+      body.append("docType", mappedDocType);
       body.append("prompt", prompt);
     }
 
