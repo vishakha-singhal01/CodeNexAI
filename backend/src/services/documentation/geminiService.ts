@@ -95,8 +95,7 @@ Analyze the following code snippet${filename ? ` from the file "${filename}"` : 
     const result = await model.generateContent({
       contents: [{ role: "user", parts: [{ text: prompt }] }],
       safetySettings,
-      // Consider adding generationConfig if needed (e.g., temperature)
-      // generationConfig: { temperature: 0.7 }
+     
     });
     const response = result.response;
     const text = response.text();
