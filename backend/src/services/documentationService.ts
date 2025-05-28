@@ -11,6 +11,16 @@ import { generateAIDocumentation } from "./documentation/geminiService";
  */
 export async function generateDocumentation(code: string, filename?: string, docType?: string): Promise<string> {
   try {
+    // If docType is not provided, try to extract it from the code
+    if (!docType) {
+      if (code.includes("API")) {
+        docType = "API Documentation";
+      } else if (code.includes("class") || code.includes("function")) {
+        docType = "Codebase Documentation";
+      } else {
+        docType = "detailed"; // Default docType
+      }
+    }
     // Directly pass the raw code and optional filename to the AI service
     // The AI service will be responsible for the detailed analysis.
     const documentation = await generateAIDocumentation(code, filename, docType);
