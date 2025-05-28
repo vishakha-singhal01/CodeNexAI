@@ -78,7 +78,7 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
   const [isLoadingDocsInternal, setIsLoadingDocsInternal] = useState(false);
   const [githubToken, setGithubToken] = useState("");
   const [selectedDocType, setSelectedDocType] = useState("API Documentation");
-  const [selectedDiagramType, setSelectedDiagramType] = useState("Sequence Diagram");
+  const [selectedDiagramType, setSelectedDiagramType] = useState<string[]>([]);
 
   const docTypeOptions = [
     "API Documentation",
@@ -250,14 +250,13 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
     setGeneratedDocs('');
     generateDocsApiCall(
       "/api/generate-docs",
-      JSON.stringify({ code: inputCode, docType: selectedDocType, diagramType: selectedDiagramType }),
+      JSON.stringify({ code: inputCode, docType: selectedDocType, diagramTypes: selectedDiagramType }),
       {
         "Content-Type": "application/json",
       }
     );
   };
 
-  // Handler for GitHub Repo URL
   const handleGenerateDocsFromRepo = useCallback(async () => {
     if (!repoUrl.trim() || !isValidGitHubUrl(repoUrl)) {
       setDocsError("Please enter a valid GitHub repository URL (e.g., https://github.com/user/repo).");
@@ -267,7 +266,7 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
     setUploadedFiles(null);
     await generateDocsApiCall(
       "/api/github-repo-docs",
-      JSON.stringify({ repoUrl, githubToken, diagramType: selectedDiagramType }),
+      JSON.stringify({ repoUrl, githubToken, diagramTypes: selectedDiagramType }),
       {
         "Content-Type": "application/json",
       }
@@ -314,18 +313,60 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
               </select>
             </div>
             <div className="mb-6">
-              <Label htmlFor="diagram-type-select" className="text-base font-medium">Diagram Type</Label>
-              <select
-                id="diagram-type-select"
-                className="w-full h-11 rounded-md border border-border bg-muted/30 dark:bg-black dark:text-white text-sm font-mono focus-visible:ring-2 focus-visible:ring-primary"
-                value={selectedDiagramType}
-                onChange={(e) => setSelectedDiagramType(e.target.value)}
-                disabled={isLoadingDocs}
-              >
-                <option value="Sequence Diagram">Sequence Diagram</option>
-                <option value="UML Diagram">UML Diagram</option>
-                <option value="Flowchart">Flowchart</option>
-              </select>
+              <Label className="text-base font-medium">Diagram Types</Label>
+              <div className="flex flex-col gap-2">
+                <label className="inline-flex items-center">
+                  <input
+                    type="checkbox"
+                    className="rounded text-primary focus:ring-primary"
+                    value="Sequence Diagram"
+                    checked={selectedDiagramType.includes("Sequence Diagram")}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedDiagramType([...selectedDiagramType, "Sequence Diagram"]);
+                      } else {
+                        setSelectedDiagramType(selectedDiagramType.filter((type) => type !== "Sequence Diagram"));
+                      }
+                    }}
+                    disabled={isLoadingDocs}
+                  />
+                  <span className="ml-2">Sequence Diagram</span>
+                </label>
+                <label className="inline-flex items-center">
+                  <input
+                    type="checkbox"
+                    className="rounded text-primary focus:ring-primary"
+                    value="UML Diagram"
+                    checked={selectedDiagramType.includes("UML Diagram")}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedDiagramType([...selectedDiagramType, "UML Diagram"]);
+                      } else {
+                        setSelectedDiagramType(selectedDiagramType.filter((type) => type !== "UML Diagram"));
+                      }
+                    }}
+                    disabled={isLoadingDocs}
+                  />
+                  <span className="ml-2">UML Diagram</span>
+                </label>
+                <label className="inline-flex items-center">
+                  <input
+                    type="checkbox"
+                    className="rounded text-primary focus:ring-primary"
+                    value="Flowchart"
+                    checked={selectedDiagramType.includes("Flowchart")}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedDiagramType([...selectedDiagramType, "Flowchart"]);
+                      } else {
+                        setSelectedDiagramType(selectedDiagramType.filter((type) => type !== "Flowchart"));
+                      }
+                    }}
+                    disabled={isLoadingDocs}
+                  />
+                  <span className="ml-2">Flowchart</span>
+                </label>
+              </div>
             </div>
             <Tabs value={selectedTab} onValueChange={handleTabChangeInternal} className="w-full">
              
@@ -448,7 +489,9 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
                         }
                       }
                       formData.append("docType", selectedDocType);
-                      formData.append("diagramType", selectedDiagramType);
+                      selectedDiagramType.forEach((type) => {
+                        formData.append("diagramTypes", type);
+                      });
                       generateDocsApiCall(
                         "/api/generate-docs-upload",
                         formData,
