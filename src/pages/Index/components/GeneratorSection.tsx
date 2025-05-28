@@ -92,6 +92,9 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
     "Codebase Documentation": "detailed",
     "Tutorials/Guides": "detailed",
     "Conceptual Overviews": "detailed",
+    "Sequence Diagram": "diagrammatical",
+    "UML Diagram": "diagrammatical",
+    "Flowchart": "diagrammatical",
   };
 
   const tabOptions = [
@@ -180,13 +183,18 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
     }
 
     // Include the selected documentation type in the request body
-    // The API endpoint should handle this parameter and generate documentation accordingly
-    const mappedDocType = docTypeMapping[selectedDocType] || "detailed";
+    // Determine docType based on whether a diagram type is selected
+    let mappedDocType = "detailed"; // Default to "detailed"
+    if (selectedDiagramType.length > 0) {
+      mappedDocType = "diagrammatical";
+    } else {
+      mappedDocType = docTypeMapping[selectedDocType] || "detailed";
+    }
 
     if (typeof body === "string") {
       const requestBody = JSON.parse(body);
       requestBody.docType = mappedDocType;
-      requestBody.prompt = prompt; // Add the prompt to the request body
+      requestBody.prompt = prompt;
       body = JSON.stringify(requestBody);
     } else if (body instanceof FormData) {
       body.append("docType", mappedDocType);
