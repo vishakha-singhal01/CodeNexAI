@@ -6,13 +6,14 @@ import { generateAIDocumentation } from "./documentation/geminiService";
  * directly to the AI service for detailed, line-by-line analysis.
  * @param code The code content as a string.
  * @param filename Optional filename for context (can be passed to AI).
+ * @param docType The type of documentation to generate.
  * @returns A promise that resolves to the generated documentation string (Markdown).
  */
-export async function generateDocumentation(code: string, filename?: string): Promise<string> {
+export async function generateDocumentation(code: string, filename?: string, docType?: string): Promise<string> {
   try {
     // Directly pass the raw code and optional filename to the AI service
     // The AI service will be responsible for the detailed analysis.
-    const documentation = await generateAIDocumentation(code, filename);
+    const documentation = await generateAIDocumentation(code, filename, docType);
 
     return documentation;
 
