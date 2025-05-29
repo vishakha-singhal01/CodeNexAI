@@ -14,11 +14,10 @@ import { IntegrationsSection } from "./Index/components/IntegrationsSection";
 import { PricingSection } from "./Index/components/PricingSection";
 import { CtaSection } from "./Index/components/CtaSection";
 import { Footer } from "./Index/components/Footer";
-import { useAuth } from "@/context/AuthContext"; // Import useAuth
-import DocumentTypesSection from "./Index/components/DocumentTypeSection";
+import { useAuth } from "@/context/AuthContext"; 
 
 const Index = () => {
-  const { token } = useAuth(); // Get token from AuthContext
+  const { token } = useAuth(); 
   const [backendStatus, setBackendStatus] = useState<{ message: string; error?: boolean } | null>(null);
   const [inputCode, setInputCode] = useState<string>('');
   const [uploadedFiles, setUploadedFiles] = useState<FileList | null>(null);
@@ -219,7 +218,6 @@ const Index = () => {
 
         <ProblemSection />
         <FeaturesSection />
-        <DocumentTypesSection/>
         {/* <IntegrationsSection /> */}
         <PricingSection />
         <CtaSection />
