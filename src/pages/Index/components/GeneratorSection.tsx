@@ -169,21 +169,53 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
 
     let prompt = "";
     switch (selectedDocType) {
-      case "API Documentation":
-        prompt = `Generate comprehensive API documentation for the following code. Include details about each endpoint, its parameters, request and response formats, authentication methods, and example usage. Focus on providing clear and concise information for developers who want to integrate with this API.`;
-        break;
-      case "Codebase Documentation":
-        prompt = `Generate detailed codebase documentation for the following code. Explain the purpose of each class, function, and module, as well as the relationships between them. Include information about data structures, algorithms, and design patterns used in the code. Focus on providing a clear understanding of the codebase for developers who want to maintain or extend it.`;
-        break;
-      case "Tutorials/Guides":
-        prompt = `Generate step-by-step tutorials and guides for using the following code. Provide clear and concise instructions, code examples, and screenshots where appropriate. Focus on helping users learn how to use the code to accomplish specific tasks.`;
-        break;
-      case "Conceptual Overviews":
-        prompt = `Generate high-level conceptual overviews of the following code. Explain the system's architecture, design principles, and key concepts. Focus on providing a clear understanding of the code for stakeholders who want to understand the big picture.`;
-        break;
-      default:
-        prompt = `Generate documentation for the following code.`;
-    }
+  case "API Documentation":
+    prompt = `Generate comprehensive API documentation for the following code. Include details about each endpoint, its parameters, request and response formats, authentication methods, and example usage. Focus on providing clear and concise information for developers who want to integrate with this API.`;
+    break;
+
+  case "Codebase Documentation":
+    prompt = `Generate detailed codebase documentation for the following code. Explain the purpose of each class, function, and module, as well as the relationships between them. Include information about data structures, algorithms, and design patterns used in the code. Focus on providing a clear understanding of the codebase for developers who want to maintain or extend it.`;
+    break;
+
+  case "Tutorials/Guides":
+    prompt = `Generate step-by-step tutorials and guides for using the following code. Provide clear and concise instructions, code examples, and screenshots where appropriate. Focus on helping users learn how to use the code to accomplish specific tasks.`;
+    break;
+
+  case "Conceptual Overviews":
+    prompt = `Generate high-level conceptual overviews of the following code. Explain the system's architecture, design principles, and key concepts. Focus on providing a clear understanding of the code for stakeholders who want to understand the big picture.`;
+    break;
+
+  case "Sequence Diagram":
+    prompt = `Analyze the following code and generate a detailed Sequence Diagram using Mermaid syntax.
+
+- Show the chronological interaction between objects/components.
+- Represent messages, method calls, and responses.
+- Annotate lifelines and activation bars meaningfully.
+- Include asynchronous and synchronous interactions.
+- Provide brief notes on optimization and potential security risks.`;
+    break;
+
+  case "UML Diagram":
+    prompt = `Analyze the following code and generate a UML Class Diagram using Mermaid syntax.
+
+- Include classes/interfaces with attributes and methods.
+- Show relationships like inheritance, composition, and dependencies.
+- Annotate visibility modifiers if applicable.
+- Provide notes on design improvements and security considerations.`;
+    break;
+
+  case "Flowchart":
+    prompt = `Analyze the following code and create a Flowchart using Mermaid syntax.
+
+- Represent the logic flow including decisions, loops, and processes.
+- Clearly label nodes and transitions.
+- Highlight critical paths and error handling branches.
+- Provide suggestions for flow optimization and identify security risks.`;
+    break;
+
+  default:
+    prompt = `Generate documentation for the following code.`;
+}
 
     // Include the selected documentation type in the request body
     // Determine docType based on whether a diagram type is selected
