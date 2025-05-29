@@ -80,6 +80,68 @@ Generate optimized, secure documentation below:
 `;
       break;
 
+    case "Sequence Diagram":
+      prompt = `
+Analyze the following code snippet${filename ? ` from the file "${filename}"` : ''} and generate a detailed **Sequence Diagram** using Mermaid syntax.
+
+### Requirements:
+- Show the chronological interaction between objects/components.
+- Clearly represent messages, method calls, and responses.
+- Annotate lifelines and activation bars meaningfully.
+- Include asynchronous and synchronous interactions where relevant.
+- **Optimization Notes**: Briefly suggest improvements in interaction flow or message efficiency.
+- **Security Risks**: Highlight any risky interaction patterns, such as insecure data passing or unvalidated calls.
+
+### Code:
+\`\`\`
+${code}
+\`\`\`
+
+Return the Mermaid sequence diagram code with optimization and security notes.
+`;
+      break;
+
+    case "UML Diagram":
+      prompt = `
+Analyze the following code snippet${filename ? ` from the file "${filename}"` : ''} and generate a **UML Class Diagram** using Mermaid syntax.
+
+### Requirements:
+- Include classes/interfaces with attributes and methods.
+- Show relationships: inheritance, composition, aggregation, and dependencies.
+- Annotate visibility (public, private, protected) if applicable.
+- Capture key design patterns or architectural principles.
+- **Optimization Notes**: Suggest improvements in class design, coupling, or cohesion.
+- **Security Risks**: Point out any unsafe class dependencies or access concerns.
+
+### Code:
+\`\`\`
+${code}
+\`\`\`
+
+Return the Mermaid UML class diagram code along with optimization and security notes.
+`;
+      break;
+
+    case "Flowchart":
+      prompt = `
+Analyze the following code snippet${filename ? ` from the file "${filename}"` : ''} and create a **Flowchart** using Mermaid syntax.
+
+### Requirements:
+- Represent the logic flow including decisions, loops, and processes.
+- Clearly label nodes and transitions.
+- Highlight critical paths and error handling branches.
+- **Optimization Notes**: Suggest improvements in the flow or simplify complex branches.
+- **Security Risks**: Identify insecure or risky decision points or data flows.
+
+### Code:
+\`\`\`
+${code}
+\`\`\`
+
+Return the Mermaid flowchart code along with optimization and security notes.
+`;
+      break;
+
     case "diagrammatical":
       prompt = `
 Analyze the following code snippet${filename ? ` from the file "${filename}"` : ''} and generate a ${diagramType || 'sequence diagram'} using Mermaid syntax.

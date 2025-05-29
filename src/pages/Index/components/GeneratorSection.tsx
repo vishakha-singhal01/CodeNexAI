@@ -85,6 +85,9 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
     "Codebase Documentation",
     "Tutorials/Guides",
     "Conceptual Overviews",
+    "Sequence Diagram",
+    "UML Diagram",
+    "Flowchart"
   ];
 
   const docTypeMapping: { [key: string]: string } = {
@@ -324,7 +327,7 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
                 ))}
               </select>
             </div>
-            <div className="mb-6">
+            {/* <div className="mb-6">
               <Label className="text-base font-medium">Diagram Types</Label>
               <div className="flex flex-col gap-2">
                 <label className="inline-flex items-center">
@@ -379,7 +382,7 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
                   <span className="ml-2">Flowchart</span>
                 </label>
               </div>
-            </div>
+            </div> */}
             <Tabs value={selectedTab} onValueChange={handleTabChangeInternal} className="w-full">
              
               <TabsList className="hidden w-full md:grid md:grid-cols-3 gap-2 bg-muted/40 p-1 rounded-lg mb-6">
