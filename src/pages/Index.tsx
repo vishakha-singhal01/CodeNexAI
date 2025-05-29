@@ -15,6 +15,7 @@ import { PricingSection } from "./Index/components/PricingSection";
 import { CtaSection } from "./Index/components/CtaSection";
 import { Footer } from "./Index/components/Footer";
 import { useAuth } from "@/context/AuthContext"; // Import useAuth
+import DocumentTypesSection from "./Index/components/DocumentTypeSection";
 
 const Index = () => {
   const { token } = useAuth(); // Get token from AuthContext
@@ -218,6 +219,7 @@ const Index = () => {
 
         <ProblemSection />
         <FeaturesSection />
+        <DocumentTypesSection/>
         {/* <IntegrationsSection /> */}
         <PricingSection />
         <CtaSection />

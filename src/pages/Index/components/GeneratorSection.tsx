@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { AlertCircle, Upload, Download, Github } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -9,7 +8,6 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ChevronDown } from "lucide-react"; // Added for dropdown indicator
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import {
@@ -18,7 +16,10 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import { useAuth } from '@/context/AuthContext'; // Import useAuth
+import { useAuth } from '@/context/AuthContext';
+import {
+  Upload, Github, Download, AlertCircle, ChevronDown, FileText, BookOpen, Layers, ListTree, Activity, GitBranch, Code
+} from 'lucide-react';
 
 interface ExtendedUser {
   id: string;
@@ -77,7 +78,7 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
   const [loadingQuote, setLoadingQuote] = useState("");
   const [isLoadingDocsInternal, setIsLoadingDocsInternal] = useState(false);
   const [githubToken, setGithubToken] = useState("");
-  const [selectedDocType, setSelectedDocType] = useState("API Documentation");
+  const [selectedDocType, setSelectedDocType] = useState("");
   const [selectedDiagramType, setSelectedDiagramType] = useState<string[]>([]);
 
   const docTypeOptions = [
@@ -90,14 +91,24 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
     "Flowchart"
   ];
 
-  const docTypeMapping: { [key: string]: string } = {
-    "API Documentation": "detailed",
-    "Codebase Documentation": "detailed",
-    "Tutorials/Guides": "detailed",
-    "Conceptual Overviews": "detailed",
-    "Sequence Diagram": "diagrammatical",
-    "UML Diagram": "diagrammatical",
-    "Flowchart": "diagrammatical",
+  const docTypeIconMap: Record<string, JSX.Element> = {
+    'API Documentation': <FileText className="h-6 w-6 text-blue-600" />,
+    'Codebase Documentation': <BookOpen className="h-6 w-6 text-indigo-600" />,
+    'Tutorials/Guides': <Layers className="h-6 w-6 text-purple-600" />,
+    'Conceptual Overviews': <ListTree className="h-6 w-6 text-pink-600" />,
+    'Sequence Diagram': <Activity className="h-6 w-6 text-orange-600" />,
+    'UML Diagram': <GitBranch className="h-6 w-6 text-green-600" />,
+    'Flowchart': <Code className="h-6 w-6 text-yellow-600" />,
+  };
+
+  const docTypeDescriptionMap: Record<string, string> = {
+    'API Documentation': 'Structured documentation for APIs, including endpoints, methods, and parameters.',
+    'Codebase Documentation': 'Internal explanation of code structure, files, and logic for developers.',
+    'Tutorials/Guides': 'Step-by-step instructions or how-to content for specific tasks or features.',
+    'Conceptual Overviews': 'High-level explanation of system architecture, ideas, and key concepts.',
+    'Sequence Diagram': 'Visual representation of the order of operations or messages over time.',
+    'UML Diagram': 'Unified Modeling Language diagrams for designing and analyzing software systems.',
+    'Flowchart': 'Graphical representation of a process or workflow using symbols and arrows.',
   };
 
   const tabOptions = [
@@ -217,12 +228,12 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
         prompt = `Generate documentation for the following code.`;
     }
 
-    let mappedDocType = "detailed"; 
+    let mappedDocType = "detailed";
 
     if (selectedDiagramType.length > 0) {
       mappedDocType = "diagrammatical";
     } else if (docTypeOptions.includes(selectedDocType)) {
-      mappedDocType = selectedDocType; 
+      mappedDocType = selectedDocType;
     } else {
       mappedDocType = "detailed";
     }
@@ -323,364 +334,315 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
   }, [generateDocsApiCall, isValidGitHubUrl, repoUrl, setDocsError, setInputCode, setUploadedFiles, githubToken, inputCode, selectedDocType, selectedDiagramType]);
 
   return (
-    // Added id="generator-section" here
-    <section id="generator-section" className="w-full py-20 md:py-28 lg:py-32 bg-background border-t">
-      <div className="container px-4 md:px-6 max-w-5xl mx-auto">
-        <div className="flex flex-col gap-4 text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Try the AI Generator</h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Paste code, upload files, or link a public GitHub repo. (Feature access depends on your plan)
-          </p>
 
-          <div className="flex flex-wrap justify-center gap-2 mt-4">
-            {[
-              'JavaScript', 'TypeScript', 'JSX', 'TSX', 'Python', 'Java', 'C', 'C++', 'C#',
-              'HTML', 'CSS', 'SCSS', 'LESS', 'JSON', 'Markdown', 'Text',
-              'Shell', 'Ruby', 'Go', 'PHP'
-            ].map(lang => (
-              <span key={lang} className="px-3 py-1 text-sm rounded-full bg-gray-100 text-gray-800 border border-gray-300">
-                {lang}
-              </span>
-            ))}
-          </div>
+    // Added id="generator-section" here
+    <section
+      id="generator-section"
+      className="w-full py-20 md:py-28 lg:py-32 bg-background border-t"
+    >
+      <div className="container px-4 md:px-6 max-w-6xl mx-auto">
+        <div className="flex flex-col items-center gap-4 text-center mb-12">
+          <h2 className="text-4xl font-bold tracking-tight">✨ Try the AI Generator</h2>
+          <p className="text-lg text-muted-foreground max-w-2xl">
+            Paste code, upload files, or link a public GitHub repo. <br className="hidden md:block" />
+            <span className="text-sm text-primary/70">(Feature access depends on your plan)</span>
+          </p>
         </div>
 
-        <Card className="max-w-4xl mx-auto shadow-md border rounded-2xl bg-card">
-          <CardContent className="p-8 space-y-6">
-            <div className="mb-6">
-              <Label htmlFor="doc-type-select" className="text-base font-medium">Documentation Type</Label>
-              <select
-                id="doc-type-select"
-                className="w-full h-11 rounded-md border border-border bg-muted/30 dark:bg-black dark:text-white text-sm font-mono focus-visible:ring-2 focus-visible:ring-primary"
-                value={selectedDocType}
-                onChange={(e) => setSelectedDocType(e.target.value)}
-                disabled={isLoadingDocs}
+        {/* Supported Languages */}
+        <div className="flex flex-wrap justify-center gap-2 mb-12">
+          {[
+            "JavaScript",
+            "TypeScript",
+            "JSX",
+            "TSX",
+            "Python",
+            "Java",
+            "C",
+            "C++",
+            "C#",
+            "HTML",
+            "CSS",
+            "SCSS",
+            "LESS",
+            "JSON",
+            "Markdown",
+            "Text",
+            "Shell",
+            "Ruby",
+            "Go",
+            "PHP",
+          ].map((lang) => (
+            <span
+              key={lang}
+              className="px-3 py-1 text-sm rounded-full bg-muted text-foreground border border-border shadow-sm"
+            >
+              {lang}
+            </span>
+          ))}
+        </div>
+
+        {!selectedDocType ? (
+          // Doc Type Cards
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {docTypeOptions.map((type) => (
+              <Card
+                key={type}
+                onClick={() => setSelectedDocType(type)}
+                className="cursor-pointer hover:shadow-xl transition-shadow duration-300 p-4 flex flex-col items-center justify-center text-center border border-gray-300 dark:border-gray-700"
               >
-                {docTypeOptions.map((option) => (
-                  <option key={option} value={option}>{option}</option>
-                ))}
-              </select>
+                <div className="mb-2">{docTypeIconMap[type]}</div>
+                <div className="font-semibold text-lg">{type}</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  {docTypeDescriptionMap[type]}
+                </div>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          // Generator Section (replaces doc type cards)
+          <div className="mb-16 p-6 border rounded-2xl bg-card shadow-lg">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-semibold">
+                Selected Doc Type:{" "}
+                <Badge className="px-2 py-1 text-sm">{selectedDocType}</Badge>
+              </h3>
+              <Button variant="ghost" onClick={() => setSelectedDocType(null)}>
+                🔄 Change Type
+              </Button>
             </div>
-            {/* <div className="mb-6">
-              <Label className="text-base font-medium">Diagram Types</Label>
-              <div className="flex flex-col gap-2">
-                <label className="inline-flex items-center">
-                  <input
-                    type="checkbox"
-                    className="rounded text-primary focus:ring-primary"
-                    value="Sequence Diagram"
-                    checked={selectedDiagramType.includes("Sequence Diagram")}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedDiagramType([...selectedDiagramType, "Sequence Diagram"]);
-                      } else {
-                        setSelectedDiagramType(selectedDiagramType.filter((type) => type !== "Sequence Diagram"));
-                      }
-                    }}
-                    disabled={isLoadingDocs}
-                  />
-                  <span className="ml-2">Sequence Diagram</span>
-                </label>
-                <label className="inline-flex items-center">
-                  <input
-                    type="checkbox"
-                    className="rounded text-primary focus:ring-primary"
-                    value="UML Diagram"
-                    checked={selectedDiagramType.includes("UML Diagram")}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedDiagramType([...selectedDiagramType, "UML Diagram"]);
-                      } else {
-                        setSelectedDiagramType(selectedDiagramType.filter((type) => type !== "UML Diagram"));
-                      }
-                    }}
-                    disabled={isLoadingDocs}
-                  />
-                  <span className="ml-2">UML Diagram</span>
-                </label>
-                <label className="inline-flex items-center">
-                  <input
-                    type="checkbox"
-                    className="rounded text-primary focus:ring-primary"
-                    value="Flowchart"
-                    checked={selectedDiagramType.includes("Flowchart")}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedDiagramType([...selectedDiagramType, "Flowchart"]);
-                      } else {
-                        setSelectedDiagramType(selectedDiagramType.filter((type) => type !== "Flowchart"));
-                      }
-                    }}
-                    disabled={isLoadingDocs}
-                  />
-                  <span className="ml-2">Flowchart</span>
-                </label>
-              </div>
-            </div> */}
-            <Tabs value={selectedTab} onValueChange={handleTabChangeInternal} className="w-full">
 
-              <TabsList className="hidden w-full md:grid md:grid-cols-3 gap-2 bg-muted/40 p-1 rounded-lg mb-6">
-                {tabOptions.map(tab => (
-                  <TabsTrigger
-                    key={tab.value}
-                    value={tab.value}
-                    className="rounded-md data-[state=active]:bg-card data-[state=active]:text-card-foreground data-[state=active]:shadow-sm"
-                    disabled={tab.disabled}
-                  >
-                    {tab.label} {tab.badge && <Badge variant="secondary" className="ml-2">{tab.badge}</Badge>}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
+            {/* <Card className="shadow-lg border rounded-2xl bg-card"> */}
+            <CardContent className="p-8 space-y-6">
+              <Tabs
+                value={selectedTab}
+                onValueChange={handleTabChangeInternal}
+                className="w-full"
+              >
+                <TabsList className="hidden w-full md:grid md:grid-cols-3 gap-2 bg-muted/30 p-1 rounded-lg mb-6">
+                  {tabOptions.map((tab) => (
+                    <TabsTrigger
+                      key={tab.value}
+                      value={tab.value}
+                      className="rounded-lg text-sm py-2 px-3 transition-all data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                      disabled={tab.disabled}
+                    >
+                      {tab.label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
 
-              <div className="md:hidden mb-6">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="w-full justify-between">
-                      {currentTabLabel}
-                      <ChevronDown className="ml-2 h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-[--radix-dropdown-menu-trigger-width)]">
-                    {tabOptions.map(tab => (
-                      <DropdownMenuItem
-                        key={tab.value}
-                        disabled={tab.disabled}
-                        onSelect={() => handleTabChangeInternal(tab.value)}
-                        className={selectedTab === tab.value ? "bg-muted" : ""}
-                      >
-                        {tab.label} {tab.badge && <Badge variant="secondary" className="ml-2">{tab.badge}</Badge>}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+                {/* Mobile Dropdown Tabs */}
+                <div className="md:hidden mb-6">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" className="w-full justify-between">
+                        {tabOptions.find((t) => t.value === selectedTab)?.label}
+                        <ChevronDown className="ml-2 h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-full">
+                      {tabOptions.map((tab) => (
+                        <DropdownMenuItem
+                          key={tab.value}
+                          disabled={tab.disabled}
+                          onSelect={() => handleTabChangeInternal(tab.value)}
+                        >
+                          {tab.label}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
 
-              <TabsContent value="paste">
-                <div className="grid gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="code-input" className="text-base font-medium">Paste Code</Label>
+                {/* Paste Tab Content */}
+                <TabsContent value="paste">
+                  <div className="grid gap-4">
+                    <Label htmlFor="code-input" className="text-base font-medium">
+                      Paste your Code
+                    </Label>
                     <Textarea
                       id="code-input"
-                      placeholder="Paste your function, class, or code snippet here..."
+                      placeholder="function helloWorld() { console.log('Hello!'); }"
                       value={inputCode}
                       onChange={(e) => {
                         setInputCode(e.target.value);
-                        // Keep clearing other inputs on change within a tab
-                        setUploadedFiles(null); setRepoUrl(''); setGeneratedDocs(''); setDocsError(null);
+                        setUploadedFiles(null);
+                        setRepoUrl("");
+                        setGeneratedDocs("");
+                        setDocsError(null);
                       }}
-                      className="min-h-[250px] font-mono text-sm bg-muted/30 border border-border rounded-lg focus-visible:ring-2 focus-visible:ring-primary"
-                      disabled={isLoadingDocs}
+                      className="min-h-[200px] font-mono text-sm bg-muted/20 border border-border rounded-lg"
                     />
+                    <Button
+                      size="lg"
+                      className="w-full"
+                      onClick={() => {
+                        setDocsError(null);
+                        setGeneratedDocs("");
+                        generateDocsApiCall(
+                          "/api/generate-docs",
+                          JSON.stringify({ code: inputCode }),
+                          {
+                            "Content-Type": "application/json",
+                          }
+                        );
+                      }}
+                      disabled={isLoadingDocs}
+                    >
+                      {isLoadingDocs ? "Generating..." : "⚡ Generate from Text"}
+                    </Button>
                   </div>
-                  <Button
-                    size="lg"
-                    className="w-full"
-                    onClick={() => {
-                      setDocsError(null);
-                      setGeneratedDocs('');
-                      generateDocsApiCall(
-                        "/api/generate-docs",
-                        JSON.stringify({ code: inputCode }),
-                        {
-                          "Content-Type": "application/json",
-                        }
-                      );
-                    }}
-                    disabled={isLoadingDocs}
-                  >
-                    {isLoadingDocs ? "Generating..." : "Generate from Text"}
-                  </Button>
-                </div>
-              </TabsContent>
+                </TabsContent>
 
-              <TabsContent value="upload">
-                <div className="grid gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="file-input" className="text-base font-medium">Upload Folder</Label>
+                {/* Upload Tab Content */}
+                <TabsContent value="upload">
+                  <div className="grid gap-4">
+                    <Label htmlFor="file-input" className="text-base font-medium">
+                      Upload Folder
+                    </Label>
                     <Input
                       id="file-input"
                       type="file"
                       ref={fileInputRef}
-                      onChange={handleFileChange} // handleFileChange already clears other inputs
+                      onChange={handleFileChange}
                       multiple
-                      // @ts-expect-error // Use ts-expect-error instead of ts-ignore
                       webkitdirectory="true"
                       directory="true"
-                      className="cursor-pointer h-11 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border file:bg-background file:text-sm file:font-medium hover:file:bg-accent hover:file:text-accent-foreground focus-visible:ring-2"
-                      disabled={isLoadingDocs || userPlan === 'free'} // Also disable input if free
+                      className="cursor-pointer h-11 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border file:bg-background file:text-sm"
                     />
-                    <p className="text-sm text-muted-foreground pt-1">
-                      Select folder containing code. (Available for Pro and Enterprise plans)
+                    <p className="text-sm text-muted-foreground">
+                      Only available on Pro & Enterprise plans
                     </p>
 
-                    {uploadedFiles && uploadedFiles.length > 0 && (
-                      <div className="mt-2 space-y-1 max-h-32 overflow-y-auto rounded-md p-3 border bg-muted/20">
-                        <p className="text-sm font-medium mb-2">Selected {uploadedFiles.length} item(s):</p>
+                    {uploadedFiles?.length > 0 && (
+                      <div className="bg-muted/20 p-3 rounded-md border max-h-32 overflow-y-auto">
+                        <p className="text-sm font-medium mb-2">Selected files:</p>
                         <div className="flex flex-wrap gap-2">
-                          {Array.from(uploadedFiles).map((file, index) => (
-                            <Badge key={index} variant="secondary" className="text-xs">
+                          {Array.from(uploadedFiles).map((file, idx) => (
+                            <Badge key={idx} variant="secondary" className="text-xs">
                               {file.name}
                             </Badge>
                           ))}
                         </div>
                       </div>
                     )}
-                  </div>
 
-                  <Button
-                    size="lg"
-                    className="w-full"
-                    onClick={() => {
-                      const formData = new FormData();
-                      if (uploadedFiles) {
-                        for (let i = 0; i < uploadedFiles.length; i++) {
-                          formData.append("files", uploadedFiles[i]);
-                        }
-                      }
-                      formData.append("docType", selectedDocType);
-                      selectedDiagramType.forEach((type) => {
-                        formData.append("diagramTypes", type);
-                      });
-                      generateDocsApiCall(
-                        "/api/generate-docs-upload",
-                        formData,
-                        {}
-                      );
-                    }}
-                    disabled={isLoadingDocs}
-                  >
-                    {isLoadingDocs ? "Generating..." : <> <Upload className="mr-2 h-4 w-4" /> Generate from Upload </>}
-                  </Button>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="github">
-                <div className="grid gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="repo-url-input" className="text-base font-medium">GitHub Repository URL</Label>
-                    <Input
-                      id="repo-url-input"
-                      placeholder="https://github.com/username/repository-name"
-                      value={repoUrl}
-                      onChange={(e) => {
-                        setRepoUrl(e.target.value);
-                        setInputCode(''); setUploadedFiles(null); setGeneratedDocs(''); setDocsError(null);
-                      }}
-                      className="font-mono text-sm h-11 rounded-md"
-                      disabled={isLoadingDocs || userPlan === 'free' || userPlan === 'pro'} // Also disable input if free/pro
-                    />
-                    <p className="text-sm text-muted-foreground pt-1">
-                      Enter the full URL of a GitHub repository. (Available for Enterprise plan)
-                    </p>
+                    <Button
+                      size="lg"
+                      className="w-full"
+                      onClick={handleGenerateDocsFromUpload}
+                      disabled={!uploadedFiles || isLoadingDocs}
+                    >
+                      {isLoadingDocs ? "Generating..." : "⚡ Generate from Files"}
+                    </Button>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="github-token-input" className="text-base font-medium">
-                      GitHub Token<span className="text-muted-foreground">(Optional for public repos, required for private)</span>
-                    </Label>
-                    <Input
-                      id="github-token-input"
-                      type="password"
-                      placeholder="Enter your GitHub token"
-                      value={githubToken}
-                      onChange={(e) => setGithubToken(e.target.value)}
-                      className="font-mono text-sm h-11 rounded-md"
-                      disabled={isLoadingDocs}
-                    />
-                    <p className="text-sm text-muted-foreground pt-1">
-                      Enter your GitHub token to access private repositories.
-                    </p>
-                    <div className="text-sm text-muted-foreground space-y-1 pt-2">
-                      <p className="font-medium">Steps to get a GitHub Token:</p>
-                      <ol className="list-decimal list-inside space-y-1">
-                        <li>Go to <a href="https://github.com/settings/tokens" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">GitHub Developer Settings</a>.</li>
-                        <li>Click on <strong>"Generate new token"</strong> (or <strong>"Fine-grained token"</strong> for more control).</li>
-                        <li>Set a name and expiration date for your token.</li>
-                        <li>Select the scopes/permissions you need (e.g., <code>repo</code> to access private repositories).</li>
-                        <li>Click <strong>"Generate token"</strong> at the bottom.</li>
-                        <li>Copy and paste the token here. You won’t be able to view it again later.</li>
-                      </ol>
+                </TabsContent>
+
+                {/* GitHub Tab Content */}
+                <TabsContent value="github">
+                  <div className="grid gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="repo-url-input" className="text-base font-medium">GitHub Repository URL</Label>
+                      <Input
+                        id="repo-url-input"
+                        placeholder="https://github.com/username/repository-name"
+                        value={repoUrl}
+                        onChange={(e) => {
+                          setRepoUrl(e.target.value);
+                          setInputCode(''); setUploadedFiles(null); setGeneratedDocs(''); setDocsError(null);
+                        }}
+                        className="font-mono text-sm h-11 rounded-md"
+                        disabled={isLoadingDocs || userPlan === 'free' || userPlan === 'pro'} // Also disable input if free/pro
+                      />
+                      <p className="text-sm text-muted-foreground pt-1">
+                        Enter the full URL of a GitHub repository. (Available for Enterprise plan)
+                      </p>
                     </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="github-token-input" className="text-base font-medium">
+                        GitHub Token<span className="text-muted-foreground">(Optional for public repos, required for private)</span>
+                      </Label>
+                      <Input
+                        id="github-token-input"
+                        type="password"
+                        placeholder="Enter your GitHub token"
+                        value={githubToken}
+                        onChange={(e) => setGithubToken(e.target.value)}
+                        className="font-mono text-sm h-11 rounded-md"
+                        disabled={isLoadingDocs}
+                      />
+                      <p className="text-sm text-muted-foreground pt-1">
+                        Enter your GitHub token to access private repositories.
+                      </p>
+                      <div className="text-sm text-muted-foreground space-y-1 pt-2">
+                        <p className="font-medium">Steps to get a GitHub Token:</p>
+                        <ol className="list-decimal list-inside space-y-1">
+                          <li>Go to <a href="https://github.com/settings/tokens" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">GitHub Developer Settings</a>.</li>
+                          <li>Click on <strong>"Generate new token"</strong> (or <strong>"Fine-grained token"</strong> for more control).</li>
+                          <li>Set a name and expiration date for your token.</li>
+                          <li>Select the scopes/permissions you need (e.g., <code>repo</code> to access private repositories).</li>
+                          <li>Click <strong>"Generate token"</strong> at the bottom.</li>
+                          <li>Copy and paste the token here. You won’t be able to view it again later.</li>
+                        </ol>
+                      </div>
+                    </div>
+                    <Button
+                      size="lg"
+                      className="w-full"
+                      onClick={handleGenerateDocsFromRepo}
+                      disabled={isLoadingDocs || !repoUrl.trim() || !isValidGitHubUrl(repoUrl) || userPlan === 'free' || userPlan === 'pro'}
+                    >
+                      {isLoadingDocs ? "Generating..." : <> <Github className="mr-2 h-4 w-4" /> Generate from Repo </>}
+                    </Button>
                   </div>
-                  <Button
-                    size="lg"
-                    className="w-full"
-                    onClick={handleGenerateDocsFromRepo}
-                    disabled={isLoadingDocs || !repoUrl.trim() || !isValidGitHubUrl(repoUrl) || userPlan === 'free' || userPlan === 'pro'}
-                  >
-                    {isLoadingDocs ? "Generating..." : <> <Github className="mr-2 h-4 w-4" /> Generate from Repo </>}
-                  </Button>
-                </div>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
+                </TabsContent>
+              </Tabs>
 
-        <div className="mt-8 max-w-4xl mx-auto w-full">
-          {isLoadingDocs ? (
-            <div className="flex justify-center items-center mb-8 min-h-[80px]">
-              <div className="relative overflow-hidden">
-                <h3 className="text-2xl md:text-3xl lg:text-4xl font-semibold text-center text-muted-foreground animate-pulse">
-                  {loadingQuote}
-                </h3>
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-foreground/10 to-transparent animate-shimmer" />
-              </div>
-            </div>
-          ) : (
-            <>
-              {docsError && (
-                <Alert variant="destructive" className="mb-6">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertTitle>Generation Error</AlertTitle>
-                  <AlertDescription>{docsError}</AlertDescription>
-                </Alert>
-              )}
-              {generatedDocs && (
-                <Card className="max-w-4xl mx-auto shadow-md border rounded-2xl bg-card">
-                  <CardHeader className="flex flex-row items-center justify-between pb-3 pt-4 px-5">
-                    <CardTitle className="text-xl font-semibold">Generated Documentation</CardTitle>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="sm">
-                          <Download className="h-4 w-4" />
+              {isLoadingDocs ? (
+                <div className="space-y-4">
+                  <Skeleton className="h-6 w-1/2" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-5/6" />
+                  <Skeleton className="h-4 w-2/3" />
+                </div>
+              ) :
+                generatedDocs && (
+                  <>
+                    <div className="mt-6 p-4 bg-muted rounded-lg border border-border font-mono text-sm relative">
+                      <div className="absolute top-4 right-4">
+                        <Button
+                          className="bg-white text-primary border border-primary hover:bg-primary hover:text-white transition-colors shadow-sm"
+                          size="sm"
+                          onClick={handleDownloadDocs}
+                        >
+                          <Download className="mr-1 h-4 w-4" />
+                          Download
                         </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={handleDownloadDocs}>
-                          Download as <span className="ml-1 font-medium">.md</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={handleDownloadPDF}>
-                          Download as <span className="ml-1 font-medium">PDF</span>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </CardHeader>
-
-                  <CardContent className="px-5 pb-5">
-                    <div className="grid grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto">
-                      <div className="bg-muted/20 p-4 rounded-md border overflow-y-auto whitespace-pre-wrap text-sm font-mono max-h-[60vh]">
-                        {generatedDocs}
                       </div>
 
-                      <div id="markdown-preview" className="prose prose-sm max-w-none dark:prose-invert bg-muted/30 p-4 rounded-md border overflow-y-auto max-h-[60vh]
-                      [&_p]:mb-4
-                      [&_h1]:mb-6 [&_h2]:mb-5 [&_h3]:mb-4
-                      [&_ul]:mb-4
-                      [&_ol]:mb-4
-                      [&_li]:mb-2
-                      [&_pre]:my-4
-                      [&_blockquote]:my-4
-                    ">
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{generatedDocs}</ReactMarkdown>
-
+                      <div className="whitespace-pre-wrap pt-12">
+                        <ReactMarkdown
+                          remarkPlugins={[remarkGfm]}
+                        >
+                          {generatedDocs}
+                        </ReactMarkdown>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
+                  </>
+
+
+                )}
+              {docsError && (
+                <div className="mt-6 text-red-600 font-semibold">{docsError}</div>
               )}
-            </>
-          )}
-        </div>
-      </div>
-    </section>
+            </CardContent>
+            {/* </Card> */}
+          </div>
+        )
+        }
+      </div >
+    </section >
+
   );
 };
