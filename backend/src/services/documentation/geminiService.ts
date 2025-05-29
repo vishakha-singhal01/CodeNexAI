@@ -56,34 +56,127 @@ export async function generateAIDocumentation(code: string, filename?: string, d
 Analyze the following code snippet${filename ? ` from the file "${filename}"` : ''} and generate clean, professional Markdown documentation.
 
 ### Documentation Guidelines:
-- **Brevity First:** 
-  - For simple or short snippets (e.g., under ~15 lines): Write a concise summary of what the code does. For functions, include a brief note on parameters and return value.
-  - For longer or more complex code: Explain the purpose, logic flow, key components, and any significant algorithms or decisions.
-- **Focus on Usefulness:**
-  - Prioritize clarity over completeness. Do not describe every line unless needed.
-  - Highlight non-obvious behavior, edge cases, or side effects.
-  - Identify input/output expectations and key roles of functions, variables, or classes.
-- **Code Optimization (if applicable):**
-  - Suggest improvements or more efficient alternatives to any part of the code if they are clearly better.
-  - Keep suggestions brief, targeted, and valuable.
+- **Purpose & Summary:** What the code does and its use case.
+- **Parameters & Return Values:** If applicable.
+- **Logic & Flow:** Clear, concise explanation of core logic.
+- **Edge Cases & Behavior:** Mention assumptions and non-obvious behavior.
+- **Optimization Suggestions:** 
+  - Suggest better performance or readability improvements.
+  - Eliminate unnecessary operations or inefficiencies.
+- **Security Considerations:**
+  - Identify any vulnerabilities or bad practices.
+  - Recommend secure coding practices.
 
-### Formatting:
-- Identify the programming language if possible.
-- Use proper Markdown: headings, subheadings, bullet points, and fenced code blocks (\`\`\`) for readability.
+### Format:
+- Use Markdown: headings, bullet points, and \`\`\`code blocks\`\`\`.
+- Identify the language used.
 
 ### Input Code:
 \`\`\`
 ${code}
 \`\`\`
 
-Generate the optimized and clean documentation below:
-`;
-       break;
-    case "diagrammatical":
-      prompt = `
-Analyze the following code snippet${filename ? ` from the file "${filename}"` : ''} and generate a ${diagramType || 'sequence diagram'} illustrating the code's structure and functionality. Use Mermaid syntax.
+Generate optimized, secure documentation below:
 `;
       break;
+
+    case "diagrammatical":
+      prompt = `
+Analyze the following code snippet${filename ? ` from the file "${filename}"` : ''} and generate a ${diagramType || 'sequence diagram'} using Mermaid syntax.
+
+### Include:
+- A high-level structural diagram of how components/functions/classes interact.
+- Annotate steps or interactions meaningfully.
+- **Optimization Notes**: Briefly mention areas where logic or performance can be improved.
+- **Security Risks**: Highlight anything risky in the flow, like unvalidated inputs, exposed tokens, or insecure data paths.
+
+### Code:
+\`\`\`
+${code}
+\`\`\`
+
+Return the Mermaid diagram and optimization/security notes.
+`;
+      break;
+
+    case "API Documentation":
+      prompt = `
+Document the following code as if it were part of a public API.
+
+### Instructions:
+- Include **function/class name**, **parameters**, **return type**, and **usage example**.
+- Document optional/default parameters clearly.
+- Add **optimization** tips if there are better patterns or simplifications.
+- Mention **security** precautions (e.g., input validation, XSS, access control) where relevant.
+
+### Code:
+\`\`\`
+${code}
+\`\`\`
+
+Output API-style documentation with optimization and security guidance.
+`;
+      break;
+
+    case "Codebase Documentation":
+      prompt = `
+Create internal developer documentation for the code below.
+
+### Include:
+- Purpose of the code in the context of a larger system.
+- Clear explanation of logic and key variables/functions.
+- How it connects to other modules (if apparent).
+- Optimization suggestions: Improve logic, readability, performance.
+- Security tips: Avoid unsafe data patterns or API misuse.
+
+### Code:
+\`\`\`
+${code}
+\`\`\`
+
+Output clean, maintainable documentation for team use.
+`;
+      break;
+
+    case "Tutorials/Guides":
+      prompt = `
+Write a usage guide for the code provided.
+
+### Include:
+- What the code does and where it's useful.
+- How to use it step-by-step.
+- Code examples with explanations.
+- Optimization suggestions to improve performance or clarity.
+- Security considerations developers should follow when using this.
+
+### Code:
+\`\`\`
+${code}
+\`\`\`
+
+Output the guide in friendly, clear Markdown format.
+`;
+      break;
+
+    case "Conceptual Overviews":
+      prompt = `
+Write a conceptual explanation of the code below.
+
+### Cover:
+- What it does and why it exists.
+- Abstract principles or patterns involved (e.g., hooks, memoization, recursion).
+- Any performance optimization insights.
+- Any potential security flaws or design pitfalls.
+
+### Code:
+\`\`\`
+${code}
+\`\`\`
+
+Output an in-depth conceptual explanation with optimization/security coverage.
+`;
+      break;
+
     default:
       return "Invalid docType";
   }
