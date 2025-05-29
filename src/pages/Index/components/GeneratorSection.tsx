@@ -169,62 +169,64 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
 
     let prompt = "";
     switch (selectedDocType) {
-  case "API Documentation":
-    prompt = `Generate comprehensive API documentation for the following code. Include details about each endpoint, its parameters, request and response formats, authentication methods, and example usage. Focus on providing clear and concise information for developers who want to integrate with this API.`;
-    break;
+      case "API Documentation":
+        prompt = `Generate comprehensive API documentation for the following code. Include details about each endpoint, its parameters, request and response formats, authentication methods, and example usage. Focus on providing clear and concise information for developers who want to integrate with this API.`;
+        break;
 
-  case "Codebase Documentation":
-    prompt = `Generate detailed codebase documentation for the following code. Explain the purpose of each class, function, and module, as well as the relationships between them. Include information about data structures, algorithms, and design patterns used in the code. Focus on providing a clear understanding of the codebase for developers who want to maintain or extend it.`;
-    break;
+      case "Codebase Documentation":
+        prompt = `Generate detailed codebase documentation for the following code. Explain the purpose of each class, function, and module, as well as the relationships between them. Include information about data structures, algorithms, and design patterns used in the code. Focus on providing a clear understanding of the codebase for developers who want to maintain or extend it.`;
+        break;
 
-  case "Tutorials/Guides":
-    prompt = `Generate step-by-step tutorials and guides for using the following code. Provide clear and concise instructions, code examples, and screenshots where appropriate. Focus on helping users learn how to use the code to accomplish specific tasks.`;
-    break;
+      case "Tutorials/Guides":
+        prompt = `Generate step-by-step tutorials and guides for using the following code. Provide clear and concise instructions, code examples, and screenshots where appropriate. Focus on helping users learn how to use the code to accomplish specific tasks.`;
+        break;
 
-  case "Conceptual Overviews":
-    prompt = `Generate high-level conceptual overviews of the following code. Explain the system's architecture, design principles, and key concepts. Focus on providing a clear understanding of the code for stakeholders who want to understand the big picture.`;
-    break;
+      case "Conceptual Overviews":
+        prompt = `Generate high-level conceptual overviews of the following code. Explain the system's architecture, design principles, and key concepts. Focus on providing a clear understanding of the code for stakeholders who want to understand the big picture.`;
+        break;
 
-  case "Sequence Diagram":
-    prompt = `Analyze the following code and generate a detailed Sequence Diagram using Mermaid syntax.
+      case "Sequence Diagram":
+        prompt = `Analyze the following code and generate a detailed Sequence Diagram using Mermaid syntax.
 
 - Show the chronological interaction between objects/components.
 - Represent messages, method calls, and responses.
 - Annotate lifelines and activation bars meaningfully.
 - Include asynchronous and synchronous interactions.
 - Provide brief notes on optimization and potential security risks.`;
-    break;
+        break;
 
-  case "UML Diagram":
-    prompt = `Analyze the following code and generate a UML Class Diagram using Mermaid syntax.
+      case "UML Diagram":
+        prompt = `Analyze the following code and generate a UML Class Diagram using Mermaid syntax.
 
 - Include classes/interfaces with attributes and methods.
 - Show relationships like inheritance, composition, and dependencies.
 - Annotate visibility modifiers if applicable.
 - Provide notes on design improvements and security considerations.`;
-    break;
+        break;
 
-  case "Flowchart":
-    prompt = `Analyze the following code and create a Flowchart using Mermaid syntax.
+      case "Flowchart":
+        prompt = `Analyze the following code and create a Flowchart using Mermaid syntax.
 
 - Represent the logic flow including decisions, loops, and processes.
 - Clearly label nodes and transitions.
 - Highlight critical paths and error handling branches.
 - Provide suggestions for flow optimization and identify security risks.`;
-    break;
+        break;
 
-  default:
-    prompt = `Generate documentation for the following code.`;
-}
+      default:
+        prompt = `Generate documentation for the following code.`;
+    }
 
-    // Include the selected documentation type in the request body
-    // Determine docType based on whether a diagram type is selected
-    let mappedDocType = "detailed"; // Default to "detailed"
+    let mappedDocType = "detailed"; 
+
     if (selectedDiagramType.length > 0) {
       mappedDocType = "diagrammatical";
+    } else if (docTypeOptions.includes(selectedDocType)) {
+      mappedDocType = selectedDocType; 
     } else {
-      mappedDocType = docTypeMapping[selectedDocType] || "detailed";
+      mappedDocType = "detailed";
     }
+
 
     if (typeof body === "string") {
       const requestBody: any = JSON.parse(body);
@@ -416,7 +418,7 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
               </div>
             </div> */}
             <Tabs value={selectedTab} onValueChange={handleTabChangeInternal} className="w-full">
-             
+
               <TabsList className="hidden w-full md:grid md:grid-cols-3 gap-2 bg-muted/40 p-1 rounded-lg mb-6">
                 {tabOptions.map(tab => (
                   <TabsTrigger
@@ -524,7 +526,7 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
                       </div>
                     )}
                   </div>
-                  
+
                   <Button
                     size="lg"
                     className="w-full"
@@ -626,14 +628,14 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
           ) : (
             <>
               {docsError && (
-                <Alert variant="destructive" className="mb-6"> 
+                <Alert variant="destructive" className="mb-6">
                   <AlertCircle className="h-4 w-4" />
                   <AlertTitle>Generation Error</AlertTitle>
                   <AlertDescription>{docsError}</AlertDescription>
                 </Alert>
               )}
               {generatedDocs && (
-                <Card className="max-w-4xl mx-auto shadow-md border rounded-2xl bg-card"> 
+                <Card className="max-w-4xl mx-auto shadow-md border rounded-2xl bg-card">
                   <CardHeader className="flex flex-row items-center justify-between pb-3 pt-4 px-5">
                     <CardTitle className="text-xl font-semibold">Generated Documentation</CardTitle>
                     <DropdownMenu>

@@ -43,7 +43,7 @@ const safetySettings = [
  * @param diagramType The type of diagram to generate.
  * @returns A promise that resolves to the generated documentation string (Markdown).
  */
-export async function generateAIDocumentation(code: string, filename?: string, docType: string = "detailed", diagramType?: string): Promise<string> {
+export async function generateAIDocumentation(code: string, filename?: string, docType: string = "Codebase Documentation", diagramType?: string): Promise<string> {
   if (!code || code.trim() === "") {
     return "No code provided to document.";
   }
@@ -51,35 +51,6 @@ export async function generateAIDocumentation(code: string, filename?: string, d
   let prompt = "";
 
   switch (docType) {
-    case "detailed":
-      prompt = `
-Analyze the following code snippet${filename ? ` from the file "${filename}"` : ''} and generate clean, professional Markdown documentation.
-
-### Documentation Guidelines:
-- **Purpose & Summary:** What the code does and its use case.
-- **Parameters & Return Values:** If applicable.
-- **Logic & Flow:** Clear, concise explanation of core logic.
-- **Edge Cases & Behavior:** Mention assumptions and non-obvious behavior.
-- **Optimization Suggestions:** 
-  - Suggest better performance or readability improvements.
-  - Eliminate unnecessary operations or inefficiencies.
-- **Security Considerations:**
-  - Identify any vulnerabilities or bad practices.
-  - Recommend secure coding practices.
-
-### Format:
-- Use Markdown: headings, bullet points, and \`\`\`code blocks\`\`\`.
-- Identify the language used.
-
-### Input Code:
-\`\`\`
-${code}
-\`\`\`
-
-Generate optimized, secure documentation below:
-`;
-      break;
-
     case "Sequence Diagram":
       prompt = `
 Analyze the following code snippet${filename ? ` from the file "${filename}"` : ''} and generate a detailed **Sequence Diagram** using Mermaid syntax.
@@ -141,6 +112,7 @@ ${code}
 Return the Mermaid flowchart code along with optimization and security notes.
 `;
       break;
+    
     case "API Documentation":
       prompt = `
 Document the following code as if it were part of a public API.
