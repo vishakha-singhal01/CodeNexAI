@@ -141,26 +141,6 @@ ${code}
 Return the Mermaid flowchart code along with optimization and security notes.
 `;
       break;
-
-    case "diagrammatical":
-      prompt = `
-Analyze the following code snippet${filename ? ` from the file "${filename}"` : ''} and generate a ${diagramType || 'sequence diagram'} using Mermaid syntax.
-
-### Include:
-- A high-level structural diagram of how components/functions/classes interact.
-- Annotate steps or interactions meaningfully.
-- **Optimization Notes**: Briefly mention areas where logic or performance can be improved.
-- **Security Risks**: Highlight anything risky in the flow, like unvalidated inputs, exposed tokens, or insecure data paths.
-
-### Code:
-\`\`\`
-${code}
-\`\`\`
-
-Return the Mermaid diagram and optimization/security notes.
-`;
-      break;
-
     case "API Documentation":
       prompt = `
 Document the following code as if it were part of a public API.
