@@ -3,55 +3,75 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Create a transporter object using the default SMTP transport
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
-  port: parseInt(process.env.SMTP_PORT || '587'),
-  secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
+  port: parseInt(process.env.SMTP_PORT || "587", 10),
+  secure: parseInt(process.env.SMTP_PORT || "587", 10) === 465, // true for 465, false for other ports
   auth: {
-    user: process.env.SMTP_USER, // generated ethereal user
-    pass: process.env.SMTP_PASS,  // generated ethereal password
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
   },
 });
+interface EmailOptions {
+  to: string;
+  subject: string;
+  text: string;
+  html: string;
+}
+
+export const sendEmail = async (options: EmailOptions) => {
+  try {
+    const info = await transporter.sendMail({
+      from: process.env.EMAIL_FROM, // Sender address
+      to: options.to, // List of receivers
+      subject: options.subject, // Subject line
+      text: options.text, // Plain text body
+      html: options.html, // HTML body
+    });
+    console.log('Message sent: %s', info.messageId);
+    return info;
+  } catch (error) {
+    console.error('Error sending email:', error);
+    throw error; // Re-throw the error to be handled by the caller
+  }
+};
 
 export const sendVerificationEmail = async (userEmail: string, token: string) => {
   const verificationLink = `${process.env.FRONTEND_URL}/verify-email/${token}`;
+  const subject = 'Verify Your Email Address';
+  const text = `Please verify your email address by clicking on the following link, or by pasting it into your browser: \n\n${verificationLink}\n\nThis link will expire in 15 minutes. If you did not request this, please ignore this email.`;
+  const html = `
+    <p>Please verify your email address by clicking on the link below:</p>
+    <p><a href="${verificationLink}">${verificationLink}</a></p>
+    <p>This link will expire in 15 minutes.</p>
+    <p>If you did not create an account, no further action is required.</p>
+  `;
 
-  const mailOptions = {
-    from: process.env.SMTP_USER,
+  await sendEmail({
     to: userEmail,
-    subject: 'Verify your email',
-    html: `<p>Please click this link to verify your email: <a href="${verificationLink}">${verificationLink}</a></p>`,
-  };
+    subject,
+    text,
+    html,
+  });
 
-  try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log('Message sent: %s', info.messageId);
-  } catch (error) {
-    console.error(error);
-    throw error;
-  }
-};
+  };
 
 export const sendPasswordResetEmail = async (userEmail: string, token: string) => {
   const resetLink = `${process.env.FRONTEND_URL}/reset-password/${token}`;
+  const subject = 'Password Reset Request';
+  const text = `You requested a password reset. Click the link to reset your password: \n\n${resetLink}\n\nThis link will expire in 15 minutes. If you did not request this, please ignore this email.`;
+  const html = `
+    <p>You requested a password reset. Click the link below to reset your password:</p>
+    <p><a href="${resetLink}">${resetLink}</a></p>
+    <p>This link will expire in 15 minutes.</p>
+    <p>If you did not request a password reset, please ignore this email.</p>
+  `;
 
-  const mailOptions = {
-    from: process.env.SMTP_USER,
+  await sendEmail({
     to: userEmail,
-    subject: 'Reset your password',
-    html: `<p>Please click this link to verify your email: <a href="${resetLink}">${resetLink}</a></p>`,
+    subject,
+    text,
+    html,
+  });
+
   };
-
-  console.log('Sending password reset email to:', userEmail);
-  console.log('Reset link:', resetLink);
-  console.log('Mail options:', mailOptions);
-
-  try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log('Message sent: %s', info.messageId);
-  } catch (error) {
-    console.error(error);
-    throw error;
-  }
-};
