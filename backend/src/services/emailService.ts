@@ -1,76 +1,71 @@
 import nodemailer from 'nodemailer';
-import dotenv from 'dotenv';
 
-dotenv.config();
+export const sendVerificationEmail = async (email: string, verificationToken: string) => {
+  // Only proceed if email is provided
+  if (!email) {
+    console.warn("Attempted to send verification email without an email address.");
+    return;
+  }
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: parseInt(process.env.SMTP_PORT || "587", 10),
-  secure: parseInt(process.env.SMTP_PORT || "587", 10) === 465, // true for 465, false for other ports
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
+  // Create a nodemailer transporter using your Brevo SMTP credentials
+  const transporter = nodemailer.createTransport({
+    host: process.env.BREVO_SMTP_HOST, // Brevo SMTP host
+    port: parseInt(process.env.BREVO_SMTP_PORT || '587'), // Brevo SMTP port (587 is common, but check your Brevo settings)
+    secure: false, // Use `true` if you're using port 465
+    auth: {
+      user: process.env.BREVO_SMTP_USER, // Your Brevo SMTP username (usually your Brevo email address)
+      pass: process.env.BREVO_SMTP_PASSWORD, // Your Brevo SMTP password
+    },
+  });
 
-interface EmailOptions {
-  to: string;
-  subject: string;
-  text: string;
-  html: string;
-}
+  const mailOptions = {
+    from: process.env.BREVO_SMTP_USER, // Sender address (must be a verified Brevo sender)
+    to: email, // Recipient address
+    subject: 'Verify Your Email',
+    html: `<p>Please click this link to verify your email: <a href="${process.env.FRONTEND_URL}/verify-email/${verificationToken}">${process.env.FRONTEND_URL}/verify-email/${verificationToken}</a></p>`,
+  };
 
-export const sendEmail = async (options: EmailOptions) => {
   try {
-    const info = await transporter.sendMail({
-      from: process.env.EMAIL_FROM, // Sender address
-      to: options.to, // List of receivers
-      subject: options.subject, // Subject line
-      text: options.text, // Plain text body
-      html: options.html, // HTML body
-    });
-    console.log('Message sent: %s', info.messageId);
-    return info;
+    // Send the email
+    await transporter.sendMail(mailOptions);
+    console.log('Verification email sent successfully!');
   } catch (error) {
-    console.error('Error sending email:', error);
-    throw error; // Re-throw the error to be handled by the caller
+    console.error('Error sending verification email:', error);
+    throw error; // Re-throw the error for handling in the calling function
   }
 };
 
-export const sendVerificationEmail = async (userEmail: string, token: string) => {
-  const verificationLink = `${process.env.FRONTEND_URL}/verify-email/${token}`;
-  const subject = 'Verify Your Email Address';
-  const text = `Please verify your email address by clicking on the following link, or by pasting it into your browser: \n\n${verificationLink}\n\nThis link will expire in 15 minutes. If you did not request this, please ignore this email.`;
-  const html = `
-    <p>Please verify your email address by clicking on the link below:</p>
-    <p><a href="${verificationLink}">${verificationLink}</a></p>
-    <p>This link will expire in 15 minutes.</p>
-    <p>If you did not create an account, no further action is required.</p>
-  `;
+export const sendResetPasswordEmail = async (email: string, resetToken: string) => {
+  // Only proceed if email is provided
+  if (!email) {
+    console.warn("Attempted to send reset password email without an email address.");
+    return;
+  }
 
-  await sendEmail({
-    to: userEmail,
-    subject,
-    text,
-    html,
+  // Create a nodemailer transporter using your Brevo SMTP credentials
+  const transporter = nodemailer.createTransport({
+    host: process.env.BREVO_SMTP_HOST, // Brevo SMTP host
+    port: parseInt(process.env.BREVO_SMTP_PORT || '587'), // Brevo SMTP port (587 is common, but check your Brevo settings)
+    secure: false, // Use `true` if you're using port 465
+    auth: {
+      user: process.env.BREVO_SMTP_USER, // Your Brevo SMTP username (usually your Brevo email address)
+      pass: process.env.BREVO_SMTP_PASSWORD, // Your Brevo SMTP password
+    },
   });
-};
 
-export const sendPasswordResetEmail = async (userEmail: string, token: string) => {
-  const resetLink = `${process.env.FRONTEND_URL}/reset-password/${token}`;
-  const subject = 'Password Reset Request';
-  const text = `You requested a password reset. Click the link to reset your password: \n\n${resetLink}\n\nThis link will expire in 15 minutes. If you did not request this, please ignore this email.`;
-  const html = `
-    <p>You requested a password reset. Click the link below to reset your password:</p>
-    <p><a href="${resetLink}">${resetLink}</a></p>
-    <p>This link will expire in 15 minutes.</p>
-    <p>If you did not request a password reset, please ignore this email.</p>
-  `;
+  const mailOptions = {
+    from: process.env.BREVO_SMTP_USER, // Sender address (must be a verified Brevo sender)
+    to: email, // Recipient address
+    subject: 'Reset Your Password',
+    html: `<p>Please click this link to reset your password: <a href="${process.env.FRONTEND_URL}/reset-password/${resetToken}">${process.env.FRONTEND_URL}/reset-password/${resetToken}</a></p>`,
+  };
 
-  await sendEmail({
-    to: userEmail,
-    subject,
-    text,
-    html,
-  });
+  try {
+    // Send the email
+    await transporter.sendMail(mailOptions);
+    console.log('Reset password email sent successfully!');
+  } catch (error) {
+    console.error('Error sending reset password email:', error);
+    throw error; // Re-throw the error for handling in the calling function
+  }
 };

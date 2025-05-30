@@ -245,13 +245,18 @@ export function LoginPage() {
               {isLoading ? 'Logging in...' : 'Login'}
             </Button>
            </form>
+           <div className="flex justify-center text-sm">
+            <Link to="/forgot-password" className="underline">
+              Forgot Password?
+            </Link>
+          </div>
            <p className="px-6 text-xs text-center text-muted-foreground">
              We protect your password using industry-standard hashing.
            </p>
          </CardContent>
           <CardFooter className="flex justify-center text-sm">
-             Don't have an account?&nbsp; {/* Use non-breaking space */}
-             <Link to="/signup" className="underline">
+             Don't have an account?&nbsp;
+             <Link to="/auth/signup" className="underline">
                  Sign up
             </Link>
         </CardFooter>
