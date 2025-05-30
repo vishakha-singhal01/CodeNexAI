@@ -241,6 +241,11 @@ export function LoginPage() {
               />
             </div>
             {error && <p className="text-sm text-red-500">{error}</p>}
+            <Link to="/forgot-password">
+              <p className="text-sm text-gray-500 mt-2 hover:text-gray-700">
+                Forgot Password?
+              </p>
+            </Link>
             <Button type="submit" className="w-full mt-2" disabled={isLoading}>
               {isLoading ? 'Logging in...' : 'Login'}
             </Button>
