@@ -37,17 +37,17 @@ async function ensureLoggedIn(context: vscode.ExtensionContext): Promise<boolean
             await vscode.commands.executeCommand('codenexai.login');
             return false;
         }
-        } catch (error: unknown) {
-            if (axios.isAxiosError(error) && error.response) {
-                vscode.window.showErrorMessage(`CodenexAI Error: ${error.response.data?.error || error.response.data?.message || error.response.statusText || "Server error " + error.response.status}`);
-            } else if (error instanceof Error) {
-                vscode.window.showErrorMessage(`CodenexAI Network Error: ${error.message}`);
-            } else {
-                vscode.window.showErrorMessage('CodenexAI: An unknown error occurred while generating documentation.');
-            }
-            return false;
+    } catch (error: unknown) {
+        if (axios.isAxiosError(error) && error.response) {
+            vscode.window.showErrorMessage(`CodenexAI Error: ${error.response.data?.error || error.response.data?.message || error.response.statusText || "Server error " + error.response.status}`);
+        } else if (error instanceof Error) {
+            vscode.window.showErrorMessage(`CodenexAI Network Error: ${error.message}`);
+        } else {
+            vscode.window.showErrorMessage('CodenexAI: An unknown error occurred while generating documentation.');
         }
+        return false;
     }
+}
 
 // --- Activate Function ---
 export function activate(context: vscode.ExtensionContext) {
@@ -74,7 +74,7 @@ export function activate(context: vscode.ExtensionContext) {
                 await context.secrets.store('codenexai.password', password);
                 vscode.window.showInformationMessage('CodenexAI: Successfully logged in!');
             } else {
-            vscode.window.showErrorMessage(`CodenexAI: Login failed. Invalid credentials.`);
+                vscode.window.showErrorMessage(`CodenexAI: Login failed. Invalid credentials.`);
             }
         } catch (error: unknown) {
             if (axios.isAxiosError(error) && error.response) {
@@ -146,7 +146,8 @@ export function activate(context: vscode.ExtensionContext) {
             title: "CodenexAI: Generating documentation...",
             cancellable: false
         }, async () => {
-            try {const response = await apiClient.post(GENERATE_DOCS_URL, {
+            try {
+                const response = await apiClient.post(GENERATE_DOCS_URL, {
                     code: selectedText,
                     email,
                     password,
@@ -174,22 +175,55 @@ export function activate(context: vscode.ExtensionContext) {
                     panel.webview.html = `<!DOCTYPE html>
                     <html lang="en">
                     <head>
-                        <meta charset="UTF-8">
-                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                        <title>CodenexAI Documentation</title>
-                        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css" integrity="sha512-LX/J+LuZrwAlL46OUv0JPLZwGh+AilYrf+vKsqrfY9WfwtarpC2F9+ePATNiSuYFkywOil56nuJWuP5JEWjSQg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-                        <style>
-                            .markdown-body {
-                                box-sizing: border-box;
-                                min-width: 200px;
-                                max-width: 980px;
-                                margin: 0 auto;
-                                padding: 45px;
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>CodenexAI Documentation</title>
+                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+                    <style>
+                        html, body {
+                            margin: 0;
+                            padding: 0;
+                            background-color: transparent;
+                            color: inherit;
+                        }
+
+                        .markdown-body {
+                            box-sizing: border-box;
+                            min-width: 200px;
+                            max-width: 980px;
+                            margin: 0 auto;
+                            padding: 45px;
+                            word-wrap: break-word;
+                            overflow-wrap: break-word;
+                        }
+
+                        pre, code {
+                            white-space: pre-wrap; /* Wrap long lines */
+                            word-break: break-word;
+                            overflow-x: auto;
+                            background-color: rgba(27, 31, 35, 0.05); /* subtle background */
+                            color: inherit;
+                        }
+
+                        pre {
+                            padding: 1em;
+                            border-radius: 6px;
+                        }
+
+                        @media (prefers-color-scheme: dark) {
+                            body {
+                            background-color: #1e1e1e;
+                            color: #d4d4d4;
                             }
+
+                            pre, code {
+                            background-color: rgba(255, 255, 255, 0.05);
+                            }
+                        }
                         </style>
                     </head>
                     <body class="markdown-body">
-                        ${htmlContent}
+                    ${htmlContent}
                     </body>
                     </html>`;
                 } else {
@@ -234,8 +268,8 @@ export function activate(context: vscode.ExtensionContext) {
                         outputChannel.appendLine(`${result.id}: ${result.content}`);
                     });
                 } else {
-                    console.log({aa: response.status})
-                    console.log({aa: response.data})
+                    console.log({ aa: response.status })
+                    console.log({ aa: response.data })
                     outputChannel.appendLine('No results found.');
                 }
             } else {
