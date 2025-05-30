@@ -1,15 +1,17 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import ReactMarkdown from 'react-markdown';
+import ReactMarkdown, { Components } from 'react-markdown';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { darcula } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import remarkGfm from 'remark-gfm';
+import "github-markdown-css/github-markdown.css";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -17,9 +19,9 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from '@/context/AuthContext';
-import {
-  Upload, Github, Download, AlertCircle, ChevronDown, FileText, BookOpen, Layers, ListTree, Activity, GitBranch, Code
-} from 'lucide-react';
+import { Github, Download, ChevronDown, FileText, BookOpen, Layers, ListTree, Activity, GitBranch, Code } from 'lucide-react';
+import { docTypeDescriptionMap, docTypeIconMap, docTypeOptions, quotes, tieredDocTypes } from './data';
+import { cn } from '@/lib/utils';
 
 interface ExtendedUser {
   id: string;
@@ -45,9 +47,7 @@ interface GeneratorSectionProps {
   docsError: string | null;
   setDocsError: (error: string | null) => void;
   fileInputRef: React.RefObject<HTMLInputElement>;
-  handleGenerateDocsFromText: () => void;
   handleFileChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  handleGenerateDocsFromUpload: () => void;
   isValidGitHubUrl: (url: string) => boolean;
   handleDownloadDocs: () => void;
   clearInputs: () => void;
@@ -67,7 +67,6 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
   setDocsError,
   fileInputRef,
   handleFileChange,
-  handleGenerateDocsFromUpload,
   isValidGitHubUrl,
   handleDownloadDocs,
   clearInputs,
@@ -75,41 +74,12 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
   const { user } = useAuth();
   const userPlan = user?.plan || "free";
   const [selectedTab, setSelectedTab] = useState("paste");
-  const [loadingQuote, setLoadingQuote] = useState("");
-  const [isLoadingDocsInternal, setIsLoadingDocsInternal] = useState(false);
+  const [selectedTierTab, setSelectedTierTab] = useState("free");
+  const [isLoading, setIsLoading] = useState(false);
   const [githubToken, setGithubToken] = useState("");
   const [selectedDocType, setSelectedDocType] = useState("");
   const [selectedDiagramType, setSelectedDiagramType] = useState<string[]>([]);
-
-  const docTypeOptions = [
-    "API Documentation",
-    "Codebase Documentation",
-    "Tutorials/Guides",
-    "Conceptual Overviews",
-    "Sequence Diagram",
-    "UML Diagram",
-    "Flowchart"
-  ];
-
-  const docTypeIconMap: Record<string, JSX.Element> = {
-    'API Documentation': <FileText className="h-6 w-6 text-blue-600" />,
-    'Codebase Documentation': <BookOpen className="h-6 w-6 text-indigo-600" />,
-    'Tutorials/Guides': <Layers className="h-6 w-6 text-purple-600" />,
-    'Conceptual Overviews': <ListTree className="h-6 w-6 text-pink-600" />,
-    'Sequence Diagram': <Activity className="h-6 w-6 text-orange-600" />,
-    'UML Diagram': <GitBranch className="h-6 w-6 text-green-600" />,
-    'Flowchart': <Code className="h-6 w-6 text-yellow-600" />,
-  };
-
-  const docTypeDescriptionMap: Record<string, string> = {
-    'API Documentation': 'Structured documentation for APIs, including endpoints, methods, and parameters.',
-    'Codebase Documentation': 'Internal explanation of code structure, files, and logic for developers.',
-    'Tutorials/Guides': 'Step-by-step instructions or how-to content for specific tasks or features.',
-    'Conceptual Overviews': 'High-level explanation of system architecture, ideas, and key concepts.',
-    'Sequence Diagram': 'Visual representation of the order of operations or messages over time.',
-    'UML Diagram': 'Unified Modeling Language diagrams for designing and analyzing software systems.',
-    'Flowchart': 'Graphical representation of a process or workflow using symbols and arrows.',
-  };
+  const [quoteIndex, setQuoteIndex] = useState(0);
 
   const tabOptions = [
     { value: "paste", label: "Paste Code", disabled: false, badge: null },
@@ -147,86 +117,129 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
     printWindow.print();
   }, []);
 
-  const loadingQuotes = [
-    "Good things take time. Great code takes a bit longer.",
-    "While we crunch the numbers, grab a coffee ☕",
-    "Just a few moments away from brilliance!",
-    "Patience is a developer's superpower.",
-    "Behind the scenes, code magic is happening... 🔮",
-    "Innovation loading... please stand by.",
-    "Documentation is being summoned 📜✨",
-    "Hold tight! Your code is getting smarter.",
-  ];
-
-
   useEffect(() => {
-    if (isLoadingDocs) {
-      setLoadingQuote(loadingQuotes[Math.floor(Math.random() * loadingQuotes.length)]);
-    }
-  }, [isLoadingDocs]);
+    const interval = setInterval(() => {
+      setQuoteIndex((prevIndex) => (prevIndex + 1) % quotes.length);
+    }, 5000);
 
-  // Handler for tab changes
-  const handleTabChangeInternal = (newTabValue: string) => {
-    setSelectedTab(newTabValue);
-    clearInputs(); // Clear all input fields from parent
-    setGeneratedDocs(''); // Clear generated docs
-    setDocsError(null); // Clear any errors
+    return () => clearInterval(interval);
+  }, []);
+
+  const renderers: Components = {
+    code({ node, inline, className, children, ...props }: any & { inline?: boolean }) {
+      const match = /language-(\w+)/.exec(className || '');
+      return !inline && match ? (
+        <SyntaxHighlighter
+          style={darcula}
+          language={match[1]}
+          PreTag="div"
+          {...props}
+        >
+          {String(children).replace(/\n$/, '')}
+        </SyntaxHighlighter>
+      ) : (
+        <code className={className} {...props}>
+          {children}
+        </code>
+      );
+    },
+
+    img({ src, alt, title, ...props }) {
+      return (
+        <img
+          src={src}
+          alt={alt}
+          title={title}
+          style={{ maxWidth: "100%", height: "auto", display: "block", margin: "1rem 0" }}
+          {...props}
+        />
+      );
+    },
+
+    table({ children, ...props }) {
+      return (
+        <table
+          className="table-auto border-collapse border border-gray-300 w-full"
+          {...props}
+        >
+          {children}
+        </table>
+      );
+    },
+
+    thead({ children, ...props }) {
+      return (
+        <thead
+          className="bg-gray-200"
+          {...props}
+        >
+          {children}
+        </thead>
+      );
+    },
+
+    tbody({ children, ...props }) {
+      return <tbody {...props}>{children}</tbody>;
+    },
+
+    tr({ children, ...props }) {
+      return (
+        <tr className="border border-gray-300" {...props}>
+          {children}
+        </tr>
+      );
+    },
+
+    th({ children, ...props }) {
+      return (
+        <th
+          className="border border-gray-300 px-4 py-2 text-left bg-gray-100"
+          {...props}
+        >
+          {children}
+        </th>
+      );
+    },
+
+    td({ children, ...props }) {
+      return (
+        <td
+          className="border border-gray-300 px-4 py-2"
+          {...props}
+        >
+          {children}
+        </td>
+      );
+    },
   };
 
+  const handleTabChangeInternal = (newTabValue: string) => {
+    setSelectedTab(newTabValue);
+    clearInputs();
+    setGeneratedDocs('');
+    setDocsError(null);
+  };
+
+  const handleSelectType = (type: string) => {
+    setSelectedDocType(type)
+    setSelectedTab('paste');
+    clearInputs();
+    setGeneratedDocs('');
+    setDocsError(null);
+  }
+
   async function generateDocsApiCall(endpoint: string, body: string | FormData, customHeaders?: HeadersInit) {
-    setIsLoadingDocsInternal(true);
+    const token = (user as ExtendedUser)?.accessToken;
+    if (!user) {
+      setDocsError("Authentication required. Please log in to generate documentation.");
+      return;
+    }
+
+    setIsLoading(true);
     setGeneratedDocs("");
     setDocsError(null);
 
-    let prompt = "";
-    switch (selectedDocType) {
-      case "API Documentation":
-        prompt = `Generate comprehensive API documentation for the following code. Include details about each endpoint, its parameters, request and response formats, authentication methods, and example usage. Focus on providing clear and concise information for developers who want to integrate with this API.`;
-        break;
-
-      case "Codebase Documentation":
-        prompt = `Generate detailed codebase documentation for the following code. Explain the purpose of each class, function, and module, as well as the relationships between them. Include information about data structures, algorithms, and design patterns used in the code. Focus on providing a clear understanding of the codebase for developers who want to maintain or extend it.`;
-        break;
-
-      case "Tutorials/Guides":
-        prompt = `Generate step-by-step tutorials and guides for using the following code. Provide clear and concise instructions, code examples, and screenshots where appropriate. Focus on helping users learn how to use the code to accomplish specific tasks.`;
-        break;
-
-      case "Conceptual Overviews":
-        prompt = `Generate high-level conceptual overviews of the following code. Explain the system's architecture, design principles, and key concepts. Focus on providing a clear understanding of the code for stakeholders who want to understand the big picture.`;
-        break;
-
-      case "Sequence Diagram":
-        prompt = `Analyze the following code and generate a detailed Sequence Diagram using Mermaid syntax.
-
-- Show the chronological interaction between objects/components.
-- Represent messages, method calls, and responses.
-- Annotate lifelines and activation bars meaningfully.
-- Include asynchronous and synchronous interactions.
-- Provide brief notes on optimization and potential security risks.`;
-        break;
-
-      case "UML Diagram":
-        prompt = `Analyze the following code and generate a UML Class Diagram using Mermaid syntax.
-
-- Include classes/interfaces with attributes and methods.
-- Show relationships like inheritance, composition, and dependencies.
-- Annotate visibility modifiers if applicable.
-- Provide notes on design improvements and security considerations.`;
-        break;
-
-      case "Flowchart":
-        prompt = `Analyze the following code and create a Flowchart using Mermaid syntax.
-
-- Represent the logic flow including decisions, loops, and processes.
-- Clearly label nodes and transitions.
-- Highlight critical paths and error handling branches.
-- Provide suggestions for flow optimization and identify security risks.`;
-        break;
-
-      default:
-        prompt = `Generate documentation for the following code.`;
-    }
+    const prompt = "Provide a Code Document";
 
     let mappedDocType = "detailed";
 
@@ -237,7 +250,6 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
     } else {
       mappedDocType = "detailed";
     }
-
 
     if (typeof body === "string") {
       const requestBody: any = JSON.parse(body);
@@ -257,8 +269,7 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
       ? `${import.meta.env.VITE_API_BASE_URL}${endpoint}`
       : endpoint;
 
-    const headers = new Headers(customHeaders); // Start with custom headers
-    const token = (user as ExtendedUser)?.accessToken;
+    const headers = new Headers(customHeaders);
     if (token && !headers.has('Authorization')) {
       headers.set('Authorization', `Bearer ${token}`);
     }
@@ -301,7 +312,7 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
         setDocsError(errorMessage);
       }
     } finally {
-      setIsLoadingDocsInternal(false);
+      setIsLoading(false);
     }
   }
 
@@ -310,11 +321,23 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
     setGeneratedDocs('');
     generateDocsApiCall(
       "/api/generate-docs",
-      JSON.stringify({ code: inputCode, docType: selectedDocType, diagramTypes: selectedDiagramType }),
+      JSON.stringify({ code: inputCode, docType: selectedDocType }),
       {
         "Content-Type": "application/json",
       }
     );
+  };
+
+  const handleGenerateDocsFromUpload = () => {
+    if (!uploadedFiles || uploadedFiles.length === 0) {
+      setDocsError("Please select files or a folder to upload.");
+      return;
+    }
+    const formData = new FormData();
+    for (let i = 0; i < uploadedFiles.length; i++) {
+      formData.append('codeFiles', uploadedFiles[i]);
+    }
+    generateDocsApiCall('/api/upload-generate-docs', formData);
   };
 
   const handleGenerateDocsFromRepo = useCallback(async () => {
@@ -326,16 +349,14 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
     setUploadedFiles(null);
     await generateDocsApiCall(
       "/api/github-repo-docs",
-      JSON.stringify({ repoUrl, githubToken, diagramTypes: selectedDiagramType }),
+      JSON.stringify({ repoUrl, githubToken, docType: selectedDocType }),
       {
         "Content-Type": "application/json",
       }
     );
-  }, [generateDocsApiCall, isValidGitHubUrl, repoUrl, setDocsError, setInputCode, setUploadedFiles, githubToken, inputCode, selectedDocType, selectedDiagramType]);
+  }, [generateDocsApiCall, isValidGitHubUrl, repoUrl, setDocsError, setInputCode, setUploadedFiles, githubToken, inputCode, selectedDocType]);
 
   return (
-
-    // Added id="generator-section" here
     <section
       id="generator-section"
       className="w-full py-20 md:py-28 lg:py-32 bg-background border-t"
@@ -383,36 +404,58 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
         </div>
 
         {!selectedDocType ? (
-          // Doc Type Cards
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {docTypeOptions.map((type) => (
-              <Card
-                key={type}
-                onClick={() => setSelectedDocType(type)}
-                className="cursor-pointer hover:shadow-xl transition-shadow duration-300 p-4 flex flex-col items-center justify-center text-center border border-gray-300 dark:border-gray-700"
-              >
-                <div className="mb-2">{docTypeIconMap[type]}</div>
-                <div className="font-semibold text-lg">{type}</div>
-                <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                  {docTypeDescriptionMap[type]}
-                </div>
-              </Card>
-            ))}
+          <div>
+            <div className="flex space-x-4 mb-4 border-b border-gray-300 dark:border-gray-700">
+              {(['free', 'pro', 'enterprise'] as const).map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setSelectedTierTab(tab)}
+                  className={`py-2 px-4 font-semibold border-b-2 ${selectedTierTab === tab
+                    ? 'border-blue-600 text-blue-600'
+                    : 'border-transparent hover:text-blue-400'
+                    }`}
+                >
+                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                </button>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {tieredDocTypes[selectedTierTab]?.map((type) => (
+                <Card
+                  key={type}
+                  onClick={() => {
+                    if (docTypeIconMap[type].enabled) {
+                      handleSelectType(type);
+                    }
+                  }}
+                  className={cn(
+                    "transition-shadow duration-300 p-4 flex flex-col items-center justify-center text-center border border-gray-300 dark:border-gray-700",
+                    docTypeIconMap[type].enabled
+                      ? "cursor-pointer hover:shadow-xl"
+                      : "opacity-50 cursor-not-allowed"
+                  )}
+                >
+                  <div className="mb-2">{docTypeIconMap[type].icon}</div>
+                  <div className="font-semibold text-lg">{type}</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    {docTypeDescriptionMap[type]}
+                  </div>
+                </Card>
+              ))}
+            </div>
           </div>
         ) : (
-          // Generator Section (replaces doc type cards)
           <div className="mb-16 p-6 border rounded-2xl bg-card shadow-lg">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-semibold">
                 Selected Doc Type:{" "}
                 <Badge className="px-2 py-1 text-sm">{selectedDocType}</Badge>
               </h3>
-              <Button variant="ghost" onClick={() => setSelectedDocType(null)}>
+              <Button variant="ghost" disabled={!!isLoading} onClick={() => setSelectedDocType(null)}>
                 🔄 Change Type
               </Button>
             </div>
-
-            {/* <Card className="shadow-lg border rounded-2xl bg-card"> */}
             <CardContent className="p-8 space-y-6">
               <Tabs
                 value={selectedTab}
@@ -432,7 +475,6 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
                   ))}
                 </TabsList>
 
-                {/* Mobile Dropdown Tabs */}
                 <div className="md:hidden mb-6">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -455,7 +497,6 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
                   </DropdownMenu>
                 </div>
 
-                {/* Paste Tab Content */}
                 <TabsContent value="paste">
                   <div className="grid gap-4">
                     <Label htmlFor="code-input" className="text-base font-medium">
@@ -463,7 +504,7 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
                     </Label>
                     <Textarea
                       id="code-input"
-                      placeholder="function helloWorld() { console.log('Hello!'); }"
+                      placeholder="Paste your code/query here...."
                       value={inputCode}
                       onChange={(e) => {
                         setInputCode(e.target.value);
@@ -477,25 +518,14 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
                     <Button
                       size="lg"
                       className="w-full"
-                      onClick={() => {
-                        setDocsError(null);
-                        setGeneratedDocs("");
-                        generateDocsApiCall(
-                          "/api/generate-docs",
-                          JSON.stringify({ code: inputCode }),
-                          {
-                            "Content-Type": "application/json",
-                          }
-                        );
-                      }}
-                      disabled={isLoadingDocs}
+                      onClick={handleGenerateDocsFromText}
+                      disabled={isLoading || !inputCode}
                     >
-                      {isLoadingDocs ? "Generating..." : "⚡ Generate from Text"}
+                      {isLoading ? "Generating..." : "⚡ Generate from Text"}
                     </Button>
                   </div>
                 </TabsContent>
 
-                {/* Upload Tab Content */}
                 <TabsContent value="upload">
                   <div className="grid gap-4">
                     <Label htmlFor="file-input" className="text-base font-medium">
@@ -532,14 +562,13 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
                       size="lg"
                       className="w-full"
                       onClick={handleGenerateDocsFromUpload}
-                      disabled={!uploadedFiles || isLoadingDocs}
+                      disabled={!uploadedFiles || isLoading}
                     >
-                      {isLoadingDocs ? "Generating..." : "⚡ Generate from Files"}
+                      {isLoading ? "Generating..." : "⚡ Generate from Files"}
                     </Button>
                   </div>
                 </TabsContent>
 
-                {/* GitHub Tab Content */}
                 <TabsContent value="github">
                   <div className="grid gap-6">
                     <div className="space-y-2">
@@ -553,7 +582,7 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
                           setInputCode(''); setUploadedFiles(null); setGeneratedDocs(''); setDocsError(null);
                         }}
                         className="font-mono text-sm h-11 rounded-md"
-                        disabled={isLoadingDocs || userPlan === 'free' || userPlan === 'pro'} // Also disable input if free/pro
+                        disabled={isLoading || userPlan === 'free' || userPlan === 'pro'}
                       />
                       <p className="text-sm text-muted-foreground pt-1">
                         Enter the full URL of a GitHub repository. (Available for Enterprise plan)
@@ -570,7 +599,7 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
                         value={githubToken}
                         onChange={(e) => setGithubToken(e.target.value)}
                         className="font-mono text-sm h-11 rounded-md"
-                        disabled={isLoadingDocs}
+                        disabled={isLoading}
                       />
                       <p className="text-sm text-muted-foreground pt-1">
                         Enter your GitHub token to access private repositories.
@@ -591,47 +620,55 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
                       size="lg"
                       className="w-full"
                       onClick={handleGenerateDocsFromRepo}
-                      disabled={isLoadingDocs || !repoUrl.trim() || !isValidGitHubUrl(repoUrl) || userPlan === 'free' || userPlan === 'pro'}
+                      disabled={isLoading || !repoUrl.trim() || !isValidGitHubUrl(repoUrl) || userPlan === 'free' || userPlan === 'pro'}
                     >
-                      {isLoadingDocs ? "Generating..." : <> <Github className="mr-2 h-4 w-4" /> Generate from Repo </>}
+                      {isLoading ? "Generating..." : <> <Github className="mr-2 h-4 w-4" /> Generate from Repo </>}
                     </Button>
                   </div>
                 </TabsContent>
               </Tabs>
 
-              {isLoadingDocs ? (
+              {isLoading ? (
                 <div className="space-y-4">
                   <Skeleton className="h-6 w-1/2" />
                   <Skeleton className="h-4 w-full" />
                   <Skeleton className="h-4 w-5/6" />
                   <Skeleton className="h-4 w-2/3" />
+
+                  <div className="pt-4 text-sm italic text-muted-foreground text-center transition-opacity duration-500 ease-in-out">
+                    <p key={quoteIndex}>{quotes[quoteIndex]}</p>
+                  </div>
                 </div>
               ) :
                 generatedDocs && (
                   <>
-                    <div className="mt-6 p-4 bg-muted rounded-lg border border-border font-mono text-sm relative">
+                    <div className="mt-6 p-4 rounded-lg border border-border font-mono text-sm relative overflow-auto">
                       <div className="absolute top-4 right-4">
-                        <Button
-                          className="bg-white text-primary border border-primary hover:bg-primary hover:text-white transition-colors shadow-sm"
-                          size="sm"
-                          onClick={handleDownloadDocs}
-                        >
-                          <Download className="mr-1 h-4 w-4" />
-                          Download
-                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button className="flex items-center px-3 py-1 rounded bg-gray-200 hover:bg-gray-300">
+                              <Download className="w-4 h-4 mr-2" />
+                              Download
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" side="bottom" className="w-30">
+                            <DropdownMenuItem onClick={handleDownloadDocs}>
+                              via Markdown
+                            </DropdownMenuItem>
+                            {/* <DropdownMenuItem onClick={handleDownloadPDF}>
+                              via PDF
+                            </DropdownMenuItem> */}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
 
-                      <div className="whitespace-pre-wrap pt-12">
-                        <ReactMarkdown
-                          remarkPlugins={[remarkGfm]}
-                        >
+                      <div className="pt-12 overflow-x-auto whitespace-pre-wrap break-words markdown-body">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]} components={renderers}>
                           {generatedDocs}
                         </ReactMarkdown>
                       </div>
                     </div>
                   </>
-
-
                 )}
               {docsError && (
                 <div className="mt-6 text-red-600 font-semibold">{docsError}</div>
