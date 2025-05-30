@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { CodeSearchResult } from './types';
 import axios, { AxiosInstance } from 'axios';
 import MarkdownIt from 'markdown-it';
+// import markdownItGitHub from 'markdown-it-github-flavored-markdown';
 
 const apiClient: AxiosInstance = axios.create();
 
@@ -112,6 +113,25 @@ export function activate(context: vscode.ExtensionContext) {
             return;
         }
 
+        // Prompt the user to select a document type
+        const docType = await vscode.window.showQuickPick([
+            'API Documentation',
+            'Codebase Documentation',
+            'Tutorials/Guides',
+            'Conceptual Overviews',
+            'Release Notes',
+            'Troubleshooting Guide',
+            'Integration Guide',
+            'FAQ'
+        ], {
+            placeHolder: 'Select document type'
+        });
+
+        if (!docType) {
+            vscode.window.showErrorMessage('CodenexAI: No document type selected.');
+            return;
+        }
+
         const email = await context.secrets.get('codenexai.email');
         const password = await context.secrets.get('codenexai.password');
 
@@ -126,17 +146,16 @@ export function activate(context: vscode.ExtensionContext) {
             title: "CodenexAI: Generating documentation...",
             cancellable: false
         }, async () => {
-            try {
-// const githubToken = await vscode.window.showInputBox({ prompt: 'Enter your GitHub token (optional)' });
-                const response = await apiClient.post(GENERATE_DOCS_URL, {
+            try {const response = await apiClient.post(GENERATE_DOCS_URL, {
                     code: selectedText,
                     email,
                     password,
-                    // githubToken
+                    docType
                 });
 
                 if (response.status === 200 && response.data.documentation) {
-                    const markdownContent = response.data.documentation;
+                    // const markdownContent = response.data.documentation;
+                    const markdownContent = `## Documentation for ${docType}:\n${response.data.documentation}`;
                     const mdParser = new MarkdownIt({
                         html: true,
                         linkify: true,
@@ -151,54 +170,28 @@ export function activate(context: vscode.ExtensionContext) {
                         { enableScripts: true }
                     );
 
+                    // Use GitHub Markdown CSS
                     panel.webview.html = `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CodenexAI Documentation</title>
-    <style>
-        body {
-            padding: 20px;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            line-height: 1.6;
-        }
-        h1, h2, h3, h4, h5, h6 {
-            margin-top: 24px;
-            margin-bottom: 16px;
-            font-weight: 600;
-        }
-        pre {
-            background-color: #f6f8fa;
-            padding: 16px;
-            overflow: auto;
-            border-radius: 6px;
-        }
-        code {
-            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
-            font-size: 85%;
-        }
-        pre code {
-            font-size: 100%;
-        }
-        blockquote {
-            color: #6a737d;
-            border-left: 0.25em solid #dfe2e5;
-            padding: 0 1em;
-        }
-        table {
-            border-collapse: collapse;
-        }
-        th, td {
-            border: 1px solid #dfe2e5;
-            padding: 6px 13px;
-        }
-    </style>
-</head>
-<body>
-    ${htmlContent}
-</body>
-</html>`;
+                    <html lang="en">
+                    <head>
+                        <meta charset="UTF-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <title>CodenexAI Documentation</title>
+                        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css" integrity="sha512-LX/J+LuZrwAlL46OUv0JPLZwGh+AilYrf+vKsqrfY9WfwtarpC2F9+ePATNiSuYFkywOil56nuJWuP5JEWjSQg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+                        <style>
+                            .markdown-body {
+                                box-sizing: border-box;
+                                min-width: 200px;
+                                max-width: 980px;
+                                margin: 0 auto;
+                                padding: 45px;
+                            }
+                        </style>
+                    </head>
+                    <body class="markdown-body">
+                        ${htmlContent}
+                    </body>
+                    </html>`;
                 } else {
                     vscode.window.showErrorMessage(`CodenexAI: Failed to generate documentation. Status: ${response.status}`);
                 }

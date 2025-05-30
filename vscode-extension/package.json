@@ -37,11 +37,6 @@
         "command": "codenexai.logout",
         "title": "CodenexAI: Logout",
         "category": "CodenexAI"
-      },
-      {
-        "command": "codenexai.smartSearch",
-        "title": "CodenexAI: Smart Search",
-        "category": "CodenexAI"
       }
     ],
     "menus": {
