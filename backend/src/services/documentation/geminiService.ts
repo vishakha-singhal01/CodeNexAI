@@ -51,148 +51,164 @@ export async function generateAIDocumentation(code: string, filename?: string, d
   let prompt = "";
 
   switch (docType) {
-    case "Sequence Diagram":
-      prompt = `
-Analyze the following code snippet${filename ? ` from the file "${filename}"` : ''} and generate a detailed **Sequence Diagram** using Mermaid syntax.
-
-### Requirements:
-- Show the chronological interaction between objects/components.
-- Clearly represent messages, method calls, and responses.
-- Annotate lifelines and activation bars meaningfully.
-- Include asynchronous and synchronous interactions where relevant.
-- **Optimization Notes**: Briefly suggest improvements in interaction flow or message efficiency.
-- **Security Risks**: Highlight any risky interaction patterns, such as insecure data passing or unvalidated calls.
-
-### Code:
-\`\`\`
-${code}
-\`\`\`
-
-Return the Mermaid sequence diagram code with optimization and security notes.
-`;
-      break;
-
-    case "UML Diagram":
-      prompt = `
-Analyze the following code snippet${filename ? ` from the file "${filename}"` : ''} and generate a **UML Class Diagram** using Mermaid syntax.
-
-### Requirements:
-- Include classes/interfaces with attributes and methods.
-- Show relationships: inheritance, composition, aggregation, and dependencies.
-- Annotate visibility (public, private, protected) if applicable.
-- Capture key design patterns or architectural principles.
-- **Optimization Notes**: Suggest improvements in class design, coupling, or cohesion.
-- **Security Risks**: Point out any unsafe class dependencies or access concerns.
-
-### Code:
-\`\`\`
-${code}
-\`\`\`
-
-Return the Mermaid UML class diagram code along with optimization and security notes.
-`;
-      break;
-
-    case "Flowchart":
-      prompt = `
-Analyze the following code snippet${filename ? ` from the file "${filename}"` : ''} and create a **Flowchart** using Mermaid syntax.
-
-### Requirements:
-- Represent the logic flow including decisions, loops, and processes.
-- Clearly label nodes and transitions.
-- Highlight critical paths and error handling branches.
-- **Optimization Notes**: Suggest improvements in the flow or simplify complex branches.
-- **Security Risks**: Identify insecure or risky decision points or data flows.
-
-### Code:
-\`\`\`
-${code}
-\`\`\`
-
-Return the Mermaid flowchart code along with optimization and security notes.
-`;
-      break;
-    
     case "API Documentation":
       prompt = `
-Document the following code as if it were part of a public API.
+Generate an expert-level, visually engaging **API documentation** for the following code${filename ? ` from the file "${filename}"` : ''}:
 
-### Instructions:
-- Include **function/class name**, **parameters**, **return type**, and **usage example**.
-- Document optional/default parameters clearly.
-- Add **optimization** tips if there are better patterns or simplifications.
-- Mention **security** precautions (e.g., input validation, XSS, access control) where relevant.
+- 🔍 List **all available endpoints**, grouped by feature/module.
+- 📥 Document **parameters**: name, type, requirement (required/optional), and description in a table.
+- 📤 Include example **requests/responses** with real data.
+- 🔐 Document **authentication methods**, token flow, and scopes if applicable.
+- 📊 Add **interactive tables**, diagrams (like Swagger/OpenAPI style), and **status code charts**.
+- 💡 Include **developer tips**, edge cases, and security best practices.
+- 🧪 Add **Postman-like test case snippets** for each endpoint.
+
+Focus on delivering a **clean, vibrant, and intuitive experience** for developers integrating with this API.
 
 ### Code:
 \`\`\`
 ${code}
 \`\`\`
-
-Output API-style documentation with optimization and security guidance.
 `;
       break;
 
     case "Codebase Documentation":
       prompt = `
-Create internal developer documentation for the code below.
+Generate a **thorough and professional codebase documentation** for the following code${filename ? ` from the file "${filename}"` : ''}:
 
-### Include:
-- Purpose of the code in the context of a larger system.
-- Clear explanation of logic and key variables/functions.
-- How it connects to other modules (if apparent).
-- Optimization suggestions: Improve logic, readability, performance.
-- Security tips: Avoid unsafe data patterns or API misuse.
+- 📦 Describe each **module, class, and function** — their purpose, inputs, outputs, and behavior.
+- 🔄 Visualize **component relationships** using class diagrams (Mermaid).
+- 🧠 Highlight **design patterns**, **key algorithms**, and **architectural decisions**.
+- 🧩 Include a **dependency graph** and **folder structure tree view**.
+- 💬 Annotate with **comments, gotchas, and caveats**.
+- 🔧 Recommend improvements, optimizations, and refactors where applicable.
+- 🌈 Use tables, diagrams, syntax-highlighted code blocks, and color-coded sections for clarity.
+
+Target: **Developers onboarding or extending the codebase**.
 
 ### Code:
 \`\`\`
 ${code}
 \`\`\`
-
-Output clean, maintainable documentation for team use.
 `;
       break;
 
     case "Tutorials/Guides":
       prompt = `
-Write a usage guide for the code provided.
+Generate an **engaging, step-by-step tutorial or guide** for the following code${filename ? ` from the file "${filename}"` : ''}:
 
-### Include:
-- What the code does and where it's useful.
-- How to use it step-by-step.
-- Code examples with explanations.
-- Optimization suggestions to improve performance or clarity.
-- Security considerations developers should follow when using this.
+- 🧭 Include a **table of contents** at the beginning.
+- 🧱 Break down tasks with **step-wise instructions**, using headings, subheadings, and code blocks.
+- 📸 Add **code screenshots**, terminal outputs, or flow diagrams where helpful.
+- 🔁 Include **real use cases**, common pitfalls, and alternate flows.
+- 🔧 Add **interactive code snippets** or embedded sandboxes (if supported).
+- 💬 Provide helpful tooltips, notes, and references.
+- 🌟 Make it colorful, modern, and fun for developers and beginners.
+
+Audience: Developers looking to **learn and apply** the code practically.
 
 ### Code:
 \`\`\`
 ${code}
 \`\`\`
-
-Output the guide in friendly, clear Markdown format.
 `;
       break;
 
     case "Conceptual Overviews":
       prompt = `
-Write a conceptual explanation of the code below.
+Generate a **conceptual overview document** that explains the high-level structure and design of the following code${filename ? ` from the file "${filename}"` : ''}:
 
-### Cover:
-- What it does and why it exists.
-- Abstract principles or patterns involved (e.g., hooks, memoization, recursion).
-- Any performance optimization insights.
-- Any potential security flaws or design pitfalls.
+- 🏗️ Describe the **system architecture** with diagrams.
+- 🌐 Explain core **design principles**, **modules**, and their roles.
+- 🧩 Include component interaction diagrams, data flow, and configuration hierarchy.
+- 🔍 Highlight **domain concepts**, business logic layers, and integration points.
+- 🎯 Add **stakeholder-friendly visuals** (boxes/arrows, layered architecture).
+- 📌 Use **color-coded blocks**, summary tables, and callouts for emphasis.
+
+Audience: **Stakeholders, architects, and non-technical audiences** needing the big picture.
 
 ### Code:
 \`\`\`
 ${code}
 \`\`\`
+`;
+      break;
 
-Output an in-depth conceptual explanation with optimization/security coverage.
+    case "Sequence Diagram":
+      prompt = `
+Generate a **MermaidJS-based Sequence Diagram** for the following code${filename ? ` from the file "${filename}"` : ''}:
+
+- 🧑‍🤝‍🧑 Clearly show **actors**, components, and message exchanges.
+- ⏱️ Annotate with **activation bars**, **lifelines**, and **method call order**.
+- 🔄 Distinguish **sync/async flows** with appropriate arrows.
+- ❗ Highlight **critical paths**, bottlenecks, and exception handlers.
+- 📌 Add notes beside complex steps explaining purpose or risk.
+- 🧩 Visuals should be **clean**, **color-coded**, and logically grouped.
+
+Goal: Help developers understand **runtime behavior and component interactions**.
+
+### Code:
+\`\`\`
+${code}
+\`\`\`
+`;
+      break;
+
+    case "UML Diagram":
+      prompt = `
+Generate a **UML Class Diagram using Mermaid syntax** for the following code${filename ? ` from the file "${filename}"` : ''}:
+
+- 📦 Show all **classes, interfaces, attributes, and methods** with visibility.
+- 🧬 Represent relationships: **inheritance, composition, association, dependencies**.
+- 🔐 Annotate with access modifiers (public/private/protected).
+- 🎨 Use **color coding or tags** for abstract classes, interfaces, and critical components.
+- 🧠 Add design insights: **SRP violations**, **refactor suggestions**, or SOLID adherence.
+- 📌 Include a **legend** for readability.
+
+Purpose: Help developers and architects understand **code structure and design hierarchy**.
+
+### Code:
+\`\`\`
+${code}
+\`\`\`
+`;
+      break;
+
+    case "Flowchart":
+      prompt = `
+Generate a **Mermaid-based Flowchart** for the following code logic${filename ? ` from the file "${filename}"` : ''}:
+
+- 🚀 Start from the entry point and **map the flow** step-by-step.
+- 🔁 Show **loops**, **conditionals**, and **function calls** clearly.
+- ❗ Highlight **decision points**, error states, and edge cases.
+- 🌈 Use **vibrant colors**, **icons**, and **symbols** to improve visual clarity.
+- 💬 Annotate complex branches and provide **optimization tips** and **security notes**.
+- 📌 Clearly label each node, and add **a legend** or tooltip guide.
+
+Intended for: Developers needing a quick yet powerful **visual of logic flow**.
+
+### Code:
+\`\`\`
+${code}
+\`\`\`
 `;
       break;
 
     default:
-      return "Invalid docType";
+      prompt = `
+Generate clean, well-structured **developer documentation** for the following code${filename ? ` from the file "${filename}"` : ''} with:
+
+- 📄 Clear sectioning and formatting
+- 📌 Explanations of code logic, usage examples, and context
+- 🌐 Visual aids such as diagrams, tables, and charts where appropriate
+- 🧠 Emphasis on clarity, best practices, and purpose of each component
+- 🌈 Use modern, colorful formatting for improved readability
+
+### Code:
+\`\`\`
+${code}
+\`\`\`
+`;
   }
 
   try {
