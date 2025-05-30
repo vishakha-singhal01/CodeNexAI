@@ -15,6 +15,7 @@ import { ForgotPasswordPage } from "./pages/Auth/ForgotPasswordPage";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage"; // Import Privacy Policy Page
 import TermsOfServicePage from "./pages/TermsOfServicePage"; // Import Terms of Service Page
 import VerifyEmailPage from "./pages/Auth/VerifyEmailPage"; // Import VerifyEmailPage
+import { ResetPasswordPage } from "./pages/Auth/ResetPasswordPage";
 
 const queryClient = new QueryClient();
 
@@ -92,14 +93,15 @@ const App = () => (
           <Route path="/privacy" element={<PrivacyPolicyPage />} /> {/* Add Privacy Policy Route */}
           <Route path="/terms" element={<TermsOfServicePage />} /> {/* Add Terms of Service Route */}
           <Route path="/verify-email/:token" element={<VerifyEmailPage />} /> {/* Add Verify Email Route */}
-           <Route
-              path="/forgot-password"
-              element={
-                <div className="flex items-center justify-center min-h-screen bg-background">
-                  <ForgotPasswordPage />
-                </div>
-              }
-            />
+          <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+          <Route
+            path="/forgot-password"
+            element={
+              <div className="flex items-center justify-center min-h-screen bg-background">
+                <ForgotPasswordPage />
+              </div>
+            }
+          />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
