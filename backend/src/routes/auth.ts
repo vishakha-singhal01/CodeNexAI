@@ -105,6 +105,7 @@ const signupHandler: RequestHandler = async (req: Request, res, next) => {
 // Apply the handler and limiter to the signup route
 router.post('/signup', authLimiter, signupHandler);
 router.post('/forgot-password', authLimiter, authController.forgotPassword as RequestHandler);
+router.post('/reset-password', authLimiter, authController.resetPassword as RequestHandler);
 
 // POST /api/auth/login (Email/Password Login for existing session-based flow)
 // Apply the limiter to the login route
