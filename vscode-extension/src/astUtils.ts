@@ -156,7 +156,7 @@ export async function extractCodeStructures(code: string, filename?: string): Pr
         ClassMethod(path: NodePath<t.ClassMethod>) {
             const node = path.node;
             // Find the parent class structure
-            const parentClassPath = path.findParent((p) => p.isClassDeclaration());
+            const parentClassPath = path.findParent((p: NodePath) => p.isClassDeclaration());
             const parentClassNode = parentClassPath?.node as t.ClassDeclaration | undefined;
             const parentClassName = parentClassNode?.id?.name || 'anonymous';
 
@@ -186,7 +186,7 @@ export async function extractCodeStructures(code: string, filename?: string): Pr
         },
         VariableDeclaration(path: NodePath<t.VariableDeclaration>) {
             // Check for arrow functions assigned to variables (e.g., const myFunction = () => {})
-            path.node.declarations.forEach(declaration => {
+            path.node.declarations.forEach((declaration: any) => {
                 if (t.isIdentifier(declaration.id) && (t.isArrowFunctionExpression(declaration.init) || t.isFunctionExpression(declaration.init))) {
                     const node = declaration.init;
                     const structure: CodeDocumentation = {

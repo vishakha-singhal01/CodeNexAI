@@ -1,5 +1,6 @@
 import express, { Router, Request, Response, NextFunction, RequestHandler } from 'express';
 import passport from 'passport';
+import * as authController from '../controllers/authController';
 import rateLimit from 'express-rate-limit';
 import crypto from 'crypto'; // Import crypto for token generation
 import User, { IUser } from '../models/User'; // Adjust path if necessary
@@ -19,7 +20,7 @@ const authLimiter = rateLimit({
 // --- Local Authentication Routes ---
 
 // Define the signup handler separately to ensure correct typing
-const signupHandler: RequestHandler = async (req, res, next) => {
+const signupHandler: RequestHandler = async (req: Request, res, next) => {
     const { email, password, username, displayName } = req.body; // Added username
 
     // --- Enhanced Input Validation ---
@@ -103,7 +104,8 @@ const signupHandler: RequestHandler = async (req, res, next) => {
 
 // Apply the handler and limiter to the signup route
 router.post('/signup', authLimiter, signupHandler);
-
+router.post('/forgot-password', authLimiter, authController.forgotPassword as RequestHandler);
+router.post('/reset-password', authLimiter, authController.resetPassword as RequestHandler);
 
 // POST /api/auth/login (Email/Password Login for existing session-based flow)
 // Apply the limiter to the login route
@@ -119,7 +121,7 @@ router.post('/login', authLimiter, (req: Request, res: Response, next: NextFunct
         req.logIn(user, (loginErr) => { // Renamed err to loginErr to avoid conflict with outer err
             if (loginErr) { return next(loginErr); }
 
-            const userResponse = { id: user._id, email: user.email, displayName: user.displayName, plan: user.plan, isEmailVerified: user.isEmailVerified };
+            const userResponse = { id: user._id, email: user.email, displayName: user.displayName, googleId: user.googleId, githubId: user.githubId, plan: user.plan, isEmailVerified: user.isEmailVerified };
             return res.json({ message: 'Login successful.', user: userResponse });
         });
     })(req, res, next);
@@ -179,7 +181,6 @@ router.post('/vscode-login', authLimiter, async (req: Request, res: Response, ne
 });
 // --- End New Login Handler for VS Code ---
 
-
 // POST /api/auth/logout (for session-based logout)
 router.post('/logout', (req: Request, res: Response, next: NextFunction) => {
     console.log(`[Auth Route] Received POST request for /api/auth/logout. User authenticated: ${req.isAuthenticated()}`); // <-- Add logging
@@ -211,13 +212,12 @@ router.get('/current_user', (req: Request, res: Response) => {
     }
 });
 
-
 // --- Google OAuth Routes ---
 
-// GET /api/auth/google (Initiate Google OAuth flow)
-router.get('/google', passport.authenticate('google', {
-    scope: ['profile', 'email'] // Request profile and email access
-}));
+// // GET /api/auth/google (Initiate Google OAuth flow)
+// router.get('/google', passport.authenticate('google', {
+//     scope: ['profile', 'email'] // Request profile and email access
+// });
 
 // GET /api/auth/google/callback (Google OAuth callback URL)
 router.get('/google/callback', (req: Request, res: Response, next: NextFunction) => {
@@ -254,7 +254,7 @@ router.get('/google/callback', (req: Request, res: Response, next: NextFunction)
                                 setTimeout(() => window.close(), 100);
                             } else {
                                 console.error('Popup: window.opener is not available.');
-                                document.body.innerText = 'Error: Could not communicate back to the original window. Please close this window manually.';
+                                document.body.innerText = 'Error: Could not communicate back to the original window. Please close this window.';
                             }
                         } catch (e) {
                             console.error('Popup: Error executing postMessage script:', e);
@@ -293,10 +293,10 @@ router.get('/google/callback', (req: Request, res: Response, next: NextFunction)
 
 // --- GitHub OAuth Routes ---
 
-// GET /api/auth/github (Initiate GitHub OAuth flow)
-router.get('/github', passport.authenticate('github', {
-    scope: ['user:email'] // Request email access
-}));
+// // GET /api/auth/github (Initiate GitHub OAuth flow)
+// router.get('/github', passport.authenticate('github', {
+//     scope: ['user:email'] // Request email access
+// });
 
 // GET /api/auth/github/callback (GitHub OAuth callback URL)
 router.get('/github/callback', (req: Request, res: Response, next: NextFunction) => {
@@ -333,7 +333,7 @@ router.get('/github/callback', (req: Request, res: Response, next: NextFunction)
                                 setTimeout(() => window.close(), 100);
                             } else {
                                 console.error('Popup: window.opener is not available.');
-                                document.body.innerText = 'Error: Could not communicate back to the original window. Please close this window manually.';
+                                document.body.innerText = 'Error: Could not communicate back to the original window. Please close this window.';
                             }
                         } catch (e) {
                             console.error('Popup: Error executing postMessage script:', e);

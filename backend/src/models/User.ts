@@ -13,6 +13,8 @@ export interface IUser extends Document {
   isEmailVerified: boolean;
   emailVerificationToken?: string;
   emailVerificationTokenExpires?: Date;
+  resetToken?: string;
+  resetTokenExpiration?: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
@@ -31,10 +33,18 @@ const UserSchema: Schema = new Schema({
     // Required only if not using OAuth
     // We'll handle this logic during user creation/update
   },
-  googleId: {
+    googleId: {
+        type: String,
+        unique: true,
+        sparse: true,
+    },
+  resetToken: {
     type: String,
-    unique: true,
-    sparse: true,
+    required: false,
+  },
+  resetTokenExpiration: {
+    type: Date,
+    required: false,
   },
   githubId: {
     type: String,

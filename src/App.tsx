@@ -11,9 +11,11 @@ import { LoginPage } from "./pages/Auth/LoginPage"; // Import LoginPage
 import { SignupPage } from "./pages/Auth/SignupPage"; // Import SignupPage
 import ContactPage from "./pages/ContactPage"; // Import ContactPage
 import SecurityPage from "./pages/SecurityPage"; // Import SecurityPage
+import { ForgotPasswordPage } from "./pages/Auth/ForgotPasswordPage";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage"; // Import Privacy Policy Page
 import TermsOfServicePage from "./pages/TermsOfServicePage"; // Import Terms of Service Page
 import VerifyEmailPage from "./pages/Auth/VerifyEmailPage"; // Import VerifyEmailPage
+import { ResetPasswordPage } from "./pages/Auth/ResetPasswordPage";
 
 const queryClient = new QueryClient();
 
@@ -59,7 +61,7 @@ const AuthRedirector = () => {
       // If user tries to access a protected route, redirect to login and pass the current location.
       // For this example, let's consider any page not explicitly public or informational as protected.
       // This is a simplified check.
-      const informationalPages = ['/', '/contact', '/security', '/privacy', '/terms']; // Add root as informational for non-logged-in users
+      const informationalPages = ['/', '/contact', '/security', '/privacy', '/terms', '/forgot-password', '/reset-password/:token']; // Add root as informational for non-logged-in users
       const isPublicOrInfo = publicOnlyPaths.includes(location.pathname) || informationalPages.includes(location.pathname);
 
       if (!isPublicOrInfo) {
@@ -91,6 +93,15 @@ const App = () => (
           <Route path="/privacy" element={<PrivacyPolicyPage />} /> {/* Add Privacy Policy Route */}
           <Route path="/terms" element={<TermsOfServicePage />} /> {/* Add Terms of Service Route */}
           <Route path="/verify-email/:token" element={<VerifyEmailPage />} /> {/* Add Verify Email Route */}
+          <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+          <Route
+            path="/forgot-password"
+            element={
+              <div className="flex items-center justify-center min-h-screen bg-background">
+                <ForgotPasswordPage />
+              </div>
+            }
+          />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

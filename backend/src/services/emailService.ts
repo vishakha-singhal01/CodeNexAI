@@ -12,7 +12,6 @@ const transporter = nodemailer.createTransport({
     pass: process.env.SMTP_PASS,
   },
 });
-
 interface EmailOptions {
   to: string;
   subject: string;
@@ -54,7 +53,8 @@ export const sendVerificationEmail = async (userEmail: string, token: string) =>
     text,
     html,
   });
-};
+
+  };
 
 export const sendPasswordResetEmail = async (userEmail: string, token: string) => {
   const resetLink = `${process.env.FRONTEND_URL}/reset-password/${token}`;
@@ -73,4 +73,5 @@ export const sendPasswordResetEmail = async (userEmail: string, token: string) =
     text,
     html,
   });
-};
+
+  };
