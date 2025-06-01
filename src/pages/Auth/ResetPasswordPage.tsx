@@ -48,6 +48,9 @@ export function ResetPasswordPage() {
 
       if (response.ok) {
         setMessage('Password updated successfully.');
+        setTimeout(() => {
+          navigate('/login');
+        }, 2000);
       } else {
         const data = await response.json();
         setError(data.message || 'Failed to reset password.');
