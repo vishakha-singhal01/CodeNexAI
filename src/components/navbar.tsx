@@ -56,7 +56,7 @@ export const Navbar = () => {
             {/* Mobile Menu Button */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-<Button variant="ghost" className="md:hidden!important relative h-8 w-8 rounded-full">
+<Button variant="ghost" className="relative h-8 w-8 rounded-full md:hidden">
                   {user ? (
                     <Avatar className="h-8 w-8">
                       <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
@@ -105,7 +105,7 @@ export const Navbar = () => {
               // User is logged in - Show User Dropdown
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-<Button variant="ghost" className="relative h-8 w-8 rounded-full hidden md:block!important">
+                  <Button variant="ghost" className="relative h-8 w-8 rounded-full md:block hidden">
                     <Avatar className="h-8 w-8">
                       <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
                     </Avatar>
