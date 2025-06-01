@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,6 +12,8 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { darcula } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import remarkGfm from 'remark-gfm';
 import "github-markdown-css/github-markdown.css";
+import rehypeRaw from 'rehype-raw';
+import html2pdf from 'html2pdf.js';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -80,6 +82,7 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
   const [selectedDocType, setSelectedDocType] = useState("");
   const [selectedDiagramType, setSelectedDiagramType] = useState<string[]>([]);
   const [quoteIndex, setQuoteIndex] = useState(0);
+  const markdownRef = useRef<HTMLDivElement>(null);
 
   const tabOptions = [
     { value: "paste", label: "Paste Code", disabled: false, badge: null },
@@ -89,33 +92,48 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
 
   const currentTabLabel = tabOptions.find(tab => tab.value === selectedTab)?.label || "Select Option";
 
-  const handleDownloadPDF = useCallback(() => {
-    const preview = document.getElementById('markdown-preview');
-    if (!preview) return;
+  const handleDownloadPDF = () => {
+    if (!markdownRef.current) return;
 
-    const printWindow = window.open('', '', 'width=800,height=600');
-    if (!printWindow) return;
+    const opt = {
+      margin: 0.5,
+      filename: 'codenexai-document.pdf',
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
 
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Generated Documentation</title>
-          <style>
-            body { font-family: sans-serif; padding: 2rem; }
-            .prose { max-width: 100%; }
-          </style>
-        </head>
-        <body>
-          ${preview.innerHTML}
-        </body>
-      </html>
-    `);
+    html2pdf().set(opt).from(markdownRef.current).save();
+  };
 
-    printWindow.document.close();
-    printWindow.focus();
-    printWindow.print();
-  }, []);
+  const handleDownloadHTML = () => {
+    if (!markdownRef.current) return;
+
+    const htmlContent = markdownRef.current.innerHTML;
+    const fullHTML = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8" />
+      <title>Document</title>
+      <style>
+        body { font-family: sans-serif; padding: 20px; }
+      </style>
+    </head>
+    <body>
+      ${htmlContent}
+    </body>
+    </html>
+  `;
+
+    const blob = new Blob([fullHTML], { type: "text/html" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "codenexai-document.html";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -125,7 +143,31 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
     return () => clearInterval(interval);
   }, []);
 
+  const slugify = (text: string) =>
+    text
+      .toLowerCase()
+      .replace(/[^\w]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+
   const renderers: Components = {
+    h1: ({ children }) => {
+      const id = slugify(children[0]?.toString() || '');
+      return <h1 id={id} className="text-3xl font-bold mt-6 mb-4">{children}</h1>;
+    },
+    h2: ({ children }) => {
+      const id = slugify(children[0]?.toString() || '');
+      return <h2 id={id} className="text-2xl font-semibold mt-5 mb-3">{children}</h2>;
+    },
+    h3: ({ children }) => {
+      const id = slugify(children[0]?.toString() || '');
+      return <h3 id={id} className="text-xl font-medium mt-4 mb-2">{children}</h3>;
+    },
+    a: ({ href, children }) => (
+      <a href={href} target='_blank' className="text-blue-600 underline" rel="noopener noreferrer">
+        {children}
+      </a>
+    ),
+    br: () => <br />,
     code({ node, inline, className, children, ...props }: any & { inline?: boolean }) {
       const match = /language-(\w+)/.exec(className || '');
       return !inline && match ? (
@@ -212,6 +254,7 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
       );
     },
   };
+
 
   const handleTabChangeInternal = (newTabValue: string) => {
     setSelectedTab(newTabValue);
@@ -655,15 +698,18 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
                             <DropdownMenuItem onClick={handleDownloadDocs}>
                               via Markdown
                             </DropdownMenuItem>
-                            {/* <DropdownMenuItem onClick={handleDownloadPDF}>
+                            <DropdownMenuItem onClick={handleDownloadHTML}>
+                              via HTML
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={handleDownloadPDF}>
                               via PDF
-                            </DropdownMenuItem> */}
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
 
-                      <div className="pt-12 overflow-x-auto whitespace-pre-wrap break-words markdown-body">
-                        <ReactMarkdown remarkPlugins={[remarkGfm]} components={renderers}>
+                      <div className="pt-12 overflow-x-auto whitespace-pre-wrap break-words markdown-body" ref={markdownRef}>
+                        <ReactMarkdown remarkPlugins={[remarkGfm]} components={renderers} rehypePlugins={[rehypeRaw]}>
                           {generatedDocs}
                         </ReactMarkdown>
                       </div>
