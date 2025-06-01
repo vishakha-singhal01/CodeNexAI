@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -81,6 +81,7 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
   const [selectedDocType, setSelectedDocType] = useState("");
   const [selectedDiagramType, setSelectedDiagramType] = useState<string[]>([]);
   const [quoteIndex, setQuoteIndex] = useState(0);
+  const markdownRef = useRef<HTMLDivElement>(null);
 
   const tabOptions = [
     { value: "paste", label: "Paste Code", disabled: false, badge: null },
@@ -118,6 +119,35 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
     printWindow.print();
   }, []);
 
+  const handleDownloadHTML = () => {
+    if (!markdownRef.current) return;
+
+    const htmlContent = markdownRef.current.innerHTML;
+    const fullHTML = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8" />
+      <title>Document</title>
+      <style>
+        body { font-family: sans-serif; padding: 20px; }
+      </style>
+    </head>
+    <body>
+      ${htmlContent}
+    </body>
+    </html>
+  `;
+
+    const blob = new Blob([fullHTML], { type: "text/html" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "codenexai-document.html";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   useEffect(() => {
     const interval = setInterval(() => {
       setQuoteIndex((prevIndex) => (prevIndex + 1) % quotes.length);
@@ -129,8 +159,8 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
   const slugify = (text: string) =>
     text
       .toLowerCase()
-      .replace(/[^\w]+/g, '-') 
-      .replace(/^-+|-+$/g, ''); 
+      .replace(/[^\w]+/g, '-')
+      .replace(/^-+|-+$/g, '');
 
   const renderers: Components = {
     h1: ({ children }) => {
@@ -151,7 +181,7 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
       </a>
     ),
     br: () => <br />,
-        code({ node, inline, className, children, ...props }: any & { inline?: boolean }) {
+    code({ node, inline, className, children, ...props }: any & { inline?: boolean }) {
       const match = /language-(\w+)/.exec(className || '');
       return !inline && match ? (
         <SyntaxHighlighter
@@ -681,14 +711,14 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
                             <DropdownMenuItem onClick={handleDownloadDocs}>
                               via Markdown
                             </DropdownMenuItem>
-                            {/* <DropdownMenuItem onClick={handleDownloadPDF}>
-                              via PDF
-                            </DropdownMenuItem> */}
+                            <DropdownMenuItem onClick={handleDownloadHTML}>
+                              via HTML
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
 
-                      <div className="pt-12 overflow-x-auto whitespace-pre-wrap break-words markdown-body">
+                      <div className="pt-12 overflow-x-auto whitespace-pre-wrap break-words markdown-body" ref={markdownRef}>
                         <ReactMarkdown remarkPlugins={[remarkGfm]} components={renderers} rehypePlugins={[rehypeRaw]}>
                           {generatedDocs}
                         </ReactMarkdown>
