@@ -13,6 +13,7 @@ import { darcula } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import remarkGfm from 'remark-gfm';
 import "github-markdown-css/github-markdown.css";
 import rehypeRaw from 'rehype-raw';
+import html2pdf from 'html2pdf.js';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -91,33 +92,19 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
 
   const currentTabLabel = tabOptions.find(tab => tab.value === selectedTab)?.label || "Select Option";
 
-  const handleDownloadPDF = useCallback(() => {
-    const preview = document.getElementById('markdown-preview');
-    if (!preview) return;
+  const handleDownloadPDF = () => {
+    if (!markdownRef.current) return;
 
-    const printWindow = window.open('', '', 'width=800,height=600');
-    if (!printWindow) return;
+    const opt = {
+      margin: 0.5,
+      filename: 'codenexai-document.pdf',
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
 
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Generated Documentation</title>
-          <style>
-            body { font-family: sans-serif; padding: 2rem; }
-            .prose { max-width: 100%; }
-          </style>
-        </head>
-        <body>
-          ${preview.innerHTML}
-        </body>
-      </html>
-    `);
-
-    printWindow.document.close();
-    printWindow.focus();
-    printWindow.print();
-  }, []);
+    html2pdf().set(opt).from(markdownRef.current).save();
+  };
 
   const handleDownloadHTML = () => {
     if (!markdownRef.current) return;
@@ -176,7 +163,7 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
       return <h3 id={id} className="text-xl font-medium mt-4 mb-2">{children}</h3>;
     },
     a: ({ href, children }) => (
-      <a href={href} className="text-blue-600 underline" rel="noopener noreferrer">
+      <a href={href} target='_blank' className="text-blue-600 underline" rel="noopener noreferrer">
         {children}
       </a>
     ),
@@ -713,6 +700,9 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={handleDownloadHTML}>
                               via HTML
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={handleDownloadPDF}>
+                              via PDF
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
