@@ -61,8 +61,12 @@ const AuthRedirector = () => {
       // If user tries to access a protected route, redirect to login and pass the current location.
       // For this example, let's consider any page not explicitly public or informational as protected.
       // This is a simplified check.
-      const informationalPages = ['/', '/contact', '/security', '/privacy', '/terms', '/forgot-password', '/reset-password/:token']; // Add root as informational for non-logged-in users
-      const isPublicOrInfo = publicOnlyPaths.includes(location.pathname) || informationalPages.includes(location.pathname);
+      const informationalPages = ['/', '/contact', '/security', '/privacy', '/terms', '/forgot-password']; // Add root as informational for non-logged-in users
+      const isPublicOrInfo = publicOnlyPaths.includes(location.pathname) || informationalPages.includes(location.pathname) || location.pathname.startsWith('/reset-password');
+
+      console.log('location.pathname:', location.pathname);
+      console.log('isPublicOrInfo:', isPublicOrInfo);
+      console.log('user:', user);
 
       if (!isPublicOrInfo) {
         console.log(`User not logged in, attempting to access ${location.pathname}, redirecting to /login`);
