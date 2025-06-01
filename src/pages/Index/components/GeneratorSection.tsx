@@ -12,6 +12,7 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { darcula } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import remarkGfm from 'remark-gfm';
 import "github-markdown-css/github-markdown.css";
+import rehypeRaw from 'rehype-raw';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -125,8 +126,32 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
     return () => clearInterval(interval);
   }, []);
 
+  const slugify = (text: string) =>
+    text
+      .toLowerCase()
+      .replace(/[^\w]+/g, '-') 
+      .replace(/^-+|-+$/g, ''); 
+
   const renderers: Components = {
-    code({ node, inline, className, children, ...props }: any & { inline?: boolean }) {
+    h1: ({ children }) => {
+      const id = slugify(children[0]?.toString() || '');
+      return <h1 id={id} className="text-3xl font-bold mt-6 mb-4">{children}</h1>;
+    },
+    h2: ({ children }) => {
+      const id = slugify(children[0]?.toString() || '');
+      return <h2 id={id} className="text-2xl font-semibold mt-5 mb-3">{children}</h2>;
+    },
+    h3: ({ children }) => {
+      const id = slugify(children[0]?.toString() || '');
+      return <h3 id={id} className="text-xl font-medium mt-4 mb-2">{children}</h3>;
+    },
+    a: ({ href, children }) => (
+      <a href={href} className="text-blue-600 underline" rel="noopener noreferrer">
+        {children}
+      </a>
+    ),
+    br: () => <br />,
+        code({ node, inline, className, children, ...props }: any & { inline?: boolean }) {
       const match = /language-(\w+)/.exec(className || '');
       return !inline && match ? (
         <SyntaxHighlighter
@@ -212,6 +237,7 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
       );
     },
   };
+
 
   const handleTabChangeInternal = (newTabValue: string) => {
     setSelectedTab(newTabValue);
@@ -663,7 +689,7 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
                       </div>
 
                       <div className="pt-12 overflow-x-auto whitespace-pre-wrap break-words markdown-body">
-                        <ReactMarkdown remarkPlugins={[remarkGfm]} components={renderers}>
+                        <ReactMarkdown remarkPlugins={[remarkGfm]} components={renderers} rehypePlugins={[rehypeRaw]}>
                           {generatedDocs}
                         </ReactMarkdown>
                       </div>
