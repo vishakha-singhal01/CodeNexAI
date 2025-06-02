@@ -21,7 +21,7 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from '@/context/AuthContext';
-import { Github, Download, ChevronDown, FileText, BookOpen, Layers, ListTree, Activity, GitBranch, Code } from 'lucide-react';
+import { Github, Download, ChevronDown, FileText, BookOpen, Layers, ListTree, Activity, GitBranch, Code, Bot, Satellite, Cpu, Cloud, Zap } from 'lucide-react';
 import { docTypeDescriptionMap, docTypeIconMap, docTypeOptions, quotes, tieredDocTypes } from './data';
 import { cn } from '@/lib/utils';
 
@@ -400,10 +400,18 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
   }, [generateDocsApiCall, isValidGitHubUrl, repoUrl, setDocsError, setInputCode, setUploadedFiles, githubToken, inputCode, selectedDocType]);
 
   return (
-<section
-  id="generator-section"
-  className="w-full py-20 md:py-28 lg:py-32 bg-gradient-to-br from-[#fff1f7] via-[#fde2ff] to-[#f3e8ff] text-gray-900"
->
+    <section
+      id="generator-section"
+      className="w-full py-20 md:py-28 lg:py-32 relative overflow-hidden"
+    >
+
+      {/* Floating Elements */}
+      <div className="absolute top-20 left-10 w-20 h-20 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-full opacity-30 animate-pulse" />
+      <div className="absolute top-40 right-20 w-16 h-16 bg-gradient-to-br from-purple-600 to-pink-700 rounded-full opacity-30 animate-pulse delay-1000" />
+      <div className="absolute bottom-40 left-20 w-12 h-12 bg-gradient-to-br from-green-600 to-blue-700 rounded-full opacity-30 animate-pulse delay-2000" />
+
+      {/* Grid overlay with lighter transparency for dark bg */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(128,128,128,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(128,128,128,0.05)_1px,transparent_1px)] bg-[size:14px_24px]" />
 
 
       <div className="container px-4 md:px-6 max-w-6xl mx-auto ">
@@ -412,6 +420,8 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
             <Badge variant="outline" className="px-3 py-1 text-sm bg-primary/10 text-primary border-primary/20">
               AI-Powered
             </Badge>
+            <Bot className="w-8 h-8 text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-indigo-500" />
+
           </div>
           <h2 className="text-4xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-600">
             ✨ Try the AI Generator
@@ -462,9 +472,8 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
                 <button
                   key={tab}
                   onClick={() => setSelectedTierTab(tab)}
-                  className={`py-3 px-6 font-medium border-b-2 transition-all ${
-                    selectedTierTab === tab ? "border-primary text-primary" : "border-transparent hover:text-primary/70"
-                  }`}
+                  className={`py-3 px-6 font-medium border-b-2 transition-all ${selectedTierTab === tab ? "border-primary text-primary" : "border-transparent hover:text-primary/70"
+                    }`}
                 >
                   {tab.charAt(0).toUpperCase() + tab.slice(1)}
                 </button>
