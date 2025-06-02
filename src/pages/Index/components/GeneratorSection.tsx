@@ -410,9 +410,6 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
       <div className="absolute top-40 right-20 w-16 h-16 bg-gradient-to-br from-purple-600 to-pink-700 rounded-full opacity-30 animate-pulse delay-1000" />
       <div className="absolute bottom-40 left-20 w-12 h-12 bg-gradient-to-br from-green-600 to-blue-700 rounded-full opacity-30 animate-pulse delay-2000" />
 
-      {/* Grid overlay with lighter transparency for dark bg */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(128,128,128,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(128,128,128,0.05)_1px,transparent_1px)] bg-[size:14px_24px]" />
-
 
       <div className="container px-4 md:px-6 max-w-6xl mx-auto ">
         <div className="flex flex-col items-center gap-4 text-center mb-12">
