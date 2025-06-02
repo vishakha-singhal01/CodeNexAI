@@ -13,8 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-// Import icons if you have them, e.g., from lucide-react
-// import { Chrome, Github } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react'; // Import icons
 import { Link } from 'react-router-dom'; // Import Link
 
 export function SignupPage() {
@@ -26,6 +25,7 @@ export function SignupPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null); // Added success message state
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleEmailSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -124,16 +124,23 @@ export function SignupPage() {
                 disabled={isLoading}
               />
             </div>
-            <div className="grid gap-1">
+            <div className="grid gap-1 relative">
               <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isLoading}
               />
+              <button
+                type="button"
+                className="absolute top-1/3 right-3 translate-y-1/2 px-1 flex items-center focus:outline-none"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
             </div>
             {error && <p className="text-sm text-red-500 text-center">{error}</p>}
             <Button type="submit" className="w-full mt-2" disabled={isLoading}>
