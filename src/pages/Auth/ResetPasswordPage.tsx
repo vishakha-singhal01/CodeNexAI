@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import * as MaterialIcons from '@mui/icons-material';
+import { Eye, EyeOff } from 'lucide-react';
 
 export function ResetPasswordPage() {
   const { token } = useParams();
@@ -86,7 +86,7 @@ export function ResetPasswordPage() {
                   className="absolute inset-y-0 right-2 flex items-center cursor-pointer"
                   onClick={() => setShowPassword(!showPassword)}
                 >
-                  {showPassword ? <MaterialIcons.VisibilityOff /> : <MaterialIcons.Visibility />}
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </span>
               </div>
             </div>
@@ -105,7 +105,7 @@ export function ResetPasswordPage() {
                   className="absolute inset-y-0 right-2 flex items-center cursor-pointer"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 >
-                  {showConfirmPassword ? <MaterialIcons.VisibilityOff /> : <MaterialIcons.Visibility />}
+                 {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </span>
               </div>
             </div>
