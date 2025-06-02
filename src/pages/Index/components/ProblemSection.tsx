@@ -143,7 +143,10 @@ export const ProblemSection = () => {
                 Stop wasting time on code archaeology. CodeNexAI instantly explains any code, from single functions to
                 entire repositories.
               </p>
-              <Button size="lg" className="bg-white text-red-600 hover:bg-gray-100 text-lg px-8 py-6">
+              <Button size="lg" className="bg-white text-red-600 hover:bg-gray-100 text-lg px-8 py-6" onClick={() => {
+              const generatorSection = document.getElementById("how-it-works")
+              generatorSection?.scrollIntoView({ behavior: "smooth" })
+            }}>
                 See How It Works
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>

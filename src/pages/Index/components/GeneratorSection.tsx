@@ -402,7 +402,7 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
   return (
     <section
       id="generator-section"
-      className="w-full py-20 md:py-28 lg:py-32 relative overflow-hidden"
+      className="w-full py-10 md:py-28 lg:py-32 relative overflow-hidden"
     >
 
       {/* Floating Elements */}
@@ -414,14 +414,14 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
       <div className="container px-4 md:px-6 max-w-6xl mx-auto ">
         <div className="flex flex-col items-center gap-4 text-center mb-12">
           <div className="inline-block mb-2">
-            <Badge variant="outline" className="px-3 py-1 text-sm bg-primary/10 text-primary border-primary/20">
-              AI-Powered
+            <Badge variant="secondary" className="mb-4 px-4 py-2 text-sm font-medium">
+              🚀 AI-Powered
             </Badge>
             <Bot className="w-8 h-8 text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-indigo-500" />
 
           </div>
           <h2 className="text-4xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-600">
-            ✨ Try the AI Generator
+            Try the AI Generator
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl">
             Paste code, upload files, or link a public GitHub repo. <br className="hidden md:block" />

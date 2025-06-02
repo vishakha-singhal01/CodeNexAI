@@ -114,10 +114,10 @@ export const FeaturesSection = () => {
                   <Check className="h-5 w-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" />
                   <span className="text-gray-700">Multiple export formats</span>
                 </li>
-                <li className="flex items-start">
+                {/* <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" />
                   <span className="text-gray-700">Team collaboration features</span>
-                </li>
+                </li> */}
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" />
                   <span className="text-gray-700">Senior developer-level quality</span>
