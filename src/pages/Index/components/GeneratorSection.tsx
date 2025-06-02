@@ -400,13 +400,22 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
   }, [generateDocsApiCall, isValidGitHubUrl, repoUrl, setDocsError, setInputCode, setUploadedFiles, githubToken, inputCode, selectedDocType]);
 
   return (
-    <section
-      id="generator-section"
-      className="w-full py-20 md:py-28 lg:py-32 bg-background border-t"
-    >
-      <div className="container px-4 md:px-6 max-w-6xl mx-auto">
+<section
+  id="generator-section"
+  className="w-full py-20 md:py-28 lg:py-32 bg-gradient-to-br from-[#fff1f7] via-[#fde2ff] to-[#f3e8ff] text-gray-900"
+>
+
+
+      <div className="container px-4 md:px-6 max-w-6xl mx-auto ">
         <div className="flex flex-col items-center gap-4 text-center mb-12">
-          <h2 className="text-4xl font-bold tracking-tight">✨ Try the AI Generator</h2>
+          <div className="inline-block mb-2">
+            <Badge variant="outline" className="px-3 py-1 text-sm bg-primary/10 text-primary border-primary/20">
+              AI-Powered
+            </Badge>
+          </div>
+          <h2 className="text-4xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-600">
+            ✨ Try the AI Generator
+          </h2>
           <p className="text-lg text-muted-foreground max-w-2xl">
             Paste code, upload files, or link a public GitHub repo. <br className="hidden md:block" />
             <span className="text-sm text-primary/70">(Feature access depends on your plan)</span>
@@ -439,7 +448,7 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
           ].map((lang) => (
             <span
               key={lang}
-              className="px-3 py-1 text-sm rounded-full bg-muted text-foreground border border-border shadow-sm"
+              className="px-3 py-1 text-sm rounded-full bg-muted/80 text-foreground border border-border shadow-sm hover:bg-muted transition-colors"
             >
               {lang}
             </span>
@@ -447,263 +456,366 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
         </div>
 
         {!selectedDocType ? (
-          <div>
-            <div className="flex space-x-4 mb-4 border-b border-gray-300 dark:border-gray-700">
-              {(['free', 'pro', 'enterprise'] as const).map((tab) => (
+          <div className="max-w-5xl mx-auto">
+            <div className="flex space-x-4 mb-6 border-b border-border">
+              {(["free", "pro", "enterprise"] as const).map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setSelectedTierTab(tab)}
-                  className={`py-2 px-4 font-semibold border-b-2 ${selectedTierTab === tab
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent hover:text-blue-400'
-                    }`}
+                  className={`py-3 px-6 font-medium border-b-2 transition-all ${
+                    selectedTierTab === tab ? "border-primary text-primary" : "border-transparent hover:text-primary/70"
+                  }`}
                 >
                   {tab.charAt(0).toUpperCase() + tab.slice(1)}
                 </button>
               ))}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
               {tieredDocTypes[selectedTierTab]?.map((type) => (
                 <Card
                   key={type}
                   onClick={() => {
-                    if (docTypeIconMap[type].enabled) {
-                      handleSelectType(type);
+                    if (docTypeIconMap[type as keyof typeof docTypeIconMap].enabled) {
+                      handleSelectType(type)
                     }
                   }}
                   className={cn(
-                    "transition-shadow duration-300 p-4 flex flex-col items-center justify-center text-center border border-gray-300 dark:border-gray-700",
-                    docTypeIconMap[type].enabled
-                      ? "cursor-pointer hover:shadow-xl"
-                      : "opacity-50 cursor-not-allowed"
+                    "transition-all duration-300 p-6 flex flex-col items-center justify-center text-center border hover:border-primary/50",
+                    docTypeIconMap[type as keyof typeof docTypeIconMap].enabled
+                      ? "cursor-pointer hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1"
+                      : "opacity-50 cursor-not-allowed",
                   )}
                 >
-                  <div className="mb-2">{docTypeIconMap[type].icon}</div>
-                  <div className="font-semibold text-lg">{type}</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                    {docTypeDescriptionMap[type]}
+                  <div className="mb-4">{docTypeIconMap[type as keyof typeof docTypeIconMap].icon}</div>
+                  <div className="font-semibold text-lg mb-2">{type}</div>
+                  <div className="text-sm text-muted-foreground">
+                    {docTypeDescriptionMap[type as keyof typeof docTypeDescriptionMap]}
                   </div>
                 </Card>
               ))}
             </div>
           </div>
         ) : (
-          <div className="mb-16 p-6 border rounded-2xl bg-card shadow-lg">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-semibold">
-                Selected Doc Type:{" "}
-                <Badge className="px-2 py-1 text-sm">{selectedDocType}</Badge>
-              </h3>
-              <Button variant="ghost" disabled={!!isLoading} onClick={() => setSelectedDocType(null)}>
-                🔄 Change Type
-              </Button>
-            </div>
-            <CardContent className="p-8 space-y-6">
-              <Tabs
-                value={selectedTab}
-                onValueChange={handleTabChangeInternal}
-                className="w-full"
-              >
-                <TabsList className="hidden w-full md:grid md:grid-cols-3 gap-2 bg-muted/30 p-1 rounded-lg mb-6">
-                  {tabOptions.map((tab) => (
-                    <TabsTrigger
-                      key={tab.value}
-                      value={tab.value}
-                      className="rounded-lg text-sm py-2 px-3 transition-all data-[state=active]:bg-background data-[state=active]:shadow-sm"
-                      disabled={tab.disabled}
-                    >
-                      {tab.label}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-
-                <div className="md:hidden mb-6">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" className="w-full justify-between">
-                        {tabOptions.find((t) => t.value === selectedTab)?.label}
-                        <ChevronDown className="ml-2 h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-full">
-                      {tabOptions.map((tab) => (
-                        <DropdownMenuItem
-                          key={tab.value}
-                          disabled={tab.disabled}
-                          onSelect={() => handleTabChangeInternal(tab.value)}
-                        >
-                          {tab.label}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-
-                <TabsContent value="paste">
-                  <div className="grid gap-4">
-                    <Label htmlFor="code-input" className="text-base font-medium">
-                      Paste your Code
-                    </Label>
-                    <Textarea
-                      id="code-input"
-                      placeholder="Paste your code/query here...."
-                      value={inputCode}
-                      onChange={(e) => {
-                        setInputCode(e.target.value);
-                        setUploadedFiles(null);
-                        setRepoUrl("");
-                        setGeneratedDocs("");
-                        setDocsError(null);
-                      }}
-                      className="min-h-[200px] font-mono text-sm bg-muted/20 border border-border rounded-lg"
-                    />
-                    <Button
-                      size="lg"
-                      className="w-full"
-                      onClick={handleGenerateDocsFromText}
-                      disabled={isLoading || !inputCode}
-                    >
-                      {isLoading ? "Generating..." : "⚡ Generate from Text"}
-                    </Button>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="upload">
-                  <div className="grid gap-4">
-                    <Label htmlFor="file-input" className="text-base font-medium">
-                      Upload Folder
-                    </Label>
-                    <Input
-                      id="file-input"
-                      type="file"
-                      ref={fileInputRef}
-                      onChange={handleFileChange}
-                      multiple
-                      webkitdirectory="true"
-                      directory="true"
-                      className="cursor-pointer h-11 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border file:bg-background file:text-sm"
-                    />
+          <div className="mb-16 max-w-5xl mx-auto">
+            <Card className="border shadow-xl shadow-primary/5 overflow-hidden">
+              <div className="flex items-center justify-between p-6 border-b">
+                <div className="flex items-center gap-3">
+                  <h3 className="text-xl font-semibold">
+                    {docTypeIconMap[selectedDocType as keyof typeof docTypeIconMap].icon}
+                  </h3>
+                  <div>
+                    <h3 className="text-xl font-semibold">{selectedDocType}</h3>
                     <p className="text-sm text-muted-foreground">
-                      Only available on Pro & Enterprise plans
+                      {docTypeDescriptionMap[selectedDocType as keyof typeof docTypeDescriptionMap]}
                     </p>
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  disabled={!!isLoading}
+                  onClick={() => setSelectedDocType(null)}
+                  className="hover:bg-muted"
+                >
+                  Change Type
+                </Button>
+              </div>
+              <CardContent className="p-6 lg:p-8">
+                <Tabs value={selectedTab} onValueChange={handleTabChangeInternal} className="w-full">
+                  <TabsList className="hidden w-full md:grid md:grid-cols-3 gap-2 bg-muted/30 p-1 rounded-lg mb-6">
+                    {tabOptions.map((tab) => (
+                      <TabsTrigger
+                        key={tab.value}
+                        value={tab.value}
+                        className="rounded-lg text-sm py-2 px-3 transition-all data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                        disabled={tab.disabled}
+                      >
+                        {tab.label}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
 
-                    {uploadedFiles?.length > 0 && (
-                      <div className="bg-muted/20 p-3 rounded-md border max-h-32 overflow-y-auto">
-                        <p className="text-sm font-medium mb-2">Selected files:</p>
-                        <div className="flex flex-wrap gap-2">
-                          {Array.from(uploadedFiles).map((file, idx) => (
-                            <Badge key={idx} variant="secondary" className="text-xs">
-                              {file.name}
-                            </Badge>
-                          ))}
+                  <div className="md:hidden mb-6">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className="w-full justify-between">
+                          {tabOptions.find((t) => t.value === selectedTab)?.label}
+                          <ChevronDown className="ml-2 h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="w-full">
+                        {tabOptions.map((tab) => (
+                          <DropdownMenuItem
+                            key={tab.value}
+                            disabled={tab.disabled}
+                            onSelect={() => handleTabChangeInternal(tab.value)}
+                          >
+                            {tab.label}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+
+                  <TabsContent value="paste" className="space-y-6">
+                    <div className="grid gap-4">
+                      <Label htmlFor="code-input" className="text-base font-medium">
+                        Paste your Code
+                      </Label>
+                      <Textarea
+                        id="code-input"
+                        placeholder="Paste your code/query here...."
+                        value={inputCode}
+                        onChange={(e) => {
+                          setInputCode(e.target.value)
+                          setUploadedFiles(null)
+                          setRepoUrl("")
+                          setGeneratedDocs("")
+                          setDocsError(null)
+                        }}
+                        className="min-h-[200px] font-mono text-sm bg-muted/20 border border-border rounded-lg resize-y"
+                      />
+                      <Button
+                        size="lg"
+                        className="w-full bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white"
+                        onClick={handleGenerateDocsFromText}
+                        disabled={isLoading || !inputCode}
+                      >
+                        {isLoading ? "Generating..." : "⚡ Generate from Text"}
+                      </Button>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="upload" className="space-y-6">
+                    <div className="grid gap-4">
+                      <Label htmlFor="file-input" className="text-base font-medium">
+                        Upload Folder
+                      </Label>
+                      <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/50 transition-colors">
+                        <Input
+                          id="file-input"
+                          type="file"
+                          ref={fileInputRef}
+                          onChange={handleFileChange}
+                          multiple
+                          webkitdirectory="true"
+                          directory="true"
+                          className="hidden"
+                        />
+                        <div className="flex flex-col items-center gap-3">
+                          <div className="p-3 rounded-full bg-primary/10">
+                            <svg
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="text-primary"
+                            >
+                              <path
+                                d="M12 16L12 8"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                              <path
+                                d="M9 11L12 8 15 11"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                              <path
+                                d="M20 16.7428C21.2215 15.734 22 14.2079 22 12.5C22 9.46243 19.5376 7 16.5 7C16.2815 7 16.0771 6.886 15.9661 6.69774C14.6621 4.48484 12.2544 3 9.5 3C5.35786 3 2 6.35786 2 10.5C2 12.5661 2.83545 14.4371 4.18695 15.7935"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                              <path
+                                d="M8 16L12 20L16 16"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          </div>
+                          <div>
+                            <Button
+                              variant="ghost"
+                              onClick={() => fileInputRef.current?.click()}
+                              className="text-primary hover:text-primary/80"
+                            >
+                              Choose files
+                            </Button>
+                            <span className="text-sm text-muted-foreground"> or drag and drop</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground">Only available on Pro & Enterprise plans</p>
                         </div>
                       </div>
-                    )}
 
-                    <Button
-                      size="lg"
-                      className="w-full"
-                      onClick={handleGenerateDocsFromUpload}
-                      disabled={!uploadedFiles || isLoading}
-                    >
-                      {isLoading ? "Generating..." : "⚡ Generate from Files"}
-                    </Button>
-                  </div>
-                </TabsContent>
+                      {uploadedFiles?.length > 0 && (
+                        <div className="bg-muted/20 p-4 rounded-md border max-h-32 overflow-y-auto">
+                          <p className="text-sm font-medium mb-2">Selected files:</p>
+                          <div className="flex flex-wrap gap-2">
+                            {Array.from(uploadedFiles).map((file, idx) => (
+                              <Badge key={idx} variant="secondary" className="text-xs">
+                                {file.name}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
-                <TabsContent value="github">
-                  <div className="grid gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="repo-url-input" className="text-base font-medium">GitHub Repository URL</Label>
-                      <Input
-                        id="repo-url-input"
-                        placeholder="https://github.com/username/repository-name"
-                        value={repoUrl}
-                        onChange={(e) => {
-                          setRepoUrl(e.target.value);
-                          setInputCode(''); setUploadedFiles(null); setGeneratedDocs(''); setDocsError(null);
-                        }}
-                        className="font-mono text-sm h-11 rounded-md"
-                        disabled={isLoading || userPlan === 'free' || userPlan === 'pro'}
-                      />
-                      <p className="text-sm text-muted-foreground pt-1">
-                        Enter the full URL of a GitHub repository. (Available for Enterprise plan)
-                      </p>
+                      <Button
+                        size="lg"
+                        className="w-full bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white"
+                        onClick={handleGenerateDocsFromUpload}
+                        disabled={!uploadedFiles || isLoading}
+                      >
+                        {isLoading ? "Generating..." : "⚡ Generate from Files"}
+                      </Button>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="github-token-input" className="text-base font-medium">
-                        GitHub Token<span className="text-muted-foreground">(Optional for public repos, required for private)</span>
-                      </Label>
-                      <Input
-                        id="github-token-input"
-                        type="password"
-                        placeholder="Enter your GitHub token"
-                        value={githubToken}
-                        onChange={(e) => setGithubToken(e.target.value)}
-                        className="font-mono text-sm h-11 rounded-md"
-                        disabled={isLoading}
-                      />
-                      <p className="text-sm text-muted-foreground pt-1">
-                        Enter your GitHub token to access private repositories.
-                      </p>
-                      <div className="text-sm text-muted-foreground space-y-1 pt-2">
-                        <p className="font-medium">Steps to get a GitHub Token:</p>
-                        <ol className="list-decimal list-inside space-y-1">
-                          <li>Go to <a href="https://github.com/settings/tokens" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">GitHub Developer Settings</a>.</li>
-                          <li>Click on <strong>"Generate new token"</strong> (or <strong>"Fine-grained token"</strong> for more control).</li>
-                          <li>Set a name and expiration date for your token.</li>
-                          <li>Select the scopes/permissions you need (e.g., <code>repo</code> to access private repositories).</li>
-                          <li>Click <strong>"Generate token"</strong> at the bottom.</li>
-                          <li>Copy and paste the token here. You won’t be able to view it again later.</li>
-                        </ol>
+                  </TabsContent>
+
+                  <TabsContent value="github" className="space-y-6">
+                    <div className="grid gap-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="repo-url-input" className="text-base font-medium">
+                          GitHub Repository URL
+                        </Label>
+                        <Input
+                          id="repo-url-input"
+                          placeholder="https://github.com/username/repository-name"
+                          value={repoUrl}
+                          onChange={(e) => {
+                            setRepoUrl(e.target.value)
+                            setInputCode("")
+                            setUploadedFiles(null)
+                            setGeneratedDocs("")
+                            setDocsError(null)
+                          }}
+                          className="font-mono text-sm h-11 rounded-md"
+                          disabled={isLoading || userPlan === "free" || userPlan === "pro"}
+                        />
+                        <p className="text-sm text-muted-foreground pt-1">
+                          Enter the full URL of a GitHub repository. (Available for Enterprise plan)
+                        </p>
                       </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="github-token-input" className="text-base font-medium flex items-center gap-2">
+                          GitHub Token
+                          <span className="text-xs text-muted-foreground font-normal">
+                            (Optional for public repos, required for private)
+                          </span>
+                        </Label>
+                        <Input
+                          id="github-token-input"
+                          type="password"
+                          placeholder="Enter your GitHub token"
+                          value={githubToken}
+                          onChange={(e) => setGithubToken(e.target.value)}
+                          className="font-mono text-sm h-11 rounded-md"
+                          disabled={isLoading}
+                        />
+                        <p className="text-sm text-muted-foreground pt-1">
+                          Enter your GitHub token to access private repositories.
+                        </p>
+                        <div className="text-sm text-muted-foreground space-y-1 pt-2 bg-muted/30 p-4 rounded-lg border border-border">
+                          <p className="font-medium">Steps to get a GitHub Token:</p>
+                          <ol className="list-decimal list-inside space-y-1">
+                            <li>
+                              Go to{" "}
+                              <a
+                                href="https://github.com/settings/tokens"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-primary underline"
+                              >
+                                GitHub Developer Settings
+                              </a>
+                              .
+                            </li>
+                            <li>
+                              Click on <strong>"Generate new token"</strong> (or <strong>"Fine-grained token"</strong>{" "}
+                              for more control).
+                            </li>
+                            <li>Set a name and expiration date for your token.</li>
+                            <li>
+                              Select the scopes/permissions you need (e.g.,{" "}
+                              <code className="bg-muted/50 px-1 py-0.5 rounded text-xs">repo</code> to access private
+                              repositories).
+                            </li>
+                            <li>
+                              Click <strong>"Generate token"</strong> at the bottom.
+                            </li>
+                            <li>Copy and paste the token here. You won't be able to view it again later.</li>
+                          </ol>
+                        </div>
+                      </div>
+                      <Button
+                        size="lg"
+                        className="w-full bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white"
+                        onClick={handleGenerateDocsFromRepo}
+                        disabled={
+                          isLoading ||
+                          !repoUrl.trim() ||
+                          !isValidGitHubUrl(repoUrl) ||
+                          userPlan === "free" ||
+                          userPlan === "pro"
+                        }
+                      >
+                        {isLoading ? (
+                          "Generating..."
+                        ) : (
+                          <>
+                            {" "}
+                            <Github className="mr-2 h-4 w-4" /> Generate from Repo{" "}
+                          </>
+                        )}
+                      </Button>
                     </div>
-                    <Button
-                      size="lg"
-                      className="w-full"
-                      onClick={handleGenerateDocsFromRepo}
-                      disabled={isLoading || !repoUrl.trim() || !isValidGitHubUrl(repoUrl) || userPlan === 'free' || userPlan === 'pro'}
-                    >
-                      {isLoading ? "Generating..." : <> <Github className="mr-2 h-4 w-4" /> Generate from Repo </>}
-                    </Button>
-                  </div>
-                </TabsContent>
-              </Tabs>
+                  </TabsContent>
+                </Tabs>
 
-              {isLoading ? (
-                <div className="space-y-4">
-                  <Skeleton className="h-6 w-1/2" />
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-5/6" />
-                  <Skeleton className="h-4 w-2/3" />
+                {isLoading ? (
+                  <div className="space-y-6 mt-8 p-6 border rounded-lg bg-muted/10">
+                    <div className="flex items-center justify-center gap-3">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                      <div className="text-lg font-medium">Generating Documentation</div>
+                    </div>
 
-                  <div className="pt-4 text-sm italic text-muted-foreground text-center transition-opacity duration-500 ease-in-out">
-                    <p key={quoteIndex}>{quotes[quoteIndex]}</p>
+                    <div className="space-y-4">
+                      <Skeleton className="h-6 w-1/2" />
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-5/6" />
+                      <Skeleton className="h-4 w-2/3" />
+                    </div>
+
+                    <div className="pt-4 text-sm italic text-muted-foreground text-center transition-opacity duration-500 ease-in-out">
+                      <p key={quoteIndex} className="animate-pulse">
+                        {quotes[quoteIndex]}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ) :
-                generatedDocs && (
-                  <>
-                    <div className="mt-6 p-4 rounded-lg border border-border font-mono text-sm relative overflow-auto">
-                      <div className="absolute top-4 right-4">
+                ) : (
+                  generatedDocs && (
+                    <div className="mt-8 px-4 rounded-lg border border-border overflow-hidden">
+                      <div className="bg-muted/30 p-4 flex items-center justify-between border-b">
+                        <h3 className="font-medium">Generated Documentation</h3>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <button className="flex items-center px-3 py-1 rounded bg-gray-200 hover:bg-gray-300">
-                              <Download className="w-4 h-4 mr-2" />
+                            <Button variant="outline" size="sm" className="flex items-center gap-2">
+                              <Download className="w-4 h-4" />
                               Download
-                            </button>
+                            </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" side="bottom" className="w-30">
-                            <DropdownMenuItem onClick={handleDownloadDocs}>
-                              via Markdown
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={handleDownloadHTML}>
-                              via HTML
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={handleDownloadPDF}>
-                              via PDF
-                            </DropdownMenuItem>
+                          <DropdownMenuContent align="end" side="bottom">
+                            <DropdownMenuItem onClick={handleDownloadDocs}>Download as Markdown</DropdownMenuItem>
+                            <DropdownMenuItem onClick={handleDownloadHTML}>Download as HTML</DropdownMenuItem>
+                            <DropdownMenuItem onClick={handleDownloadPDF}>Download as PDF</DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
@@ -714,18 +826,19 @@ export const GeneratorSection: React.FC<GeneratorSectionProps> = ({
                         </ReactMarkdown>
                       </div>
                     </div>
-                  </>
+                  )
                 )}
-              {docsError && (
-                <div className="mt-6 text-red-600 font-semibold">{docsError}</div>
-              )}
-            </CardContent>
-            {/* </Card> */}
-          </div>
-        )
-        }
-      </div >
-    </section >
 
+                {docsError && (
+                  <div className="mt-6 p-4 border border-red-200 bg-red-50 dark:bg-red-900/10 dark:border-red-900/20 text-red-600 dark:text-red-400 rounded-lg">
+                    {docsError}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
+      </div>
+    </section>
   );
 };

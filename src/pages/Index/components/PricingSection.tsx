@@ -43,7 +43,7 @@ export const PricingSection = () => {
             Simple, Transparent Pricing
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Choose the plan that fits your workflow—code snippets, full repos, or GitHub URLs.
+            Choose the plan that fits your team size and needs
           </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -93,8 +93,8 @@ export const PricingSection = () => {
               <CardTitle>Pro</CardTitle>
               <div className="flex items-baseline mt-4">
                 <div className="text-2xl font-semibold">
-                  <span className="line-through text-gray-500 mr-2">₹2300</span>
-                  <span className="text-4xl font-bold">₹1800</span>
+                  <span className="line-through text-gray-500 mr-2">$40</span>
+                  <span className="text-4xl font-bold">$29</span>
                   <span className="text-sm text-muted-foreground ml-1 align-baseline">/month</span>
                   <span className="block text-sm text-red-500 mt-1">
                     Early bird discount — limited time offer!
