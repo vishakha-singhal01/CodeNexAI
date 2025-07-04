@@ -51,6 +51,18 @@ export const Navbar = () => {
 
         {/* Right: Auth Options */}
         <div className="flex items-center space-x-4">
+          <a
+            href="/docs"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Button
+              className="relative overflow-hidden text-white text-lg font-semibold px-6 py-3 rounded-full bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] transition-all duration-300 hover:scale-105 border-none"
+            >
+              <span className="absolute inset-0 bg-white opacity-10 blur-lg rounded-full animate-pulse" />
+              <span className="relative z-10">Explore Docs</span>
+            </Button>
+          </a>
           <ModeToggle />
 
           {/* Mobile: Hamburger icon dropdown */}

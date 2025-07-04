@@ -16,6 +16,8 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage"; // Import Privacy Pol
 import TermsOfServicePage from "./pages/TermsOfServicePage"; // Import Terms of Service Page
 import VerifyEmailPage from "./pages/Auth/VerifyEmailPage"; // Import VerifyEmailPage
 import { ResetPasswordPage } from "./pages/Auth/ResetPasswordPage";
+import ExploreDocs from './pages/Index/components/ExploreDocs';
+import ExploreDocsDetailPageWrapper from './pages/Index/components/DocPage';
 
 const queryClient = new QueryClient();
 
@@ -92,6 +94,8 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<LoginPage />} /> {/* Add Login Route */}
           <Route path="/signup" element={<SignupPage />} /> {/* Add Signup Route */}
+          <Route path="/docs" element={<ExploreDocs />} />
+  <Route path="/docs/:id" element={<ExploreDocsDetailPageWrapper />} />
           <Route path="/contact" element={<ContactPage />} /> {/* Add Contact Route */}
           <Route path="/security" element={<SecurityPage />} /> {/* Add Security Route */}
           <Route path="/privacy" element={<PrivacyPolicyPage />} /> {/* Add Privacy Policy Route */}
