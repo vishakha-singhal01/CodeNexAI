@@ -213,3 +213,112 @@ export const quotes = [
   "“In order to be irreplaceable, one must always be different.” – Coco Chanel (applied to devs too!)",
   "“Experience is the name everyone gives to their mistakes.” – Oscar Wilde (debugging edition)",
 ];
+
+export interface RepoDoc {
+  id: string
+  name: string
+  // logo: string
+  tags: string[]
+  description: string
+  link: string
+  generationTime: number
+  createdOn: string
+  sourceUrl: string
+  sourceName: string
+  // Extended fields for detail page
+  fullDescription: string
+  features: string[]
+  // techStack: string[]
+  pdfUrl: string
+  author: string
+  lastUpdated: string
+  readTime: string
+}
+
+export const repoDocs: RepoDoc[] = [
+  {
+    id: "1",
+    name: "CodeRabbit",
+    // logo: "/placeholder.svg?height=48&width=48",
+    tags: ["#openai", "#code-review", "#github-action", "gpt-4", "typescript", "javascript"],
+    description: "Summarized technical documentation for CodeRabbit's GitHub repo.",
+    link: "/docs/coderabbit",
+    generationTime: 165,
+    createdOn: "June 03, 2025",
+    sourceUrl: "https://github.com/coderabbitai/ai-pr-reviewer",
+    sourceName: "codenexai/coderabbit",
+    fullDescription:
+      "AI-based Pull Request Summarizer and Reviewer with Chat Capabilities.",
+    features: [
+      "AI-powered code analysis and suggestions",
+      "Automated pull request reviews",
+      "Security vulnerability detection",
+      "Code quality metrics and insights",
+      "Integration with popular Git platforms",
+      "Customizable review rules and standards",
+    ],
+    // techStack: ["Node.js", "TypeScript", "React", "Express", "MongoDB", "OpenAI API"],
+    pdfUrl: "https://docs.google.com/document/d/1example-coderabbit/edit",
+    author: "CodeNexAI Team",
+    lastUpdated: "June 03, 2025",
+    readTime: "12 min read",
+  }
+  // {
+  //   id: "2",
+  //   name: "ReactJS",
+  //   logo: "/placeholder.svg?height=48&width=48",
+  //   tags: ["#Frontend", "#JavaScript"],
+  //   description: "AI-generated docs for React's core concepts and setup.",
+  //   link: "/docs/reactjs",
+  //   generationTime: 6.2,
+  //   createdOn: "July 20, 2025",
+  //   sourceUrl: "https://github.com/facebook/react",
+  //   sourceName: "facebook/react",
+  //   fullDescription:
+  //     "React is a declarative, efficient, and flexible JavaScript library for building user interfaces. It lets you compose complex UIs from small and isolated pieces of code called components. This comprehensive documentation covers everything from basic concepts to advanced patterns and best practices.",
+  //   features: [
+  //     "Component-based architecture",
+  //     "Virtual DOM for optimal performance",
+  //     "Declarative programming paradigm",
+  //     "Rich ecosystem and community",
+  //     "Server-side rendering capabilities",
+  //     "Extensive developer tools",
+  //   ],
+  //   techStack: ["JavaScript", "JSX", "Babel", "Webpack", "Jest", "React DevTools"],
+  //   pdfUrl: "https://docs.google.com/document/d/1example-react/edit",
+  //   author: "Facebook/Meta Team",
+  //   lastUpdated: "July 20, 2025",
+  //   readTime: "15 min read",
+  // },
+  // {
+  //   id: "3",
+  //   name: "Next.js Commerce",
+  //   logo: "/placeholder.svg?height=48&width=48",
+  //   tags: ["#Ecommerce", "#Next.js"],
+  //   description: "Docs for Vercel's e-commerce boilerplate, enhanced by AI.",
+  //   link: "/docs/nextjs-commerce",
+  //   generationTime: 10.1,
+  //   createdOn: "July 18, 2025",
+  //   sourceUrl: "https://github.com/vercel/commerce",
+  //   sourceName: "vercel/commerce",
+  //   fullDescription:
+  //     "Next.js Commerce is a high-performance, server-side rendered e-commerce template built with Next.js and React. It provides a solid foundation for building modern online stores with excellent SEO, fast loading times, and seamless user experiences across all devices.",
+  //   features: [
+  //     "Server-side rendering for optimal SEO",
+  //     "Built-in payment processing",
+  //     "Responsive design system",
+  //     "Product catalog management",
+  //     "Shopping cart functionality",
+  //     "Order management system",
+  //   ],
+  //   techStack: ["Next.js", "React", "TypeScript", "Tailwind CSS", "Stripe", "Vercel"],
+  //   pdfUrl: "https://docs.google.com/document/d/1example-nextjs-commerce/edit",
+  //   author: "Vercel Team",
+  //   lastUpdated: "July 18, 2025",
+  //   readTime: "18 min read",
+  // },
+]
+
+export function getDocById(id: string): RepoDoc | undefined {
+  return repoDocs.find((doc) => doc.id === id)
+}
