@@ -24,7 +24,7 @@ export const HeroSection = () => {
         {/* Beta Badge */}
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border border-blue-200/50 dark:border-blue-800/50 mb-8 backdrop-blur-sm">
           <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-          <span className="text-sm font-medium text-blue-700 dark:text-blue-300">Early Access Available</span>
+          <span className="text-sm font-medium text-blue-700 dark:text-blue-300">Available on VS Code for Developers</span>
         </div>
 
         {/* Main Heading */}
@@ -40,9 +40,7 @@ export const HeroSection = () => {
 
         {/* Subtitle */}
         <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed mb-8">
-          Stop wasting time on manual documentation. Let AI analyze your codebase, generate comprehensive docs, and keep
-          them automatically updated with
-          <span className="font-semibold text-foreground"> intelligent automation</span>.
+          Stop wasting time on manual documentation. Let AI analyze your codebase and generate comprehensive docs.
         </p>
 
         {/* Feature Pills */}
@@ -55,10 +53,6 @@ export const HeroSection = () => {
             <Zap className="w-4 h-4 text-indigo-600" />
             <span className="text-sm font-medium">Auto-Generated</span>
           </div>
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/80 dark:bg-gray-800/80 border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm">
-            <FileText className="w-4 h-4 text-purple-600" />
-            <span className="text-sm font-medium">Always Updated</span>
-          </div>
         </div>
 
         {/* CTA Buttons */}
@@ -68,7 +62,7 @@ export const HeroSection = () => {
             className="h-14 px-8 text-base font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl hover:shadow-blue-500/25 transition-all duration-300 transform hover:scale-105"
             onClick={() => navigate("/contact")}
           >
-            Request Early Access
+            Book a Demo
             <ArrowRight className="ml-2 h-5 w-5" />
           </Button>
           <Button

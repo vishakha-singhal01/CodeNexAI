@@ -97,7 +97,7 @@ export const PricingSection = () => {
                   <span className="text-4xl font-bold">$29</span>
                   <span className="text-sm text-muted-foreground ml-1 align-baseline">/month</span>
                   <span className="block text-sm text-red-500 mt-1">
-                    Early bird discount — limited time offer!
+                    Early bird discount - limited time offer!
                   </span>
                 </div>
 
