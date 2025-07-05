@@ -240,13 +240,13 @@ export const repoDocs: RepoDoc[] = [
     id: "1",
     name: "CodeRabbit",
     // logo: "/placeholder.svg?height=48&width=48",
-    tags: ["#openai", "#code-review", "#github-action", "gpt-4", "typescript", "javascript"],
+    tags: ["openai", "code-review", "github-action", "gpt-4", "typescript", "javascript"],
     description: "Summarized technical documentation for CodeRabbit's GitHub repo.",
     link: "/docs/coderabbit",
     generationTime: 165,
     createdOn: "June 03, 2025",
     sourceUrl: "https://github.com/coderabbitai/ai-pr-reviewer",
-    sourceName: "codenexai/coderabbit",
+    sourceName: "coderabbitai/ai-pr-reviewer",
     fullDescription:
       "AI-based Pull Request Summarizer and Reviewer with Chat Capabilities.",
     features: [
