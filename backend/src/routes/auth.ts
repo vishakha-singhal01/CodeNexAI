@@ -64,9 +64,11 @@ const signupHandler: RequestHandler = async (req: Request, res, next) => {
 
         await newUser.save(); // Save user with verification token
 
+        let verificationEmailSent = false;
         try {
             if (newUser.email) { // Ensure email exists before sending
                 await sendVerificationEmail(newUser.email, verificationToken);
+                verificationEmailSent = true;
             } else {
                 // This case should ideally not happen if email is required for signup
                 // Or handle OAuth signups that might not have email immediately differently
@@ -74,13 +76,8 @@ const signupHandler: RequestHandler = async (req: Request, res, next) => {
             }
         } catch (emailError) {
             console.error("Error sending verification email:", emailError);
-            // Decide on error handling:
-            // Option 1: Let user sign up but inform them email sending failed.
-            // Option 2: Fail the signup (as implemented by passing error to next())
-            // For now, we'll pass the error, which will prevent login and send a generic server error.
-            // A more user-friendly approach might be to log the error and still allow signup,
-            // with a message to the user to try verifying later or contact support.
-            return next(new Error('Signup succeeded, but failed to send verification email. Please try logging in and resending verification.'));
+            // Keep signup successful even if mail provider fails.
+            verificationEmailSent = false;
         }
 
         // User is NOT logged in immediately after signup.
@@ -90,7 +87,10 @@ const signupHandler: RequestHandler = async (req: Request, res, next) => {
         // Send response indicating signup was successful and email verification is needed.
         // No user object is sent back in the response here, as they are not logged in.
         res.status(201).json({ 
-            message: 'Signup successful. Please check your email to verify your account.'
+            message: verificationEmailSent
+                ? 'Signup successful. Please check your email to verify your account.'
+                : 'Signup successful, but we could not send the verification email right now. Please try again later.',
+            verificationEmailSent
             // We are not sending the user object anymore as they are not logged in.
             // user: { email: newUser.email, isEmailVerified: newUser.isEmailVerified } 
         });
